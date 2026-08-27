@@ -1,0 +1,13 @@
+{
+  "version": "v2",
+  "faults": [
+    {"faultType": "internal_agent_failure", "injectionPoint": "first_internal_execution", "expectedRecoveryPolicy": "retry_or_reassign", "severity": "recoverable", "seed": 20260821},
+    {"faultType": "recipient_timeout", "injectionPoint": "recipient_acceptance", "expectedRecoveryPolicy": "select_alternate_recipient", "severity": "recoverable", "seed": 20260822},
+    {"faultType": "stale_profile", "injectionPoint": "requester_selection", "expectedRecoveryPolicy": "detect_revision_mismatch_and_refresh", "severity": "recoverable", "seed": 20260823},
+    {"faultType": "tool_unavailable", "injectionPoint": "internal_execution", "expectedRecoveryPolicy": "reassign_to_tool_capable_agent", "severity": "recoverable", "seed": 20260824},
+    {"faultType": "superseded_result", "injectionPoint": "downstream_read", "expectedRecoveryPolicy": "reject_stale_result_version", "severity": "critical", "seed": 20260825},
+    {"faultType": "requirement_revision", "injectionPoint": "mid_project", "expectedRecoveryPolicy": "localized_replan", "severity": "recoverable", "seed": 20260826},
+    {"faultType": "board_conflict", "injectionPoint": "parallel_update", "expectedRecoveryPolicy": "version_conflict_resolution", "severity": "recoverable", "seed": 20260827},
+    {"faultType": "agent_overload", "injectionPoint": "internal_allocation", "expectedRecoveryPolicy": "load_aware_reallocation", "severity": "recoverable", "seed": 20260828}
+  ]
+}

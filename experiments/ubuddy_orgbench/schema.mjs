@@ -1,8 +1,14 @@
 import crypto from 'node:crypto';
 
-export const BENCHMARK_VERSION = 'ubuddy_orgbench_v1';
+export const BENCHMARK_VERSION = 'ubuddy_orgbench_v2';
+export const BENCHMARK_NAME = 'uBuddy-AppWorld Hybrid Benchmark';
 export const METHODS = ['M0_single_ubuddy', 'M1_static_profile', 'M2_generic_shared', 'M3_ours'];
 export const LAYERS = ['requester_ubuddy', 'recipient_ubuddy', 'internal_agent', 'environment'];
+export const DIMENSIONS = [
+  'project_organization', 'atomic_execution', 'feedback_evolution',
+  'decomposition_dependency', 'cross_ubuddy_allocation', 'board_communication',
+  'fault_recovery', 'layered_attribution',
+];
 export const EVENT_KINDS = [
   'project_created', 'profile_queried', 'ubuddy_invited', 'selection_snapshot_frozen',
   'task_node_created', 'dependency_created', 'task_assigned', 'internal_agent_selected',

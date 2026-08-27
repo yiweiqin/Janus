@@ -1,4 +1,6 @@
-# uBuddy-OrgBench v1
+# uBuddy-AppWorld Hybrid Benchmark v2
+
+完整学术协议见 [BENCHMARK_PROTOCOL.md](./BENCHMARK_PROTOCOL.md)，远程运行见 [REMOTE_RUNBOOK_CN.md](./REMOTE_RUNBOOK_CN.md)。v2 将 AppWorld 官方任务验收与 Janus 协作事件真值结合，正式报告八个维度，不把外部 benchmark 的 judge 分数混成一个总分。
 
 ## Cross-task evolution loop
 
@@ -16,7 +18,7 @@ npm run experiment:ubuddy:orgbench:evolution -- --real-appworld --task-id 042a9f
 
 The runner creates an isolated evolution namespace for every method/seed, runs E0--E4, applies the evidence gate, passes adopted policy/Skill/Memory version IDs into Round 2, and writes rollback records. Missing official evaluator, profile snapshot, Cloud evidence, or credentials is recorded as `blocked`/`fallback`; it is never counted as a formal evolution result.
 
-这是 Janus/uBuddy 的双层多 Agent 组织 benchmark 原型。
+这是 Janus/uBuddy 的双层多 Agent 组织 benchmark，面向“实验室式组员协作”而非传统公司的固定岗位。
 
 它不预设任务树或人员分工。每个 episode 只给 requester uBuddy 一个总问题、候选 uBuddy 的公开画像和可执行环境；任务拆解、邀请、跨人委派、内部 Agent 分配、状态图更新、返工和验收均由 uBuddy 运行时决定。
 

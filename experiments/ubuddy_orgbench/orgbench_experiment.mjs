@@ -19,11 +19,14 @@ import { assertActionAllowed } from './core/permissions.mjs';
 import { spawn } from 'node:child_process';
 import { JanusOrgBenchClient } from './core/janusClient.mjs';
 import { createEvolutionCoordinator } from './core/evolutionCoordinator.mjs';
+import { independentlyVerify } from './evaluators/independentVerifier.mjs';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..');
 const ORG_ROOT = path.join(ROOT, 'experiments', 'ubuddy_orgbench');
 const RUN_ROOT = path.join(ROOT, 'experiments', 'runs');
 const APPWORLD_MANIFEST = path.join(ROOT, 'experiments', 'ubuddy_appworld', 'appworld_tasks.manifest.json');
+const TASK_PROTOCOL_MANIFEST = path.join(ORG_ROOT, 'task_protocol.manifest.json');
+const TRANSFER_PAIRS_MANIFEST = path.join(ORG_ROOT, 'transfer_pairs.manifest.json');
 const args = parseArgs(process.argv.slice(2));
 const command = args._[0] || 'help';
 
@@ -32,6 +35,12 @@ function csv(value, fallback) { return value ? String(value).split(',').map((ite
 const hash = (value) => crypto.createHash('sha256').update(String(value)).digest('hex');
 async function exists(file) { try { await fs.access(file); return true; } catch { return false; } }
 async function readJson(file) { return JSON.parse(await fs.readFile(file, 'utf8')); }
+async function selectProtocolTasks(manifest, split = 'locked_test') {
+  const protocol = await readJson(TASK_PROTOCOL_MANIFEST);
+  const families = new Set(protocol.splits?.[split] || []);
+  const source = split === 'boundary' ? (manifest.boundarySupplement || []) : (manifest.tasks || []);
+  return source.filter((task) => families.has(task.taskFamily));
+}
 async function writeJson(file, value) { await fs.mkdir(path.dirname(file), { recursive: true }); await fs.writeFile(file, JSON.stringify(value, null, 2) + '\n', 'utf8'); }
 async function writeJsonl(file, rows) { await fs.mkdir(path.dirname(file), { recursive: true }); await fs.writeFile(file, rows.map((row) => JSON.stringify(row)).join('\n') + (rows.length ? '\n' : ''), 'utf8'); }
 function encryptJson(value, keyMaterial = process.env.UBUDDY_ORGBENCH_TRUTH_KEY || 'orgbench-local-canary-key') {
@@ -41,7 +50,7 @@ function encryptJson(value, keyMaterial = process.env.UBUDDY_ORGBENCH_TRUTH_KEY 
   return { algorithm: 'aes-256-gcm', keyDerivation: 'sha256(env:UBUDDY_ORGBENCH_TRUTH_KEY)', iv: iv.toString('base64'), tag: cipher.getAuthTag().toString('base64'), ciphertext: ciphertext.toString('base64') };
 }
 function runDir(name = `orgbench-${Date.now()}`) { return path.join(RUN_ROOT, name); }
-function help() { console.log('uBuddy-OrgBench v1\n\nCommands: doctor, prepare, manifest, canary, pilot, main, attribution, evolution, swebench, verify, report, package'); }
+function help() { console.log('uBuddy-AppWorld Hybrid Benchmark v2\n\nCommands: doctor, prepare, manifest, canary, pilot, main, attribution, evolution, swebench, verify, report, package'); }
 
 function spawnAppWorldBridge() {
   const python = process.env.APPWORLD_PYTHON || 'D:/Cli-anything/benchmarks/appworld-official/.venv313/Scripts/python.exe';
@@ -92,6 +101,18 @@ async function runRealAppWorldEpisode({ task, method, seed, runDir, evolutionCon
   const event = (kind, layer, sourceId, metadata = {}, actorId = layer === 'requester_ubuddy' ? 'ubuddy_A' : 'system') => { const e = makeEvent({ eventKind: kind, episodeId, actorId, actorLayer: layer, sourceKind: 'appworld', sourceId, metadata }); events.push(e); return e; };
   const selections = []; const boardUpdates = []; const executions = []; let janusDelegationId = '';
   const cloudAgentMap = (() => { try { return JSON.parse(process.env.UBUDDY_ORGBENCH_CLOUD_AGENT_MAP || '{}') || {}; } catch { return {}; } })();
+  const ubuddyUserMap = (() => { try { return JSON.parse(process.env.UBUDDY_ORGBENCH_UBUDDY_USER_MAP || '{}') || {}; } catch { return {}; } })();
+  const cloudAgentId = (localAgentInstanceId = '') => {
+    const localId = String(localAgentInstanceId || '');
+    if (!localId) return '';
+    if (cloudAgentMap[localId]) return String(cloudAgentMap[localId]);
+    for (const [ubuddyId, pool] of Object.entries(scenario.internalPools || {})) {
+      const agent = pool.agents.find((item) => item.agentInstanceId === localId); if (!agent) continue;
+      const suffix = ({ research: 'research', data: 'data_analysis', coding: 'coding', execution: 'web_operation', review: 'review', communication: 'communication' })[agent.agentFamilyId] || 'research';
+      return String(cloudAgentMap[`agent_${ubuddyId}_${suffix}`] || '');
+    }
+    return '';
+  };
   try {
     const reset = await bridge.call({ command: 'reset', taskId: task.taskId, experimentName: `orgbench-${method}-${seed}-${Date.now()}` });
     event('project_created', 'requester_ubuddy', 'project_root', { benchmark: 'AppWorld', taskId: task.taskId, seed, round, evolutionNamespace: evolutionContext?.namespace || '', policyVersionId: evolutionContext?.policyVersionId || '', officialInstructionHash: sha256(reset.instruction) });
@@ -103,13 +124,13 @@ async function runRealAppWorldEpisode({ task, method, seed, runDir, evolutionCon
     usage.push({ stage: 'requester_organization', usage: requester.usage, responseHash: requester.responseHash, model: requester.model });
     const invited = method === 'M0_single_ubuddy' ? [] : [...new Set((requester.value.inviteUbuddyIds || []).map(String).filter((id) => scenario.internalPools[id]))];
     for (const id of invited) { selections.push({ ubuddyId: id, revision: scenario.profiles.find((p) => p.ubuddyId === id)?.revision, contentHash: scenario.profiles.find((p) => p.ubuddyId === id)?.contentHash }); event('ubuddy_invited', 'requester_ubuddy', id, { recipientUbuddyId: id }); if (methodFeatures(method).profileVersioning) event('selection_snapshot_frozen', 'requester_ubuddy', `${id}:snapshot`, { recipientUbuddyId: id, revision: selections.at(-1).revision, contentHash: selections.at(-1).contentHash, immutable: true }); }
-    if (janus.enabled && invited.length) janusArtifacts.push({ stage: 'selection_confirm', result: await janus.confirmSelection({ recipientUserId: String(process.env.UBUDDY_ORGBENCH_JANUS_RECIPIENT_USER_ID || ''), selection: { profileRevision: selections[0]?.revision, contentHash: selections[0]?.contentHash, requirement: reset.instruction, selectionReason: 'OrgBench requester model decision' } }) });
+    if (janus.enabled && invited.length) janusArtifacts.push({ stage: 'selection_confirm', result: await janus.confirmSelection({ recipientUserId: String(ubuddyUserMap[invited[0]] || process.env.UBUDDY_ORGBENCH_JANUS_RECIPIENT_USER_ID || ''), selection: { profileRevision: selections[0]?.revision, contentHash: selections[0]?.contentHash, requirement: reset.instruction, selectionReason: 'OrgBench requester model decision' } }) });
     // Create the Cloud delegation before execution so the real lifecycle is
     // task-group/delegation -> progress -> result -> attribution.  The final
     // upload below remains the authoritative complete trace.
     if (janus.enabled && invited.length) {
       const delegation = await janus.createDelegation({
-        recipientId: String(process.env.UBUDDY_ORGBENCH_JANUS_RECIPIENT_USER_ID || invited[0] || ''),
+        recipientId: String(ubuddyUserMap[invited[0]] || process.env.UBUDDY_ORGBENCH_JANUS_RECIPIENT_USER_ID || invited[0] || ''),
         title: `OrgBench ${task.taskId}`.slice(0, 160), instruction: reset.instruction,
         clientRequestId: episodeId,
         capabilitySelection: selections[0] ? { profileRevision: selections[0].revision, contentHash: selections[0].contentHash, requirement: { description: reset.instruction, capabilityTags: scenario.requirements.map((item) => item.capability) }, consideredCandidateUserIds: String(process.env.UBUDDY_ORGBENCH_JANUS_CANDIDATE_USER_IDS || '').split(',').filter(Boolean), selectionReason: 'OrgBench requester organization decision' } : {},
@@ -173,7 +194,7 @@ async function runRealAppWorldEpisode({ task, method, seed, runDir, evolutionCon
     }
     graph.update('project_root', { status: 'done', progress: 1 }, 'ubuddy_A', 'requester_ubuddy'); event('result_accepted', 'requester_ubuddy', 'project_root', { acceptance: 'awaiting_official_evaluator' }); const officialEvaluation = await bridge.call({ command: 'evaluate' }); event('project_evaluated', 'environment', 'appworld_official_evaluator', { success: officialEvaluation.success, passPercentage: officialEvaluation.passPercentage }, 'appworld');
     const metrics = evaluateEpisode({ scenario, method, graph, events, officialEvaluation });
-    if (janus.enabled && janusDelegationId) { janusArtifacts.push({ stage: 'organization_trace', result: await janus.uploadOrganizationTrace({ evolutionNamespace: evolutionContext?.namespace || 'default', traceId: episodeId, delegationId: janusDelegationId, taskType: 'appworld', events: events.map((item, index) => { const localAgentInstanceId = String(item.metadata?.agentInstanceId || ''); return ({ ...item, idempotencyKey: `${episodeId}:${index}:${item.eventKind}`, payload: { ...item.metadata, localAgentInstanceId, agentInstanceId: localAgentInstanceId ? String(cloudAgentMap[localAgentInstanceId] || '') : '', officialEvaluation: item.eventKind === 'project_evaluated' ? officialEvaluation : undefined } }); }) }) }); janusArtifacts.push({ stage: 'state_graph', result: await janus.stateGraph({ delegationId: janusDelegationId }) }); janusArtifacts.push({ stage: 'attribution', result: await janus.attribution(janusDelegationId) }); }
+    if (janus.enabled && janusDelegationId) { janusArtifacts.push({ stage: 'organization_trace', result: await janus.uploadOrganizationTrace({ evolutionNamespace: evolutionContext?.namespace || 'default', traceId: episodeId, delegationId: janusDelegationId, taskType: 'appworld', events: events.map((item, index) => { const localAgentInstanceId = String(item.metadata?.agentInstanceId || ''); return ({ ...item, idempotencyKey: `${episodeId}:${index}:${item.eventKind}`, payload: { ...item.metadata, localAgentInstanceId, agentInstanceId: cloudAgentId(localAgentInstanceId), officialEvaluation: item.eventKind === 'project_evaluated' ? officialEvaluation : undefined } }); }) }) }); janusArtifacts.push({ stage: 'state_graph', result: await janus.stateGraph({ delegationId: janusDelegationId }) }); janusArtifacts.push({ stage: 'attribution', result: await janus.attribution(janusDelegationId) }); }
     return { episodeId, benchmark: 'AppWorld', taskId: task.taskId, method, seed, round, evolutionNamespace: evolutionContext?.namespace || '', policyVersionId: evolutionContext?.policyVersionId || 'org-policy-baseline-v1', policyRulesApplied: policyApplied.applied, janusDelegationId, protocolOnly: false, officialEvaluation, metrics, graph: graph.project('all'), events, executions, usage, publicProfiles: visibleProfiles, selections, janusArtifacts, scenario, taskInstruction: reset.instruction, createdAt: nowIso() };
   } finally { await bridge.call({ command: 'close' }).catch(() => {}); bridge.close(); }
 }
@@ -200,10 +221,12 @@ async function manifest() {
   const tac = await theAgentCompanyAdapter().manifest();
   const output = {
     benchmark: BENCHMARK_VERSION,
-    version: 'v1',
+    name: 'uBuddy-AppWorld Hybrid Benchmark',
+    version: 'v2',
+    protocol: 'BENCHMARK_PROTOCOL.md',
     approvalRequired: false,
-    primary: { name: 'TheAgentCompany', taskCount: tac.taskCount, status: 'adapter_manifest', taskIds: tac.taskIds },
-    controlled: orgAppworld ? { name: 'AppWorld', strictTaskCount: orgAppworld.strictTaskCount, boundaryTaskCount: orgAppworld.boundaryTaskCount, taskIds: orgAppworld.tasks.map((task) => task.taskId), boundaryTaskIds: orgAppworld.boundarySupplement.map((task) => task.taskId), manifestSha256: orgAppworld.manifestSha256 } : { name: 'AppWorld', taskCount: appworld.taskCount, taskIds: appworld.tasks.map((task) => task.taskId), manifestSha256: appworld.manifestSha256 },
+    primary: orgAppworld ? { name: 'AppWorld', officialEvaluatorRequired: true, strictTaskCount: orgAppworld.strictTaskCount, boundaryTaskCount: orgAppworld.boundaryTaskCount, taskIds: orgAppworld.tasks.map((task) => task.taskId), boundaryTaskIds: orgAppworld.boundarySupplement.map((task) => task.taskId), manifestSha256: orgAppworld.manifestSha256 } : { name: 'AppWorld', officialEvaluatorRequired: true, taskCount: appworld.taskCount, taskIds: appworld.tasks.map((task) => task.taskId), manifestSha256: appworld.manifestSha256 },
+    externalScenarioValidation: { name: 'TheAgentCompany', taskCount: tac.taskCount, status: 'adapter_manifest', taskIds: tac.taskIds },
     organizationReference: marbleAdapter(),
     attributionReference: whoWhenAdapter(),
     externalValidation: swebenchAdapter(),
@@ -220,7 +243,7 @@ async function prepare() {
   const { spawn } = await import('node:child_process');
   await new Promise((resolve, reject) => { const child = spawn(python, [generator], { stdio: 'inherit', windowsHide: true }); child.on('close', (code) => code === 0 ? resolve() : reject(new Error(`orgbench_manifest_generation_failed:${code}`))); child.on('error', reject); });
   await manifest();
-  const plan = { benchmark: BENCHMARK_VERSION, methods: METHODS, seeds: [20260821, 20260822, 20260823], primaryEpisodes: 288, controlledEpisodes: 480, marbleEpisodes: 144, attributionOutputs: 768, evolutionEpisodes: 216, deferred: ['swebench_verified'], generatedAt: nowIso() };
+  const plan = { benchmark: BENCHMARK_VERSION, methods: METHODS, seeds: [20260821, 20260822, 20260823], splitUnit: 'task_family', controlledLockedTestEpisodes: 228, faultStressEpisodesMaximum: 1824, evolutionPairEpisodes: 300, primaryMetric: 'AppWorld official checkpoint rate', processDimensions: 8, deferred: ['swebench_verified', 'theagentcompany_external_validation'], generatedAt: nowIso() };
   await writeJson(path.join(ORG_ROOT, 'experiment_plan.json'), plan);
   console.log(JSON.stringify({ prepared: true, plan: path.join(ORG_ROOT, 'experiment_plan.json') }, null, 2));
 }
@@ -369,9 +392,9 @@ async function pilot() {
 }
 async function main() {
   if (args.realAppworld) {
-    const manifest = await readJson(path.join(ORG_ROOT, 'appworld_orgbench_tasks.manifest.json')); const taskLimit = Number(args.taskCount || manifest.strictTaskCount || 37); const tasks = manifest.tasks.slice(0, taskLimit); const seeds = csv(args.seeds, ['20260821', '20260822', '20260823']).map(Number); const methods = csv(args.methods, METHODS); const dir = path.resolve(String(args.runDir || runDir(`orgbench-appworld-main-${Date.now()}`))); await fs.mkdir(dir, { recursive: true }); const rows = []; const errors = [];
+    const manifest = await readJson(path.join(ORG_ROOT, 'appworld_orgbench_tasks.manifest.json')); const split = String(args.split || 'locked_test'); const splitTasks = await selectProtocolTasks(manifest, split); const taskLimit = Number(args.taskCount || splitTasks.length); const tasks = splitTasks.slice(0, taskLimit); const seeds = csv(args.seeds, ['20260821', '20260822', '20260823']).map(Number); const methods = csv(args.methods, METHODS); const dir = path.resolve(String(args.runDir || runDir(`orgbench-appworld-main-${Date.now()}`))); await fs.mkdir(dir, { recursive: true }); const rows = []; const errors = [];
     for (const task of tasks) for (const seed of seeds) for (const method of methods) { try { rows.push(await runRealAppWorldEpisode({ task, method, seed, runDir: dir })); } catch (error) { errors.push({ taskId: task.taskId, method, seed, message: error.message, stack: error.stack, infrastructureLikely: /fetch failed|timeout|ECONN|model_request/.test(error.message) }); } await writeJsonl(path.join(dir, 'episodes.jsonl'), rows.map(safeRealEpisode)); if (errors.length) await writeJsonl(path.join(dir, 'errors.jsonl'), errors); await writeJson(path.join(dir, 'metrics.json'), aggregateMetrics(rows.map((r) => r.metrics))); }
-    await writeJson(path.join(dir, 'config.json'), { benchmark: BENCHMARK_VERSION, adapter: 'AppWorld', mode: 'real', taskCount: tasks.length, episodeCount: rows.length, errorCount: errors.length, methods, seeds }); console.log(JSON.stringify({ runDir: dir, episodeCount: rows.length, errorCount: errors.length, protocolOnly: false }, null, 2)); return;
+    await writeJson(path.join(dir, 'config.json'), { benchmark: BENCHMARK_VERSION, adapter: 'AppWorld', mode: 'real', split, splitUnit: 'task_family', taskCount: tasks.length, taskIds: tasks.map((task) => task.taskId), episodeCount: rows.length, errorCount: errors.length, methods, seeds }); console.log(JSON.stringify({ runDir: dir, split, episodeCount: rows.length, errorCount: errors.length, protocolOnly: false }, null, 2)); return;
   }
   await runEpisodes({ name: `orgbench-main-${Date.now()}`, tasks: ['appworld_6f4b9a5_1', 'appworld_042a9fc_1', 'tac_pm_assign_issues', 'tac_sde_unit_test'], seeds: [20260821, 20260822, 20260823] });
 }
@@ -385,8 +408,9 @@ async function evolution() {
   let tasks = [{ taskId: 'synthetic_round1', instruction: 'Resolve a multi-step research, data analysis, execution and review problem.' }, { taskId: 'synthetic_round2', instruction: 'Resolve a similar but different research, data analysis, execution and review problem.' }];
   if (real) {
     const manifest = await readJson(path.join(ORG_ROOT, 'appworld_orgbench_tasks.manifest.json'));
-    const first = manifest.tasks.find((item) => item.taskId === String(args.taskId || '')) || manifest.tasks[0];
-    const second = manifest.tasks.find((item) => item.taskFamily === first.taskFamily && item.taskId !== first.taskId) || manifest.tasks.find((item) => item.taskId !== first.taskId) || first;
+    const transfer = await readJson(TRANSFER_PAIRS_MANIFEST); const pair = transfer.pairs.find((item) => item.round1 === String(args.taskId || '')) || transfer.pairs[0]; const allTasks = [...manifest.tasks, ...(manifest.boundarySupplement || [])];
+    const first = allTasks.find((item) => item.taskId === pair.round1); const second = allTasks.find((item) => item.taskId === pair.round2);
+    if (!first || !second) throw new Error(`transfer_pair_task_missing:${pair.round1}:${pair.round2}`);
     tasks = [first, second];
   }
   const rows = [];
@@ -456,16 +480,18 @@ async function verify() {
   const batchArtifactCompleteness = hasOfficialEvaluation && rows.every((row) => row.officialEvaluation && row.metrics && row.events && row.graph);
   const artifactNames = ['config.json', 'metrics.json']; const artifactCompleteness = hasOfficialEvaluation ? ((await Promise.all(artifactNames.map((name) => exists(path.join(dir, name)))).then((values) => values.every(Boolean))) && (batchArtifactCompleteness || (await exists(path.join(dir, 'official_evaluation.json')) && await exists(path.join(dir, 'organization_evaluation.json'))))) : true;
   const valid = rows.length > 0 && noPrivateLeak && eventContractsValid && artifactCompleteness;
-  await writeJson(path.join(dir, 'verification.json'), { valid, episodeCount: rows.length, noPrivateLeak, eventContractsValid, artifactCompleteness, hasOfficialEvaluation, independentMetricRecompute: aggregateMetrics(rows.map((row) => row.metrics || {})) });
-  console.log(JSON.stringify({ valid, episodeCount: rows.length, noPrivateLeak, eventContractsValid, artifactCompleteness }, null, 2)); process.exitCode = valid ? 0 : 1;
+  const independent = await independentlyVerify(dir).catch((error) => ({ valid: false, error: error.message }));
+  const finalValid = valid && independent.valid;
+  await writeJson(path.join(dir, 'verification.json'), { valid: finalValid, episodeCount: rows.length, noPrivateLeak, eventContractsValid, artifactCompleteness, hasOfficialEvaluation, independentMetricRecompute: aggregateMetrics(rows.map((row) => row.metrics || {})), independentVerifier: independent });
+  console.log(JSON.stringify({ valid: finalValid, episodeCount: rows.length, noPrivateLeak, eventContractsValid, artifactCompleteness, independentVerifier: independent.valid }, null, 2)); process.exitCode = finalValid ? 0 : 1;
 }
 async function report() {
   const dir = path.resolve(String(args.runDir || args._[1] || '')); const metrics = await readJson(path.join(dir, 'metrics.json')); const config = await readJson(path.join(dir, 'config.json')).catch(() => ({})); const verification = await readJson(path.join(dir, 'verification.json')).catch(() => null); const official = await readJson(path.join(dir, 'official_evaluation.json')).catch(() => null);
   const methodRows = Object.entries(metrics.byMethod || {}).map(([method, row]) => { const checkpointRate = row.meanOfficialCheckpointRate ?? (official && Object.keys(metrics.byMethod || {}).length === 1 ? official.passCount / Math.max(1, official.totalCount) : null); return `| ${method} | ${row.n} | ${(100 * (row.projectSuccessRate || 0)).toFixed(1)}% | ${checkpointRate == null ? 'n/a' : `${(100 * checkpointRate).toFixed(1)}%`} | ${row.meanInternalAllocationRegret == null ? 'n/a' : row.meanInternalAllocationRegret.toFixed(3)} |`; }).join('\n');
-  const reportText = `# uBuddy-OrgBench v1 实验报告\n\n## 实验目的\n\n验证双层 uBuddy 组织协议能否在不预设人员分工和任务树的条件下，完成候选选择、跨人委派、recipient 二次拆解、内部 Agent 执行、共享状态更新和官方验收。\n\n## 实验条件\n\n- benchmark: ${config.adapter || config.benchmark || BENCHMARK_VERSION}\n- mode: ${config.mode || 'protocol'}\n- episodes: ${metrics.episodeCount ?? metrics.traceCount ?? 'n/a'}\n- task: ${config.taskId || 'multiple'}\n- method: ${config.method || 'multiple'}\n- seed: ${config.seed || 'multiple'}\n- official evaluator: ${official ? 'yes' : 'no'}\n\n## 打分机制\n\n任务结果由外部 benchmark 官方 evaluator 决定；组织指标从状态图和事件日志独立复算。官方 checkpoint rate = passCount / totalCount；完整成功要求官方 success=true，且没有依赖违规或隐私泄露。\n\n## 结果\n\n| 方法 | N | 完整成功率 | 官方 checkpoint rate | 内部分配 regret |\n|---|---:|---:|---:|---:|\n${methodRows || '| n/a | 0 | n/a | n/a | n/a |'}\n\n${official ? `本次官方 evaluator：${official.passCount}/${official.totalCount} checkpoints，通过率 ${official.passPercentage}%，完整成功=${official.success}。` : '本 run 没有官方 evaluator，只能作为协议测试。'}\n\n## 完整性和边界\n\n- artifact verification: ${verification?.valid ?? 'not run'}\n- private leak: ${verification ? !verification.noPrivateLeak : 'not checked'}\n- protocolOnly: ${official ? 'false' : 'true'}\n- attribution/evolution claim eligible: false，需完成带人工 gold 的归因实验和第二轮迁移实验。\n\n## 结论\n\n${official ? '真实 AppWorld 执行与官方评分链路已经建立；单个 canary 只证明工程链路，不证明 M3 优于对照方法。' : '当前仅证明协议和 artifact 契约可运行，不能报告任务效果。'}\n`;
+  const reportText = `# uBuddy-AppWorld Hybrid Benchmark v2 实验报告\n\n## 实验目的\n\n验证双层 uBuddy 组织协议能否在不预设人员分工和任务树的条件下，完成候选选择、跨人委派、recipient 二次拆解、内部 Agent 执行、共享状态更新、故障恢复和官方验收。\n\n## 实验条件\n\n- benchmark: ${config.adapter || config.benchmark || BENCHMARK_VERSION}\n- protocol: BENCHMARK_PROTOCOL.md\n- mode: ${config.mode || 'protocol'}\n- episodes: ${metrics.episodeCount ?? metrics.traceCount ?? 'n/a'}\n- task: ${config.taskId || 'multiple'}\n- method: ${config.method || 'multiple'}\n- seed: ${config.seed || 'multiple'}\n- official evaluator: ${official ? 'yes' : 'no'}\n\n## 打分机制\n\nAppWorld 官方 evaluator 负责外部任务结果；Janus 状态图和事件链负责八个过程维度。两类分数分开呈现，不定义掩盖失败类型的总分。\n\n## 结果\n\n| 方法 | N | 完整成功率 | 官方 checkpoint rate | 内部分配 regret |\n|---|---:|---:|---:|---:|\n${methodRows || '| n/a | 0 | n/a | n/a | n/a |'}\n\n${official ? `本次官方 evaluator：${official.passCount}/${official.totalCount} checkpoints，通过率 ${official.passPercentage}%，完整成功=${official.success}。` : '本 run 没有官方 evaluator，只能作为协议测试。'}\n\n## 完整性和边界\n\n- artifact verification: ${verification?.valid ?? 'not run'}\n- private leak: ${verification ? !verification.noPrivateLeak : 'not checked'}\n- protocolOnly: ${official ? 'false' : 'true'}\n- attribution/evolution claim eligible: false，需完成带 gold 的归因实验和第二轮迁移实验。\n\n## 结论\n\n${official ? '真实 AppWorld 执行与官方评分链路已经建立；单个 canary 只证明工程链路，不证明 M3 优于对照方法。' : '当前仅证明协议和 artifact 契约可运行，不能报告任务效果。'}\n`;
   await fs.writeFile(path.join(dir, 'report.md'), reportText, 'utf8'); console.log(JSON.stringify({ report: path.join(dir, 'report.md') }, null, 2));
 }
-async function packageCommand() { const manifestFile = path.join(ORG_ROOT, 'orgbench.manifest.json'); if (!(await exists(manifestFile))) await manifest(); const files = ['schema.mjs', 'orgbench_experiment.mjs', 'core/random.mjs', 'core/stateGraph.mjs', 'core/scenario.mjs', 'core/policy.mjs', 'core/modelPolicy.mjs', 'core/janusClient.mjs', 'core/evolutionCoordinator.mjs', 'evaluators/metrics.mjs', 'adapters/appworld.mjs', 'adapters/theagentcompany.mjs', 'adapters/marble.mjs', 'adapters/who_when.mjs', 'adapters/swebench.mjs', 'orgbench.manifest.json', 'experiment_plan.json']; const output = path.join(ROOT, 'outputs', 'ubuddy-orgbench-v1-package.json'); await writeJson(output, { benchmark: BENCHMARK_VERSION, sourceRoot: ORG_ROOT, files, note: 'Use the Janus repository package for source distribution; this JSON is a manifest and contains no secrets or run outputs.' }); console.log(JSON.stringify({ manifest: output, fileCount: files.length }, null, 2)); }
+async function packageCommand() { const manifestFile = path.join(ORG_ROOT, 'orgbench.manifest.json'); if (!(await exists(manifestFile))) await manifest(); const files = ['schema.mjs', 'orgbench_experiment.mjs', 'core/random.mjs', 'core/stateGraph.mjs', 'core/scenario.mjs', 'core/policy.mjs', 'core/modelPolicy.mjs', 'core/janusClient.mjs', 'core/evolutionCoordinator.mjs', 'core/benchmarkProtocol.mjs', 'core/faultInjection.mjs', 'evaluators/metrics.mjs', 'evaluators/eightDimensions.mjs', 'evaluators/independentVerifier.mjs', 'adapters/appworld.mjs', 'adapters/theagentcompany.mjs', 'adapters/marble.mjs', 'adapters/who_when.mjs', 'adapters/swebench.mjs', 'schemas/task-gold.schema.json', 'schemas/fault-manifest.schema.json', 'schemas/attribution-gold.schema.json', 'schemas/run-config.schema.json', 'BENCHMARK_PROTOCOL.md', 'REMOTE_RUNBOOK_CN.md', 'task_protocol.manifest.json', 'transfer_pairs.manifest.json', 'fault_manifest.example.json', 'benchmark.config.example.json', 'orgbench.manifest.json', 'experiment_plan.json']; const output = path.join(ROOT, 'outputs', 'ubuddy-orgbench-v2-package.json'); await writeJson(output, { benchmark: BENCHMARK_VERSION, sourceRoot: ORG_ROOT, files, note: 'Use the Janus repository package for source distribution; this JSON is a manifest and contains no secrets or run outputs.' }); console.log(JSON.stringify({ manifest: output, fileCount: files.length }, null, 2)); }
 
 if (process.argv[1] && path.resolve(process.argv[1]) === path.resolve(fileURLToPath(import.meta.url))) {
   try {

@@ -1,0 +1,14 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://janus.local/schemas/ubuddy-orgbench/task-gold.schema.json",
+  "title": "uBuddy-AppWorld task gold",
+  "type": "object",
+  "required": ["taskId", "taskFamily", "requirements", "requiredDependencies", "acceptableDecomposition"],
+  "properties": {
+    "taskId": {"type": "string"}, "taskFamily": {"type": "string"},
+    "requirements": {"type": "array", "items": {"type": "object", "required": ["id", "capability"], "properties": {"id": {"type": "string"}, "capability": {"type": "string"}, "required": {"type": "boolean"}}}},
+    "requiredDependencies": {"type": "array", "items": {"type": "object", "required": ["from", "to"], "properties": {"from": {"type": "string"}, "to": {"type": "string"}}}},
+    "forbiddenDependencies": {"type": "array", "items": {"type": "object", "required": ["from", "to"]}},
+    "acceptableDecomposition": {"type": "object", "required": ["minLeaves", "maxLeaves"], "properties": {"minLeaves": {"type": "integer", "minimum": 1}, "maxLeaves": {"type": "integer", "minimum": 1}, "allowedCapabilities": {"type": "array", "items": {"type": "string"}}}}
+  }
+}

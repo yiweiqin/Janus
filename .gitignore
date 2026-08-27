@@ -16,6 +16,7 @@ scripts/__pycache__/
 .env
 .env.local
 .env.*.local
+deploy/env/orgbench-init.env
 config/codex/auth.json
 *.pem
 !*.pem.example

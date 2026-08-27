@@ -4,6 +4,9 @@ import { buildScenario } from '../core/scenario.mjs';
 import { applyOrganizationPlaybook, makeEpisode } from '../orgbench_test_exports.mjs';
 import { assertActionAllowed } from '../core/permissions.mjs';
 import { createEvolutionCoordinator } from '../core/evolutionCoordinator.mjs';
+import { validateRunConfig, assertFamilyDisjoint } from '../core/benchmarkProtocol.mjs';
+import { faultEventMetadata, validateFaultManifest } from '../core/faultInjection.mjs';
+import { scoreAttributionRows, scoreEvolutionPairs } from '../evaluators/eightDimensions.mjs';
 
 test('scenario creates public uBuddy profiles and private internal pools', () => {
   const scenario = buildScenario({ seed: 20260826 });
@@ -127,4 +130,29 @@ test('Round 2 organization playbook changes the observable task tree and records
   assert.deepEqual(result.applied, ['review_after_execution']);
   assert.ok(result.tasks.some((task) => task.id === 'policy_review' && task.capability === 'review'));
   assert.deepEqual(base, [{ id: 'research', title: 'Research', description: 'Collect evidence', capability: 'research', assigneeUbuddyId: 'ubuddy_B', dependsOn: [] }]);
+});
+
+test('v2 exposes all eight benchmark dimensions from raw protocol evidence', () => {
+  const episode = makeEpisode({ taskId: 'eight_dimensions', method: 'M3_ours', seed: 20260826, injectFault: 'internal_agent_failure' });
+  assert.equal(episode.metrics.dimensionOrder.length, 8);
+  assert.ok(episode.metrics.benchmarkDimensions.decompositionDependency.targetCoverage >= 0);
+  assert.ok(episode.metrics.benchmarkDimensions.crossUbuddyAllocation.meanInternalAllocationRegret >= 0);
+  assert.equal(episode.metrics.benchmarkDimensions.faultRecovery.faultInjected, true);
+});
+
+test('academic protocol locks methods, seeds and family-disjoint splits', () => {
+  assert.equal(validateRunConfig({ benchmark: 'ubuddy_orgbench_v2', split: 'locked_test', methods: ['M3_ours'], seeds: [20260821] }), true);
+  assert.equal(assertFamilyDisjoint({ development: [{ taskFamily: 'a' }], locked_test: [{ taskFamily: 'b' }] }), true);
+  assert.throws(() => assertFamilyDisjoint({ development: [{ taskFamily: 'a' }], locked_test: [{ taskFamily: 'a' }] }), /task_family_leakage/);
+});
+
+test('fault manifest and layered attribution metrics are deterministic', () => {
+  const fault = { faultType: 'tool_unavailable', injectionPoint: 'execution', expectedRecoveryPolicy: 'reassign', seed: 1 };
+  assert.equal(validateFaultManifest(fault), true);
+  assert.equal(faultEventMetadata(fault, 0).injectedAt, '1970-01-01T00:00:00.000Z');
+  const scored = scoreAttributionRows([{ goldLayer: 'internal_agent', predictedLayer: 'internal_agent', goldCause: ['tool'], predictedCause: ['tool'], goldEvidenceRefs: ['e1'], evidenceRefs: ['e1'], confidence: 0.9 }]);
+  assert.equal(scored.accuracy, 1);
+  assert.equal(scored.multiCauseIoU, 1);
+  const evolution = scoreEvolutionPairs([{ round1: { officialCheckpointRate: 0.5 }, round2: { officialCheckpointRate: 0.75 }, update: { adopted: true, goldValid: true } }]);
+  assert.equal(evolution.meanTransferGain, 0.25);
 });

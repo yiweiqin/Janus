@@ -2,26 +2,39 @@ const GRAPH_VERSION = 'ubuddy_collaboration_graph_v1';
 
 export async function publishCollaborationGraph(pool, { viewerUserId = '', graph = {}, apiError = defaultApiError } = {}) {
   const graphId = String(graph.graphId || '').trim();
+  const isDelta = String(graph.mode || '').toLowerCase() === 'delta';
   const root = graph.root || (graph.nodes || []).find((node) => node.kind === 'root') || {};
-  if (!graphId || graph.graphVersion !== GRAPH_VERSION || !root.nodeId) throw apiError(400, 'invalid_collaboration_graph');
+  if (!graphId || graph.graphVersion !== GRAPH_VERSION || (!isDelta && !root.nodeId)) throw apiError(400, 'invalid_collaboration_graph');
   const scopeDelegationIds = [...new Set((graph.nodes || []).map((node) => String(node.delegationId || '')).filter(Boolean))];
   const scopeGroupId = String(root.publicMetadata?.groupId || graph.groupId || '').trim();
-  const authorized = String(root.ownerUserId || graph.ownerUserId || '') === viewerUserId
-    || (scopeDelegationIds.length && (await pool.query(`SELECT 1 FROM agent_delegations WHERE id=ANY($1::text[])
-      AND (requester_user_id=$2 OR recipient_user_id=$2) LIMIT 1`, [scopeDelegationIds, viewerUserId])).rowCount > 0)
-    || (scopeGroupId && (await pool.query(`SELECT 1 FROM collaboration_group_members WHERE group_id=$1 AND user_id=$2 AND status!='removed' LIMIT 1`, [scopeGroupId, viewerUserId])).rowCount > 0);
-  if (!authorized) throw apiError(403, 'collaboration_graph_forbidden');
   const client = await pool.connect();
   try {
     await client.query('BEGIN');
     const existing = (await client.query('SELECT * FROM collaboration_graphs WHERE id=$1 FOR UPDATE', [graphId])).rows[0];
-    const isDelta = String(graph.mode || '').toLowerCase() === 'delta';
+    if (isDelta && !existing) throw apiError(409, 'collaboration_graph_delta_base_missing');
+    const authorized = existing
+      ? await storedGraphParticipant(client, graphId, viewerUserId)
+      : String(root.ownerUserId || graph.ownerUserId || '') === viewerUserId
+        || (scopeDelegationIds.length && (await client.query(`SELECT 1 FROM agent_delegations WHERE id=ANY($1::text[])
+          AND (requester_user_id=$2 OR recipient_user_id=$2) LIMIT 1`, [scopeDelegationIds, viewerUserId])).rowCount > 0)
+        || (scopeGroupId && (await client.query(`SELECT 1 FROM collaboration_group_members WHERE group_id=$1 AND user_id=$2 AND status!='removed' LIMIT 1`, [scopeGroupId, viewerUserId])).rowCount > 0);
+    if (!authorized) throw apiError(403, 'collaboration_graph_forbidden');
     if (isDelta) {
-      if (!existing) throw apiError(409, 'collaboration_graph_delta_base_missing');
       const baseRevision = Number(graph.baseRevision || 0);
-      const eventIds = (graph.graphEvents || graph.recentEvents || []).map((event) => String(event.eventId || '').trim()).filter(Boolean);
+      const incomingEvents = (graph.graphEvents || graph.recentEvents || []).slice(0, 500)
+        .sort((left, right) => Number(left.graphRevision || 0) - Number(right.graphRevision || 0));
+      const eventIds = incomingEvents.map((event) => String(event.eventId || '').trim()).filter(Boolean);
+      const present = eventIds.length
+        ? (await client.query(
+          `SELECT event_id FROM collaboration_graph_events WHERE graph_id=$1 AND event_id IN (${eventIds.map((_, index) => `$${index + 2}`).join(',')})`,
+          [graphId, ...eventIds],
+        )).rowCount
+        : 0;
+      if (eventIds.length && present === eventIds.length && baseRevision === Number(existing.current_revision || 0)) {
+        await client.query('COMMIT');
+        return { ok: true, idempotent: true, mode: 'delta', graphVersion: GRAPH_VERSION, graphId, baseRevision, revision: Number(existing.current_revision || 0) };
+      }
       if (baseRevision !== Number(existing.current_revision || 0)) {
-        const present = eventIds.length ? Number((await client.query('SELECT count(*) AS count FROM collaboration_graph_events WHERE event_id=ANY($1::text[])', [eventIds])).rows[0]?.count || 0) : 0;
         if (eventIds.length && present === eventIds.length) {
           await client.query('COMMIT');
           return { ok: true, idempotent: true, mode: 'delta', graphVersion: GRAPH_VERSION, graphId, baseRevision, revision: Number(existing.current_revision || 0) };
@@ -31,7 +44,7 @@ export async function publishCollaborationGraph(pool, { viewerUserId = '', graph
       let revision = baseRevision;
       for (const node of (graph.changedNodes || []).slice(0, 500)) await upsertNode(client, graphId, node);
       for (const edge of (graph.changedEdges || []).slice(0, 1000)) await upsertEdge(client, graphId, edge);
-      for (const event of (graph.graphEvents || graph.recentEvents || []).slice(0, 500)) {
+      for (const event of incomingEvents) {
         const eventId = String(event.eventId || '').trim();
         if (!eventId || (await client.query('SELECT 1 FROM collaboration_graph_events WHERE event_id=$1', [eventId])).rowCount) continue;
         revision += 1;
@@ -67,10 +80,28 @@ export async function publishCollaborationGraph(pool, { viewerUserId = '', graph
       await client.query(`INSERT INTO collaboration_graph_events(graph_id,graph_revision,event_id,event_type,node_id,public_patch_json,actor_user_id,actor_agent_instance_id,created_at)
         VALUES($1,$2,$3,$4,$5,$6,$7,$8,COALESCE($9::timestamptz,now()))`, [graphId, revision, eventId, String(event.eventType || 'graph_updated'), String(event.nodeId || ''), safePublicJson(event.publicPatch), viewerUserId, String(event.actorAgentInstanceId || ''), event.createdAt || null]);
     }
-    await client.query('UPDATE collaboration_graphs SET current_revision=$2,updated_at=now() WHERE id=$1', [graphId, revision]);
+    // Keep the cloud cursor aligned with the authoritative local snapshot
+    // revision even when the snapshot carries only a bounded event window.
+    // The graph state is complete via nodes/edges; omitted historical events
+    // leave harmless revision gaps and future deltas continue from this cursor.
+    const snapshotRevision = Number(graph.revision || 0);
+    const cloudRevision = Math.max(revision, snapshotRevision);
+    await client.query('UPDATE collaboration_graphs SET current_revision=$2,updated_at=now() WHERE id=$1', [graphId, cloudRevision]);
     await client.query('COMMIT');
-    return { ok: true, graphVersion: GRAPH_VERSION, graphId, revision };
+    return { ok: true, graphVersion: GRAPH_VERSION, graphId, revision: cloudRevision };
   } catch (error) { await client.query('ROLLBACK'); throw error; } finally { client.release(); }
+}
+
+async function storedGraphParticipant(client, graphId, viewerUserId) {
+  if (!viewerUserId) return false;
+  const graph = (await client.query('SELECT owner_user_id,root_group_id FROM collaboration_graphs WHERE id=$1', [graphId])).rows[0];
+  if (!graph) return false;
+  if (graph.owner_user_id === viewerUserId) return true;
+  if ((await client.query('SELECT 1 FROM collaboration_graph_nodes WHERE graph_id=$1 AND owner_user_id=$2 LIMIT 1', [graphId, viewerUserId])).rowCount) return true;
+  if ((await client.query(`SELECT 1 FROM collaboration_graph_nodes n JOIN agent_delegations d ON d.id=n.delegation_id
+    WHERE n.graph_id=$1 AND (d.requester_user_id=$2 OR d.recipient_user_id=$2) LIMIT 1`, [graphId, viewerUserId])).rowCount) return true;
+  return Boolean(graph.root_group_id && (await client.query(`SELECT 1 FROM collaboration_group_members
+    WHERE group_id=$1 AND user_id=$2 AND status!='removed' LIMIT 1`, [graph.root_group_id, viewerUserId])).rowCount);
 }
 
 async function upsertNode(client, graphId, node) {
@@ -104,13 +135,7 @@ export async function readCollaborationGraph(pool, {
   } else throw apiError(400, 'collaboration_graph_scope_required');
   const graph = (await pool.query(`SELECT cg.* FROM collaboration_graphs cg WHERE ${conditions.join(' AND ')} ORDER BY cg.updated_at DESC LIMIT 1`, params)).rows[0];
   if (!graph) throw apiError(404, 'collaboration_graph_not_found');
-  const access = (await pool.query(`SELECT (
-      cg.owner_user_id=$2 OR EXISTS(SELECT 1 FROM collaboration_graph_nodes n WHERE n.graph_id=cg.id AND n.owner_user_id=$2)
-      OR EXISTS(SELECT 1 FROM collaboration_graph_nodes n JOIN agent_delegations d ON d.id=n.delegation_id
-        WHERE n.graph_id=cg.id AND (d.requester_user_id=$2 OR d.recipient_user_id=$2))
-      OR EXISTS(SELECT 1 FROM collaboration_group_members m WHERE m.group_id=cg.root_group_id AND m.user_id=$2 AND m.status!='removed')
-    ) AS allowed FROM collaboration_graphs cg WHERE cg.id=$1`, [graph.id, viewerUserId])).rows[0];
-  if (!access?.allowed) throw apiError(403, 'collaboration_graph_forbidden');
+  if (!await storedGraphParticipant(pool, graph.id, viewerUserId)) throw apiError(403, 'collaboration_graph_forbidden');
   const [nodesResult, edgesResult, eventsResult] = await Promise.all([
     pool.query('SELECT * FROM collaboration_graph_nodes WHERE graph_id=$1 ORDER BY depth,created_at,node_id', [graph.id]),
     pool.query('SELECT * FROM collaboration_graph_edges WHERE graph_id=$1 ORDER BY created_at,edge_id', [graph.id]),

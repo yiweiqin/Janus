@@ -1,4 +1,5 @@
 import { methodFeatures } from '../schema.mjs';
+import { evaluateEightDimensions } from './eightDimensions.mjs';
 
 export function evaluateEpisode({ scenario, method, graph, events, officialEvaluation = null }) {
   const taskNodes = [...graph.nodes.values()].filter((node) => node.kind !== 'project');
@@ -22,6 +23,7 @@ export function evaluateEpisode({ scenario, method, graph, events, officialEvalu
   const internalAssignments = events.filter((event) => event.eventKind === 'internal_agent_selected');
   const regrets = internalAssignments.map((event) => { const node = graph.nodes.get(event.sourceId); const pool = scenario.internalPools?.[event.metadata?.ownerUbuddyId]?.agents || []; const selected = pool.find((agent) => agent.agentInstanceId === event.metadata?.agentInstanceId); const eligible = pool.filter((agent) => agent.capabilities.includes(node?.capability) || agent.capabilities.includes('execution')); const best = Math.max(0, ...(eligible.length ? eligible : pool).map((agent) => agent.strength || 0)); return selected ? Math.max(0, best - (selected.strength || 0)) : 1; });
   const officialCheckpointRate = officialEvaluation?.totalCount ? officialEvaluation.passCount / officialEvaluation.totalCount : null;
+  const eightDimensions = evaluateEightDimensions({ scenario, method, graph, events, officialEvaluation, gold: scenario.hiddenTruth, fault: scenario.injectFault ? { faultType: scenario.injectFault } : null });
   return {
     method,
     projectSuccess,
@@ -49,6 +51,7 @@ export function evaluateEpisode({ scenario, method, graph, events, officialEvalu
     organizationFormationEventCount: events.findIndex((event) => event.eventKind === 'execution_started') + 1,
     checkpointPerBoardUpdate: officialEvaluation?.passCount != null ? officialEvaluation.passCount / Math.max(1, events.filter((event) => event.eventKind === 'progress_published').length) : null,
     protocolFeatures: features,
+    ...eightDimensions,
   };
 }
 

@@ -1,0 +1,13 @@
+{
+  "benchmark": "ubuddy_orgbench_v2",
+  "unit": "task family",
+  "rule": "all instances from one family stay in one split",
+  "splits": {
+    "development": ["042a9fc", "f323bae", "90adc3f"],
+    "validation": ["652485c", "32616b5", "6f4b9a5"],
+    "locked_test": ["8ce6779", "bde252e", "83a7951", "986aa4e", "b9c5c9a", "d18139b", "f861c32"],
+    "boundary": ["6b6ca61", "9dabbc9"]
+  },
+  "goldPolicy": "requirements and dependency constraints are annotated without prescribing a unique task tree",
+  "lockedTestMutation": "forbidden after protocol freeze"
+}

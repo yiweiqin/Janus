@@ -1,6 +1,8 @@
 {
-  "benchmark": "ubuddy_orgbench_v1",
-  "version": "v1",
+  "benchmark": "ubuddy_orgbench_v2",
+  "name": "uBuddy-AppWorld Hybrid Benchmark",
+  "version": "v2",
+  "protocol": "BENCHMARK_PROTOCOL.md",
   "approvalRequired": false,
   "primary": {
     "name": "TheAgentCompany",

@@ -1155,7 +1155,10 @@ export async function createRuntime({ root = '', workspaceRoot = '', isDev = fal
       const cursor = collaborationGraphCloudCursors.get(graphId) || { localRevision: 0, cloudRevision: 0 };
       if (!cursor.cloudRevision) {
         const result = await socialRelay.publishCollaborationGraph(graph);
-        const sentLocalRevision = Math.max(0, ...(graph.recentEvents || []).map((event) => Number(event.graphRevision || 0)));
+        // `revision` is the authoritative local graph cursor.  `recentEvents`
+        // is intentionally bounded for payload size, so deriving the cursor
+        // from the returned event window can make us skip older/newer events.
+        const sentLocalRevision = Number(graph.revision || 0);
         collaborationGraphCloudCursors.set(graphId, { localRevision: sentLocalRevision, cloudRevision: Number(result?.revision || 0) });
       }
       let activeCursor = collaborationGraphCloudCursors.get(graphId) || { localRevision: 0, cloudRevision: 0 };
@@ -1170,7 +1173,7 @@ export async function createRuntime({ root = '', workspaceRoot = '', isDev = fal
         } catch (error) {
           if (Number(error?.status || 0) !== 409 && String(error?.code || '') !== 'COLLABORATION_GRAPH_REVISION_CONFLICT') throw error;
           result = await socialRelay.publishCollaborationGraph(graph);
-          activeCursor = { localRevision: Math.max(0, ...(graph.recentEvents || []).map((event) => Number(event.graphRevision || 0))), cloudRevision: Number(result?.revision || 0) };
+          activeCursor = { localRevision: Number(graph.revision || 0), cloudRevision: Number(result?.revision || 0) };
           collaborationGraphCloudCursors.set(graphId, activeCursor);
         }
         if (activeCursor.localRevision >= Number(graph.revision || 0)) break;

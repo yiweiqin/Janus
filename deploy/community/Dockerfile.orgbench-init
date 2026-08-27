@@ -1,0 +1,12 @@
+FROM node:22-bookworm-slim
+
+ENV NODE_ENV=production
+WORKDIR /opt/janus
+COPY package.json package-lock.json ./
+RUN npm ci --omit=dev --ignore-scripts --no-audit --no-fund
+COPY cloud ./cloud
+COPY src ./src
+COPY experiments/ubuddy_orgbench ./experiments/ubuddy_orgbench
+RUN mkdir -p /var/lib/janus/orgbench-init && chown -R node:node /var/lib/janus
+USER node
+CMD ["node", "experiments/ubuddy_orgbench/remote/remoteInit.mjs"]

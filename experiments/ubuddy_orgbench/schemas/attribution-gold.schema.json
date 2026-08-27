@@ -1,0 +1,11 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://janus.local/schemas/ubuddy-orgbench/attribution-gold.schema.json",
+  "title": "uBuddy-AppWorld layered attribution gold",
+  "type": "object", "required": ["traceId", "goldLayer", "goldCause", "goldEvidenceRefs"],
+  "properties": {
+    "traceId": {"type": "string"}, "goldLayer": {"type": "string", "enum": ["requester_ubuddy", "recipient_ubuddy", "internal_agent", "environment"]},
+    "goldCause": {"type": "array", "items": {"type": "string"}}, "goldEvidenceRefs": {"type": "array", "items": {"type": "string"}},
+    "confidence": {"type": "number", "minimum": 0, "maximum": 1}
+  }
+}

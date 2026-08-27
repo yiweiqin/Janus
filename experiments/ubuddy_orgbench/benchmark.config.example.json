@@ -1,0 +1,10 @@
+{
+  "benchmark": "ubuddy_orgbench_v2",
+  "adapter": "AppWorld",
+  "split": "locked_test",
+  "methods": ["M0_single_ubuddy", "M1_static_profile", "M2_generic_shared", "M3_ours"],
+  "seeds": [20260821, 20260822, 20260823],
+  "taskManifest": "appworld_orgbench_tasks.manifest.json",
+  "faultManifest": "schemas/fault-manifest.schema.json",
+  "outputDir": "/data/janus-runs/orgbench/main"
+}

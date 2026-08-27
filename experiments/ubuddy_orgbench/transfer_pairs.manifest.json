@@ -1,0 +1,16 @@
+{
+  "benchmark": "ubuddy_orgbench_v2",
+  "pairingRule": "same AppWorld taskFamily, distinct task instance; no identical initial state",
+  "pairs": [
+    {"family": "042a9fc", "round1": "042a9fc_1", "round2": "042a9fc_2"},
+    {"family": "652485c", "round1": "652485c_1", "round2": "652485c_2"},
+    {"family": "8ce6779", "round1": "8ce6779_1", "round2": "8ce6779_2"},
+    {"family": "f323bae", "round1": "f323bae_1", "round2": "f323bae_2"},
+    {"family": "32616b5", "round1": "32616b5_1", "round2": "32616b5_2"},
+    {"family": "90adc3f", "round1": "90adc3f_1", "round2": "90adc3f_2"},
+    {"family": "6f4b9a5", "round1": "6f4b9a5_1", "round2": "6f4b9a5_2"},
+    {"family": "83a7951", "round1": "83a7951_1", "round2": "83a7951_2"},
+    {"family": "986aa4e", "round1": "986aa4e_1", "round2": "986aa4e_2"},
+    {"family": "d18139b", "round1": "d18139b_1", "round2": "d18139b_2"}
+  ]
+}

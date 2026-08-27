@@ -132,6 +132,25 @@ services:
     security_opt: [no-new-privileges:true]
     networks: [backend]
 
+  orgbench-init:
+    profiles: ["orgbench"]
+    build:
+      context: ../..
+      dockerfile: deploy/community/Dockerfile.orgbench-init
+    env_file: [../env/orgbench-init.env]
+    secrets:
+      - api_jwt_secret
+    depends_on:
+      migrator: { condition: service_completed_successfully }
+      cloud-api: { condition: service_healthy }
+    volumes:
+      - ../../experiments/runs/remote-init:/var/lib/janus/orgbench-init
+    read_only: true
+    tmpfs: [/tmp]
+    security_opt: [no-new-privileges:true]
+    networks: [backend]
+    restart: "no"
+
   caddy:
     image: caddy:2.10-alpine
     restart: unless-stopped

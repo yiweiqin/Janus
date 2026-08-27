@@ -1,23 +1,19 @@
 {
-  "benchmark": "ubuddy_orgbench_v1",
-  "methods": [
-    "M0_single_ubuddy",
-    "M1_static_profile",
-    "M2_generic_shared",
-    "M3_ours"
-  ],
-  "seeds": [
-    20260821,
-    20260822,
-    20260823
-  ],
-  "primaryEpisodes": 288,
-  "controlledEpisodes": 480,
-  "marbleEpisodes": 144,
-  "attributionOutputs": 768,
-  "evolutionEpisodes": 216,
-  "deferred": [
-    "swebench_verified"
-  ],
-  "generatedAt": "2026-08-26T12:57:21.595Z"
+  "benchmark": "ubuddy_orgbench_v2",
+  "name": "uBuddy-AppWorld Hybrid Benchmark",
+  "methods": ["M0_single_ubuddy", "M1_static_profile", "M2_generic_shared", "M3_ours"],
+  "evolutionMethods": ["E0_static", "E1_organization_only", "E2_individual_only", "E3_joint_gated", "E4_joint_no_gate"],
+  "seeds": [20260821, 20260822, 20260823],
+  "splitUnit": "task_family",
+  "lockedTestTaskCount": 19,
+  "controlledLockedTestEpisodes": 228,
+  "faultTypes": 8,
+  "faultStressEpisodesMaximum": 1824,
+  "transferPairCount": 10,
+  "evolutionPairEpisodes": 300,
+  "primaryMetric": "AppWorld official checkpoint rate",
+  "processDimensions": 8,
+  "statistics": ["mean", "95% bootstrap CI", "paired difference", "effect size"],
+  "deferred": ["swebench_verified", "theagentcompany_external_validation"],
+  "formalRunsRemoteOnly": true
 }

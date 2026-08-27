@@ -1,0 +1,11 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://janus.local/schemas/ubuddy-orgbench/fault-manifest.schema.json",
+  "title": "uBuddy-AppWorld fault manifest",
+  "type": "object", "required": ["faultType", "injectionPoint", "expectedRecoveryPolicy"],
+  "properties": {
+    "faultType": {"type": "string", "enum": ["internal_agent_failure", "recipient_timeout", "stale_profile", "tool_unavailable", "superseded_result", "requirement_revision", "board_conflict", "agent_overload"]},
+    "injectionPoint": {"type": "string"}, "seed": {"type": "integer"},
+    "expectedRecoveryPolicy": {"type": "string"}, "severity": {"type": "string", "enum": ["recoverable", "critical"]}
+  }
+}
