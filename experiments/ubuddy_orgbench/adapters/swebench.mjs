@@ -1,0 +1,1 @@
+export function swebenchAdapter() { return { name: 'swebench_verified', taskCount: 12, phase: 2, evaluator: 'official_docker_harness', approvalRequired: false, status: 'deferred_until_main_protocol_stable' }; }

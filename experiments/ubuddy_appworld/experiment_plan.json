@@ -1,0 +1,52 @@
+{
+  "benchmark": "ubuddy_appworld_hybrid_v1",
+  "innovationPoints": [
+    "versioned_visible_capability_profiles_and_shared_collaboration_state",
+    "organization_individual_process_attribution_and_evidence_gated_joint_evolution"
+  ],
+  "main": {
+    "tasks": 12,
+    "seeds": [20260821, 20260822, 20260823],
+    "methods": ["M0_single_agent", "M1_static_profile", "M2_generic_shared", "M3_ours"],
+    "episodes": 144,
+    "primaryMetric": "official_appworld_success",
+    "secondaryMetrics": ["subtask_success", "dependency_violations", "rework_count", "stale_profile_use", "superseded_result_use", "private_leak_rate", "tokens", "latency"]
+  },
+  "attribution": {
+    "methods": ["A0_final_outcome_only", "A1_unstructured_trace", "A2_single_layer_credit", "A3_ours_dual_layer_gated"],
+    "goldTrajectories": 96,
+    "categories": ["decomposition_error", "recipient_selection_error", "stale_profile", "dependency_order_error", "individual_capability_gap", "tool_or_environment_failure", "requirement_revision", "insufficient_evidence"],
+    "metrics": ["macro_f1", "layer_confusion_rate", "evidence_precision", "evidence_recall", "ece", "correct_block_rate"]
+  },
+  "evolution": {
+    "taskPairs": [
+      ["6f4b9a5_1", "6f4b9a5_2"],
+      ["042a9fc_1", "042a9fc_2"],
+      ["652485c_1", "652485c_2"],
+      ["b9c5c9a_1", "b9c5c9a_2"],
+      ["f323bae_1", "f323bae_2"],
+      ["f861c32_1", "f861c32_2"]
+    ],
+    "methods": ["E0_static", "E1_organization_only", "E2_individual_only", "E3_joint_gated", "E4_joint_no_gate"],
+    "mainEpisodes": 120,
+    "noGateStressEpisodes": 18,
+    "adoptionRule": "source evidence + official validation + confidence threshold",
+    "rollbackRule": "revert update when paired transfer success decreases or privacy/old-result invariants fail"
+  },
+  "external": {
+    "benchmark": "WebArena-Verified",
+    "role": "real_web_external_validation",
+    "tasks": [552, 553, 554, 555, 562, 563, 564, 565],
+    "methods": ["M0_single_agent", "M1_static_profile", "M2_generic_shared", "M3_ours"],
+    "seeds": [20260821, 20260822, 20260823],
+    "episodes": 96
+  },
+  "evidenceLevels": [
+    "protocol_artifacts_run",
+    "official_evaluator_matches_gold",
+    "attribution_matches_blind_gold",
+    "attribution_changes_next_round",
+    "official_transfer_performance_improves"
+  ]
+}
+

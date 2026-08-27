@@ -1,0 +1,125 @@
+{
+  "benchmark": "ubuddy_orgbench_v1",
+  "version": "v1",
+  "approvalRequired": false,
+  "primary": {
+    "name": "TheAgentCompany",
+    "taskCount": 24,
+    "status": "adapter_manifest",
+    "taskIds": [
+      "pm-ask-for-issue-and-create-in-gitlab-image",
+      "pm-assign-issues-image",
+      "pm-update-gitlab-issue-from-plane-status-image",
+      "pm-update-plane-issue-from-gitlab-status-image",
+      "ds-answer-spreadsheet-questions-image",
+      "ds-calculate-spreadsheet-stats-image",
+      "ds-merge-multiple-sheets-image",
+      "ds-organise-report-sus-data-image",
+      "sde-check-and-run-unit-test-image",
+      "sde-find-answer-in-codebase-1-image",
+      "sde-fix-factual-mistake-image",
+      "sde-write-a-unit-test-for-append_file-function-image",
+      "hr-collect-feedbacks-image",
+      "hr-create-career-ladder-image",
+      "hr-organize-talent-info-image",
+      "hr-resume-screening-image",
+      "finance-budget-variance-image",
+      "finance-expense-validation-image",
+      "finance-invoice-matching-image",
+      "finance-revenue-reconciliation-image",
+      "qa-escalate-emergency-image",
+      "qa-update-issue-status-according-to-colleagues-image",
+      "admin-make-spreadsheet-image",
+      "admin-read-survey-and-summarise-image"
+    ]
+  },
+  "controlled": {
+    "name": "AppWorld",
+    "strictTaskCount": 37,
+    "boundaryTaskCount": 3,
+    "taskIds": [
+      "042a9fc_1",
+      "042a9fc_2",
+      "652485c_1",
+      "652485c_2",
+      "652485c_3",
+      "8ce6779_1",
+      "8ce6779_2",
+      "8ce6779_3",
+      "6b6ca61_3",
+      "f323bae_1",
+      "f323bae_2",
+      "f323bae_3",
+      "32616b5_1",
+      "32616b5_2",
+      "32616b5_3",
+      "90adc3f_1",
+      "90adc3f_2",
+      "90adc3f_3",
+      "bde252e_1",
+      "bde252e_2",
+      "6f4b9a5_1",
+      "6f4b9a5_2",
+      "6f4b9a5_3",
+      "83a7951_1",
+      "83a7951_2",
+      "83a7951_3",
+      "986aa4e_1",
+      "986aa4e_2",
+      "986aa4e_3",
+      "b9c5c9a_3",
+      "bde252e_3",
+      "d18139b_1",
+      "d18139b_2",
+      "d18139b_3",
+      "f861c32_1",
+      "f861c32_2",
+      "f861c32_3"
+    ],
+    "boundaryTaskIds": [
+      "042a9fc_3",
+      "6b6ca61_2",
+      "9dabbc9_1"
+    ],
+    "manifestSha256": "1cd00d717974becb727def91034e2532f5d44dd55f1646ba5893076318317964"
+  },
+  "organizationReference": {
+    "name": "marble",
+    "coordinationModes": [
+      "graph",
+      "star",
+      "tree"
+    ],
+    "metrics": [
+      "task_completion",
+      "token_consumption",
+      "planning_score",
+      "communication_score",
+      "agent_kpis",
+      "total_milestones"
+    ],
+    "source": "D:/Cli-anything/benchmarks/marble"
+  },
+  "attributionReference": {
+    "name": "who_when",
+    "files": [
+      "Algorithm-Generated.parquet",
+      "Hand-Crafted.parquet"
+    ],
+    "source": "D:/Cli-anything/benchmarks/who-and-when",
+    "role": "attribution_reference"
+  },
+  "externalValidation": {
+    "name": "swebench_verified",
+    "taskCount": 12,
+    "phase": 2,
+    "evaluator": "official_docker_harness",
+    "approvalRequired": false,
+    "status": "deferred_until_main_protocol_stable"
+  },
+  "selectionRules": {
+    "theAgentCompany": "six role families, four tasks each, >=3 checkpoints, >=1 deterministic checkpoint",
+    "appworld": "existing audited 12-task manifest; expand to 40 only after compatibility audit"
+  },
+  "manifestSha256": "bdffb141edaba614622180ab3207cc41f5e5db297cf8eda9ec414f8f1c2ed1a3"
+}

@@ -1,0 +1,13 @@
+{
+  "source": "C:\\Users\\zhang\\Desktop\\src",
+  "target": "D:\\Cli-anything\\Janus\\src",
+  "generatedAt": "2026-08-22T01:27:22.6552057Z",
+  "sourceFileCount": 500,
+  "targetFileCount": 500,
+  "missingCount": 0,
+  "extraCount": 0,
+  "hashMismatchCount": 0,
+  "missing": [],
+  "extra": [],
+  "hashMismatches": []
+}

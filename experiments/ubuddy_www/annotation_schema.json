@@ -1,0 +1,25 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "uBuddy-WWW attribution annotation",
+  "type": "object",
+  "required": ["trajectoryId", "annotatorId", "labels", "evidenceRefs", "insufficientEvidence"],
+  "properties": {
+    "trajectoryId": { "type": "string" },
+    "annotatorId": { "type": "string" },
+    "labels": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["layer", "kind"],
+        "properties": {
+          "layer": { "enum": ["organization", "individual"] },
+          "kind": { "type": "string" },
+          "confidence": { "type": "number", "minimum": 0, "maximum": 1 }
+        }
+      }
+    },
+    "evidenceRefs": { "type": "array", "items": { "type": "string" } },
+    "insufficientEvidence": { "type": "boolean" },
+    "notes": { "type": "string" }
+  }
+}

@@ -431,6 +431,7 @@ async function decidePostgresPersonalRunWithClient(client, {
     const returnedActions = [];
     let conflict = false;
     for (const item of normalized) {
+      let effect = null;
       if (!['skill', 'memory_operation'].includes(item.targetKind) || !['accept', 'reject'].includes(item.decision)) {
         throw simpleApiError('evolution_decision_invalid', 'Personal evolution decision is invalid.', 400);
       }
@@ -467,12 +468,12 @@ async function decidePostgresPersonalRunWithClient(client, {
           await client.query("UPDATE cloud_personal_skill_overlay_versions SET status='rejected',archived_at=now() WHERE user_id=$1 AND id=$2 AND status='candidate'", [userId, candidateId]);
         }
       } else if (item.decision === 'accept') {
-          await applyOneMemoryOperation(client, { userId, run, operationRow, keyring });
+          effect = await applyOneMemoryOperation(client, { userId, run, operationRow, keyring });
       } else {
         await updateOperation(client, operationRow, 'rejected');
       }
       const action = { id: `peaction_${crypto.randomUUID()}`, proposalId: runId, targetKind: item.targetKind,
-        targetId: item.targetId, decision: item.decision, revision: 1, actorDeviceId, automatic, receivedAt: new Date().toISOString() };
+        targetId: item.targetId, decision: item.decision, revision: 1, actorDeviceId, automatic, effect, receivedAt: new Date().toISOString() };
       await client.query(`INSERT INTO cloud_personal_evolution_actions_v4 (
         user_id,id,proposal_id,target_kind,target_id,decision,revision,actor_device_id,payload_json,received_at
       ) VALUES ($1,$2,$3,$4,$5,$6,1,$7,$8::jsonb,$9)`,
@@ -499,6 +500,7 @@ async function applyOneMemoryOperation(client, { userId, run, operationRow, keyr
   if (!baselineMatches && !continued) throw simpleApiError('evolution_memory_baseline_changed', 'Memory baseline changed; reject this operation and request a new Proposal.', 409);
   const currentContent = String(currentPayload.content || '');
   const nextContent = applyMemorySection(currentContent, operation);
+  let activeVersionId = document.current_version_id || '';
   if (nextContent !== currentContent) {
     const versionNo = Number((await client.query('SELECT COALESCE(MAX(version_no),0)+1 AS value FROM cloud_memory_document_versions_v3 WHERE user_id=$1 AND memory_document_id=$2', [userId, document.id])).rows[0].value);
     const id = `memver_${crypto.randomUUID()}`;
@@ -508,6 +510,7 @@ async function applyOneMemoryOperation(client, { userId, run, operationRow, keyr
     await client.query(`INSERT INTO cloud_memory_document_versions_v3 (user_id,id,memory_document_id,version_no,content_hash,payload_json)
       VALUES ($1,$2,$3,$4,$5,$6::jsonb)`, [userId, id, document.id, versionNo, payload.contentHash, JSON.stringify(payload)]);
     await client.query('UPDATE cloud_memory_documents_v3 SET current_version_id=$1,updated_at=now() WHERE user_id=$2 AND id=$3', [id, userId, document.id]);
+    activeVersionId = id;
     await createPostgresAuthoritativeEvidence(client,{keyring,ownerUserId:userId,userAgentInstanceId:run.user_agent_instance_id,
       agentFamilyId:document.agent_family_id,sourceKind:String(payload.visibility || document.visibility || '') === 'work_summary' ? 'task_shared_summary' : 'memory_version',
       sourceId:document.id,sourceVersionId:id,content:nextContent,contextSpaceId:document.context_space_id || '',taskId:document.task_run_id || '',
@@ -515,6 +518,7 @@ async function applyOneMemoryOperation(client, { userId, run, operationRow, keyr
       metadata:{sourceKind:'cloud_personal_evolution',sourceOperationId:operation.id,memoryScope:document.scope}});
   }
   await updateOperation(client, operationRow, 'applied');
+  return { memoryDocumentId: document.id, previousVersionId: document.current_version_id || '', activeVersionId };
 }
 
 async function updateOperation(client, row, status) {

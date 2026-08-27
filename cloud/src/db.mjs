@@ -12,7 +12,7 @@ const MIGRATIONS_DIR = path.join(DATABASE_DIR, 'migrations');
 const PG_MEM_BASELINE_PATH = path.resolve(__dirname, '../test/fixtures/pg-mem-baseline.sql');
 
 export const CLOUD_DATABASE_BASELINE_ID = 'baseline_sync8_081';
-export const CLOUD_DATABASE_MIGRATION_HEAD = '084_janus_clean_slate_identity.sql';
+export const CLOUD_DATABASE_MIGRATION_HEAD = '095_ubuddy_orgbench_evolution_head.sql';
 const CLOUD_REQUIRED_RELATIONS = Object.freeze([
   'accounts',
   'account_memberships_v8',

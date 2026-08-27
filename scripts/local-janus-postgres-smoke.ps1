@@ -1,0 +1,14 @@
+$ErrorActionPreference = 'Stop'
+$names = @(
+  'DATABASE_URL', 'DATABASE_MIGRATOR_URL', 'EVOLUTION_WORKER_DATABASE_URL', 'JANUS_LOCAL_JWT_SECRET', 'JANUS_LOCAL_POSTGRES_SUPER_PASSWORD',
+  'JANUS_EVOLUTION_ACTIVE_KEY_ID', 'JANUS_EVOLUTION_KEYS_JSON', 'JANUS_EVOLUTION_WORKER_ACTIVE_KEY_ID',
+  'JANUS_EVOLUTION_WORKER_PUBLIC_KEYS_JSON', 'JANUS_EVOLUTION_WORKER_PRIVATE_KEYS_JSON',
+  'OPENAI_BASE_URL', 'CRS_OAI_KEY', 'OPENAI_MODEL', 'JANUS_EVOLUTION_MODEL', 'JANUS_EVOLUTION_REASONING_EFFORT'
+)
+foreach ($name in $names) {
+  $value = [Environment]::GetEnvironmentVariable($name, 'User')
+  if ($value) { Set-Item -Path "Env:$name" -Value $value }
+}
+$env:JWT_SECRET = $env:JANUS_LOCAL_JWT_SECRET
+$env:NODE_ENV = 'production'
+node scripts/ubuddy_postgres_smoke.mjs

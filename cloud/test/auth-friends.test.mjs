@@ -1033,6 +1033,42 @@ test('cloud auth and friends API contract', async (t) => {
     assert.equal(bobOverview.status, 200);
     assert.equal(bobOverview.body.groups.some((item) => item.id === groupId), true);
 
+    await ctx.api('/api/social/ubuddy-profile', {
+      method: 'PUT',
+      headers: authHeaders(alice.accessToken),
+      body: { commandId: 'state-graph-profile-alice', socialCapability: 'ubuddy-capability-profile-v1',
+        profile: capabilityProfile(alice.user.id, 1, '擅长跨人任务拆分、委派与验收。') },
+    });
+    await ctx.api('/api/social/ubuddy-profile', {
+      method: 'PUT',
+      headers: authHeaders(bob.accessToken),
+      body: { commandId: 'state-graph-profile-bob', socialCapability: 'ubuddy-capability-profile-v1',
+        profile: capabilityProfile(bob.user.id, 1, '擅长研究执行、文件交付与结果修订。') },
+    });
+
+    const stateGraphWithoutCapability = await ctx.api(`/api/collaboration/state-graph?groupId=${encodeURIComponent(groupId)}`, {
+      headers: authHeaders(alice.accessToken),
+    });
+    assert.equal(stateGraphWithoutCapability.status, 426);
+    assert.equal(stateGraphWithoutCapability.body.error.code, 'agent_work_detail_projection_capability_required');
+
+    const stateGraph = await ctx.api(`/api/collaboration/state-graph?capability=agent-work-detail-projection-v1&groupId=${encodeURIComponent(groupId)}`, {
+      headers: authHeaders(alice.accessToken),
+    });
+    assert.equal(stateGraph.status, 200);
+    assert.equal(stateGraph.body.graphVersion, 'ubuddy_collaboration_state_graph_v1');
+    assert.equal(stateGraph.body.scope.groupId, groupId);
+    assert.equal(stateGraph.body.nodes.some((item) => item.userId === alice.user.id && item.kind === 'ubuddy'), true);
+    assert.equal(stateGraph.body.nodes.some((item) => item.userId === bob.user.id && item.capabilityProfile?.profile?.evidenceSummary === '仅包含公开能力概述'), true);
+    assert.equal(stateGraph.body.edges.some((item) => item.delegationId === delegationId && item.from === `ubuddy:${alice.user.id}` && item.to === `ubuddy:${bob.user.id}`), true);
+    assert.equal(JSON.stringify(stateGraph.body).includes('Alice 私有草稿'), false);
+    assert.equal(JSON.stringify(stateGraph.body).includes('Bob 私有初稿'), false);
+
+    const outsiderStateGraph = await ctx.api(`/api/collaboration/state-graph?capability=agent-work-detail-projection-v1&groupId=${encodeURIComponent(groupId)}`, {
+      headers: authHeaders(carol.accessToken),
+    });
+    assert.equal(outsiderStateGraph.status, 404);
+
     const prematureSubmit = await ctx.api(`/api/collaboration/tasks/${delegationId}/action`, {
       method: 'POST',
       headers: authHeaders(bob.accessToken),
@@ -1110,6 +1146,12 @@ test('cloud auth and friends API contract', async (t) => {
     });
     assert.equal(revision.status, 200);
     assert.equal(revision.body.delegation.status, 'revision_requested');
+
+    const afterRevisionGraph = await ctx.api(`/api/collaboration/state-graph?capability=agent-work-detail-projection-v1&delegationId=${encodeURIComponent(delegationId)}`, {
+      headers: authHeaders(alice.accessToken),
+    });
+    assert.equal(afterRevisionGraph.status, 200);
+    assert.equal(afterRevisionGraph.body.resultVersions.some((item) => item.action === 'submit' && item.decision === 'superseded'), true);
 
     const staleSubmit = await ctx.api(`/api/collaboration/tasks/${delegationId}/action`, {
       method: 'POST',
@@ -1418,6 +1460,22 @@ test('cloud auth and friends API contract', async (t) => {
       method: 'POST', headers: authHeaders(bob.accessToken), body: { action: 'accept_result' },
     });
     assert.equal(unauthorizedAcceptedRetry.status, 403, 'idempotency must not bypass requester authorization');
+
+    const attribution = await ctx.api(`/api/collaboration/attribution?capability=agent-work-detail-projection-v1&delegationId=${encodeURIComponent(delegationId)}`, {
+      headers: authHeaders(alice.accessToken),
+    });
+    assert.equal(attribution.status, 200);
+    assert.equal(attribution.body.attributionVersion, 'ubuddy_process_attribution_v1');
+    assert.equal(attribution.body.trace.some((item) => item.eventKind === 'result_submitted'), true);
+    assert.equal(attribution.body.trace.some((item) => item.eventKind === 'result_accepted'), true);
+    assert.equal(attribution.body.organizationSignals.some((item) => item.kind === 'collaboration_route_validated'), true);
+    assert.equal(attribution.body.individualSignals.some((item) => item.userId === bob.user.id && item.kind === 'delivery_capability_supported'), true);
+    assert.equal(JSON.stringify(attribution.body).includes('Bob 的 uBuddy 私有初稿'), false);
+
+    const outsiderAttribution = await ctx.api(`/api/collaboration/attribution?capability=agent-work-detail-projection-v1&delegationId=${encodeURIComponent(delegationId)}`, {
+      headers: authHeaders(carol.accessToken),
+    });
+    assert.equal(outsiderAttribution.status, 404);
   });
 
   await t.test('秘书消息、在线心跳和跨用户任务委托闭环', async () => {

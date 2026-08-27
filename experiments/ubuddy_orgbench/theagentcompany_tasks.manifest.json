@@ -1,0 +1,154 @@
+{
+  "benchmark": "TheAgentCompany",
+  "version": "1.0.0",
+  "approvalRequired": false,
+  "taskCount": 24,
+  "tasks": [
+    {
+      "taskId": "pm-ask-for-issue-and-create-in-gitlab-image",
+      "roleFamily": "pm",
+      "officialImage": "ghcr.io/theagentcompany/pm-ask-for-issue-and-create-in-gitlab-image:1.0.0",
+      "checkpointAuditRequired": true
+    },
+    {
+      "taskId": "pm-assign-issues-image",
+      "roleFamily": "pm",
+      "officialImage": "ghcr.io/theagentcompany/pm-assign-issues-image:1.0.0",
+      "checkpointAuditRequired": true
+    },
+    {
+      "taskId": "pm-update-gitlab-issue-from-plane-status-image",
+      "roleFamily": "pm",
+      "officialImage": "ghcr.io/theagentcompany/pm-update-gitlab-issue-from-plane-status-image:1.0.0",
+      "checkpointAuditRequired": true
+    },
+    {
+      "taskId": "pm-update-plane-issue-from-gitlab-status-image",
+      "roleFamily": "pm",
+      "officialImage": "ghcr.io/theagentcompany/pm-update-plane-issue-from-gitlab-status-image:1.0.0",
+      "checkpointAuditRequired": true
+    },
+    {
+      "taskId": "ds-answer-spreadsheet-questions-image",
+      "roleFamily": "data_research",
+      "officialImage": "ghcr.io/theagentcompany/ds-answer-spreadsheet-questions-image:1.0.0",
+      "checkpointAuditRequired": true
+    },
+    {
+      "taskId": "ds-calculate-spreadsheet-stats-image",
+      "roleFamily": "data_research",
+      "officialImage": "ghcr.io/theagentcompany/ds-calculate-spreadsheet-stats-image:1.0.0",
+      "checkpointAuditRequired": true
+    },
+    {
+      "taskId": "ds-merge-multiple-sheets-image",
+      "roleFamily": "data_research",
+      "officialImage": "ghcr.io/theagentcompany/ds-merge-multiple-sheets-image:1.0.0",
+      "checkpointAuditRequired": true
+    },
+    {
+      "taskId": "ds-organise-report-sus-data-image",
+      "roleFamily": "data_research",
+      "officialImage": "ghcr.io/theagentcompany/ds-organise-report-sus-data-image:1.0.0",
+      "checkpointAuditRequired": true
+    },
+    {
+      "taskId": "sde-check-and-run-unit-test-image",
+      "roleFamily": "sde",
+      "officialImage": "ghcr.io/theagentcompany/sde-check-and-run-unit-test-image:1.0.0",
+      "checkpointAuditRequired": true
+    },
+    {
+      "taskId": "sde-find-answer-in-codebase-1-image",
+      "roleFamily": "sde",
+      "officialImage": "ghcr.io/theagentcompany/sde-find-answer-in-codebase-1-image:1.0.0",
+      "checkpointAuditRequired": true
+    },
+    {
+      "taskId": "sde-fix-factual-mistake-image",
+      "roleFamily": "sde",
+      "officialImage": "ghcr.io/theagentcompany/sde-fix-factual-mistake-image:1.0.0",
+      "checkpointAuditRequired": true
+    },
+    {
+      "taskId": "sde-write-a-unit-test-for-append_file-function-image",
+      "roleFamily": "sde",
+      "officialImage": "ghcr.io/theagentcompany/sde-write-a-unit-test-for-append_file-function-image:1.0.0",
+      "checkpointAuditRequired": true
+    },
+    {
+      "taskId": "hr-collect-feedbacks-image",
+      "roleFamily": "hr_admin",
+      "officialImage": "ghcr.io/theagentcompany/hr-collect-feedbacks-image:1.0.0",
+      "checkpointAuditRequired": true
+    },
+    {
+      "taskId": "hr-create-career-ladder-image",
+      "roleFamily": "hr_admin",
+      "officialImage": "ghcr.io/theagentcompany/hr-create-career-ladder-image:1.0.0",
+      "checkpointAuditRequired": true
+    },
+    {
+      "taskId": "hr-organize-talent-info-image",
+      "roleFamily": "hr_admin",
+      "officialImage": "ghcr.io/theagentcompany/hr-organize-talent-info-image:1.0.0",
+      "checkpointAuditRequired": true
+    },
+    {
+      "taskId": "admin-read-survey-and-summarise-image",
+      "roleFamily": "hr_admin",
+      "officialImage": "ghcr.io/theagentcompany/admin-read-survey-and-summarise-image:1.0.0",
+      "checkpointAuditRequired": true
+    },
+    {
+      "taskId": "finance-budget-variance-image",
+      "roleFamily": "finance",
+      "officialImage": "ghcr.io/theagentcompany/finance-budget-variance-image:1.0.0",
+      "checkpointAuditRequired": true
+    },
+    {
+      "taskId": "finance-expense-validation-image",
+      "roleFamily": "finance",
+      "officialImage": "ghcr.io/theagentcompany/finance-expense-validation-image:1.0.0",
+      "checkpointAuditRequired": true
+    },
+    {
+      "taskId": "finance-invoice-matching-image",
+      "roleFamily": "finance",
+      "officialImage": "ghcr.io/theagentcompany/finance-invoice-matching-image:1.0.0",
+      "checkpointAuditRequired": true
+    },
+    {
+      "taskId": "finance-revenue-reconciliation-image",
+      "roleFamily": "finance",
+      "officialImage": "ghcr.io/theagentcompany/finance-revenue-reconciliation-image:1.0.0",
+      "checkpointAuditRequired": true
+    },
+    {
+      "taskId": "qa-escalate-emergency-image",
+      "roleFamily": "qa_ops",
+      "officialImage": "ghcr.io/theagentcompany/qa-escalate-emergency-image:1.0.0",
+      "checkpointAuditRequired": true
+    },
+    {
+      "taskId": "qa-update-issue-status-according-to-colleagues-image",
+      "roleFamily": "qa_ops",
+      "officialImage": "ghcr.io/theagentcompany/qa-update-issue-status-according-to-colleagues-image:1.0.0",
+      "checkpointAuditRequired": true
+    },
+    {
+      "taskId": "admin-make-spreadsheet-image",
+      "roleFamily": "qa_ops",
+      "officialImage": "ghcr.io/theagentcompany/admin-make-spreadsheet-image:1.0.0",
+      "checkpointAuditRequired": true
+    },
+    {
+      "taskId": "pm-update-project-milestones-image",
+      "roleFamily": "qa_ops",
+      "officialImage": "ghcr.io/theagentcompany/pm-update-project-milestones-image:1.0.0",
+      "checkpointAuditRequired": true
+    }
+  ],
+  "selectionRule": "six role families x four public tasks; retain only tasks with >=3 checkpoints and >=1 deterministic checkpoint after local audit",
+  "manifestSha256": "0519e2aa4502c7265ed72066419a401e98a610ec1f3639b30c8038f292dc12cc"
+}

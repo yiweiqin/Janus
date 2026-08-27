@@ -1,0 +1,196 @@
+{
+  "manifestVersion": "ubuddy_workarena_task_manifest_v1",
+  "benchmark": "WorkArena++",
+  "sourceRevision": "a772230",
+  "sourceRoot": "D:\\Cli-anything\\benchmarks\\workarena",
+  "selectionRule": {
+    "minSubtasks": 3,
+    "minOracleActions": 10,
+    "minDependencyEdges": 1,
+    "requiresIntermediateCheckpoint": true,
+    "requiresDeterministicEvaluator": true
+  },
+  "selectionNote": "Class IDs are official; instance-dependent checks are filled only after gated ServiceNow access.",
+  "tasks": [
+    {
+      "officialTaskId": "workarena.servicenow.workload-balancing-small-l2",
+      "category": "planning_and_problem_solving",
+      "taskClass": "WorkloadBalancingSmallTaskL2",
+      "level": 2,
+      "condition": "controlled",
+      "status": "selected_official_class_pending_instance_parity",
+      "runtimeChecks": {
+        "subtaskCount": null,
+        "oracleActionCount": null,
+        "dependencyEdgeCount": null,
+        "intermediateCheckpoint": null,
+        "deterministicEvaluator": null
+      }
+    },
+    {
+      "officialTaskId": "workarena.servicenow.work-assignment-small-l2",
+      "category": "planning_and_problem_solving",
+      "taskClass": "WorkAssignmentSmallTaskL2",
+      "level": 2,
+      "condition": "controlled",
+      "status": "selected_official_class_pending_instance_parity",
+      "runtimeChecks": {
+        "subtaskCount": null,
+        "oracleActionCount": null,
+        "dependencyEdgeCount": null,
+        "intermediateCheckpoint": null,
+        "deterministicEvaluator": null
+      }
+    },
+    {
+      "officialTaskId": "workarena.servicenow.basic-filter-problems-and-mark-duplicates-small-l2",
+      "category": "planning_and_problem_solving",
+      "taskClass": "BasicFilterProblemsAndMarkDuplicatesSmallTaskL2",
+      "level": 2,
+      "condition": "controlled",
+      "status": "selected_official_class_pending_instance_parity",
+      "runtimeChecks": {
+        "subtaskCount": null,
+        "oracleActionCount": null,
+        "dependencyEdgeCount": null,
+        "intermediateCheckpoint": null,
+        "deterministicEvaluator": null
+      }
+    },
+    {
+      "officialTaskId": "workarena.servicenow.get-warranty-expiration-date-l2",
+      "category": "information_retrieval",
+      "taskClass": "GetWarrantyExpirationDateTaskL2",
+      "level": 2,
+      "condition": "controlled",
+      "status": "selected_official_class_pending_instance_parity",
+      "runtimeChecks": {
+        "subtaskCount": null,
+        "oracleActionCount": null,
+        "dependencyEdgeCount": null,
+        "intermediateCheckpoint": null,
+        "deterministicEvaluator": null
+      }
+    },
+    {
+      "officialTaskId": "workarena.servicenow.filter-requested-items-and-order-developer-laptop-l2",
+      "category": "information_retrieval",
+      "taskClass": "FilterRequestedItemsAndOrderDeveloperLaptopTaskL2",
+      "level": 2,
+      "condition": "controlled",
+      "status": "selected_official_class_pending_instance_parity",
+      "runtimeChecks": {
+        "subtaskCount": null,
+        "oracleActionCount": null,
+        "dependencyEdgeCount": null,
+        "intermediateCheckpoint": null,
+        "deterministicEvaluator": null
+      }
+    },
+    {
+      "officialTaskId": "workarena.servicenow.dashboard-retrieve-incident-and-min-create-incident-l2",
+      "category": "information_retrieval",
+      "taskClass": "DashboardRetrieveIncidentAndMinCreateIncidentTaskL2",
+      "level": 2,
+      "condition": "controlled",
+      "status": "selected_official_class_pending_instance_parity",
+      "runtimeChecks": {
+        "subtaskCount": null,
+        "oracleActionCount": null,
+        "dependencyEdgeCount": null,
+        "intermediateCheckpoint": null,
+        "deterministicEvaluator": null
+      }
+    },
+    {
+      "officialTaskId": "workarena.servicenow.basic-expense-management-small-l2",
+      "category": "data_driven_reasoning",
+      "taskClass": "BasicExpenseManagementSmallTaskL2",
+      "level": 2,
+      "condition": "natural",
+      "status": "selected_official_class_pending_instance_parity",
+      "runtimeChecks": {
+        "subtaskCount": null,
+        "oracleActionCount": null,
+        "dependencyEdgeCount": null,
+        "intermediateCheckpoint": null,
+        "deterministicEvaluator": null
+      }
+    },
+    {
+      "officialTaskId": "workarena.servicenow.filter-random-expenses-and-find-total-return-small-l2",
+      "category": "data_driven_reasoning",
+      "taskClass": "FilterRandomExpensesAndFindTotalReturnSmallTaskL2",
+      "level": 2,
+      "condition": "natural",
+      "status": "selected_official_class_pending_instance_parity",
+      "runtimeChecks": {
+        "subtaskCount": null,
+        "oracleActionCount": null,
+        "dependencyEdgeCount": null,
+        "intermediateCheckpoint": null,
+        "deterministicEvaluator": null
+      }
+    },
+    {
+      "officialTaskId": "workarena.servicenow.dashboard-retrieve-catalog-and-mean-order-developer-laptop-l2",
+      "category": "data_driven_reasoning",
+      "taskClass": "DashboardRetrieveCatalogAndMeanOrderDeveloperLaptopTaskL2",
+      "level": 2,
+      "condition": "natural",
+      "status": "selected_official_class_pending_instance_parity",
+      "runtimeChecks": {
+        "subtaskCount": null,
+        "oracleActionCount": null,
+        "dependencyEdgeCount": null,
+        "intermediateCheckpoint": null,
+        "deterministicEvaluator": null
+      }
+    },
+    {
+      "officialTaskId": "workarena.servicenow.navigate-and-create-incident-l2",
+      "category": "sophisticated_memory",
+      "taskClass": "NavigateAndCreateIncidentTaskL2",
+      "level": 2,
+      "condition": "natural",
+      "status": "selected_official_class_pending_instance_parity",
+      "runtimeChecks": {
+        "subtaskCount": null,
+        "oracleActionCount": null,
+        "dependencyEdgeCount": null,
+        "intermediateCheckpoint": null,
+        "deterministicEvaluator": null
+      }
+    },
+    {
+      "officialTaskId": "workarena.servicenow.off-board-user-l2",
+      "category": "sophisticated_memory",
+      "taskClass": "OffBoardUserTaskL2",
+      "level": 2,
+      "condition": "natural",
+      "status": "selected_official_class_pending_instance_parity",
+      "runtimeChecks": {
+        "subtaskCount": null,
+        "oracleActionCount": null,
+        "dependencyEdgeCount": null,
+        "intermediateCheckpoint": null,
+        "deterministicEvaluator": null
+      }
+    },
+    {
+      "officialTaskId": "workarena.servicenow.infeasible-navigate-and-create-incident-with-reason-l2",
+      "category": "contextual_understanding_infeasible_tasks",
+      "taskClass": "InfeasibleNavigateAndCreateIncidentWithReasonTaskL2",
+      "level": 2,
+      "condition": "natural",
+      "status": "selected_official_class_pending_instance_parity",
+      "runtimeChecks": {
+        "subtaskCount": null,
+        "oracleActionCount": null,
+        "dependencyEdgeCount": null,
+        "intermediateCheckpoint": null,
+        "deterministicEvaluator": null
+      }
+    }
+  ]
+}

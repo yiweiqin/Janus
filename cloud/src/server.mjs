@@ -114,6 +114,7 @@ import {
   toIso,
 } from './modules/platform/index.mjs';
 import { registerEvolutionRoutes } from './modules/evolution/index.mjs';
+import { registerOrganizationEvolutionRoutes } from './modules/organizationEvolution.mjs';
 import { createPostgresAuthoritativeEvidence } from './modules/evolution/authoritativeEvidence.mjs';
 import { registerEmployeeRoutes } from './modules/employees/index.mjs';
 import { registerWorkMemoryRoutes } from './modules/work-memory/index.mjs';
@@ -124,6 +125,16 @@ import {
   normalizeUBuddyCapabilityProfile,
   validateUBuddyCapabilityProfile,
 } from '../../src/shared/contracts/uBuddyCapabilityProfile.js';
+import { buildCollaborationAttribution, buildCollaborationStateGraph, publicTraceMetadata } from './modules/collaboration/stateGraph.mjs';
+import { publishCollaborationGraph, readCollaborationGraph } from './modules/collaboration/collaborationGraph.mjs';
+import { queuePostgresPersonalEvolutionRun } from './modules/evolution/personalQueue.mjs';
+import { evolutionModelProviderStatus } from './modules/evolution/modelProvider.mjs';
+import {
+  captureCapabilitySelectionSnapshot,
+  createCapabilitySelectionToken,
+  queryCollaborationCandidates,
+  verifyCapabilitySelectionToken,
+} from './modules/collaboration/capabilitySelection.mjs';
 
 export { permissionsForRole } from './modules/platform/index.mjs';
 
@@ -326,6 +337,7 @@ export function createApp({ pool, config, mailer, objectStore = null }) {
 
   const deviceGrants = registerSyncRoutes({ app, pool, auth, route, apiError, env, objectStore });
   registerEvolutionRoutes({ app, pool, auth, route, apiError, deviceGrants, env });
+  registerOrganizationEvolutionRoutes({ app, pool, auth, route, apiError });
   registerEmployeeRoutes({ app, pool, apiError });
   registerWorkMemoryRoutes({ app, pool, auth, route, apiError, env });
 
@@ -835,7 +847,7 @@ export function createApp({ pool, config, mailer, objectStore = null }) {
   }));
 
   app.get('/api/social/capabilities', auth, route(async (_req, res) => {
-    res.json({ capabilities: ['chat-groups-v1', 'chat-groups-v2', 'chat-group-message-withdraw-v1', 'chat-group-files-v1', 'resumable-file-transfer-v1', 'account-social-direct-v1', 'conversation-inbox-archive-v1', 'delegation-realtime-sse-v1', 'delegation-execution-lease-v1', 'delegation-create-idempotency-v1', 'direct-delegation-files-v1', 'contact-remarks-v1', 'membership-display-names-v1', 'ubuddy-capability-profile-v1', 'agent-work-detail-projection-v1'], chatGroups: {
+    res.json({ capabilities: ['chat-groups-v1', 'chat-groups-v2', 'chat-group-message-withdraw-v1', 'chat-group-files-v1', 'resumable-file-transfer-v1', 'account-social-direct-v1', 'conversation-inbox-archive-v1', 'delegation-realtime-sse-v1', 'delegation-execution-lease-v1', 'delegation-create-idempotency-v1', 'direct-delegation-files-v1', 'contact-remarks-v1', 'membership-display-names-v1', 'ubuddy-capability-profile-v1', 'ubuddy-capability-selection-v1', 'agent-work-detail-projection-v1', 'ubuddy-organization-evolution-v1'], chatGroups: {
       enabled: true, version: 2, audienceScope: 'account_social', messageWithdraw: true,
     } });
   }));
@@ -965,6 +977,47 @@ export function createApp({ pool, config, mailer, objectStore = null }) {
       else profiles.push(exposed);
     }
     res.json({ profiles, unavailableUserIds });
+  }));
+
+  app.post('/api/collaboration/candidates/query', auth, route(async (req, res) => {
+    requireUBuddyCapabilityProfileCapability(req);
+    res.json(await queryCollaborationCandidates(pool, {
+      viewerUserId: req.auth.user.id,
+      userIds: req.body?.userIds,
+      requirement: req.body?.requirement,
+      apiError,
+    }));
+  }));
+
+  app.post('/api/collaboration/selections/confirm', auth, route(async (req, res) => {
+    requireUBuddyCapabilityProfileCapability(req);
+    const recipientUserId = String(req.body?.recipientUserId || req.body?.userId || '').trim();
+    const snapshot = await captureCapabilitySelectionSnapshot(pool, {
+      viewerUserId: req.auth.user.id,
+      recipientUserId,
+      selection: jsonObject(req.body?.selection || req.body?.capabilitySelection),
+      apiError,
+    });
+    const selectionId = `selection_${stableRequestHash(snapshot).slice(0, 24)}`;
+    const selectionToken = createCapabilitySelectionToken(snapshot, collaborationSelectionSecret(config));
+    res.status(201).json({
+      selectionId,
+      selectionToken,
+      selectionVersion: 'ubuddy_capability_selection_confirmation_v1',
+      snapshot,
+      delegationInput: {
+        recipientId: recipientUserId,
+        capabilitySelection: {
+          selectionToken,
+          queryId: snapshot.queryId,
+          profileRevision: snapshot.recipientProfile.profileRevision,
+          contentHash: snapshot.recipientProfile.contentHash,
+          requirement: snapshot.requirement,
+          consideredCandidateUserIds: snapshot.consideredCandidateUserIds,
+          selectionReason: snapshot.selectionReason,
+        },
+      },
+    });
   }));
 
   app.get('/api/social/events/stream', auth, async (req, res, next) => {
@@ -1865,6 +1918,16 @@ export function createApp({ pool, config, mailer, objectStore = null }) {
         return res.json({ ok: true, idempotent: true, delegation: await hydratedDelegation(pool, existing.id, requesterId), message: null });
       }
     }
+    const capabilitySelectionSnapshot = await maybeCaptureCapabilitySelectionSnapshot(pool, {
+      viewerUserId: requesterId,
+      recipientUserId: recipientId,
+      selection: jsonObject(req.body.capabilitySelection || delegationMetadata.capabilitySelection),
+      selectionSecret: collaborationSelectionSecret(config),
+    });
+    const publicMetadata = {
+      ...publicDelegationMetadata(delegationMetadata),
+      ...(capabilitySelectionSnapshot ? { capabilitySelectionSnapshot } : {}),
+    };
     const result = await inTransaction(pool, async (client) => {
       const id = newId('agent_delegate');
       const inserted = await client.query(
@@ -1878,7 +1941,7 @@ export function createApp({ pool, config, mailer, objectStore = null }) {
           id, workspace.id, requesterId, recipientId, clientRequestId,
           String(req.body.senderAgentId || 'secretary_agent').slice(0, 80),
           String(req.body.recipientAgentId || 'secretary_agent').slice(0, 80),
-          title, instruction.slice(0, 16000), JSON.stringify(publicDelegationMetadata(delegationMetadata)),
+          title, instruction.slice(0, 16000), JSON.stringify(publicMetadata),
         ],
       );
       if (!inserted.rowCount) {
@@ -1904,7 +1967,7 @@ export function createApp({ pool, config, mailer, objectStore = null }) {
           id, account_workspace_id, sender_user_id, recipient_user_id, sender_agent_id, recipient_agent_id,
           kind, title, content, metadata_json
          ) VALUES ($1, $2, $3, $4, 'secretary_agent', 'secretary_agent', 'agent', $5, $6, $7::jsonb)`,
-        [messageId, workspace.id, requesterId, recipientId, `Buddy agent 委托：${title}`, instruction.slice(0, 8000), JSON.stringify({ ...publicDelegationMetadata(delegationMetadata), type: 'agent_delegation', action: 'assigned', delegationId: id, status: 'assigned' })],
+        [messageId, workspace.id, requesterId, recipientId, `Buddy agent 委托：${title}`, instruction.slice(0, 8000), JSON.stringify({ ...publicMetadata, type: 'agent_delegation', action: 'assigned', delegationId: id, status: 'assigned' })],
       );
       await appendDelegationRealtimeEvents(client, {
         delegationId: id,
@@ -2124,6 +2187,7 @@ export function createApp({ pool, config, mailer, objectStore = null }) {
         title: String(item.title || req.body?.title || 'uBuddy 委托任务').trim().slice(0, 160),
         instruction: String(item.instruction || '').trim().slice(0, 16000),
         metadata: jsonObject(item.metadata),
+        capabilitySelection: jsonObject(item.capabilitySelection || item.metadata?.capabilitySelection),
       }))
       .filter((item) => item.recipientId && item.recipientId !== ownerId && item.instruction);
     if (new Set(assignments.map((item) => item.recipientId)).size !== assignments.length) {
@@ -2132,6 +2196,14 @@ export function createApp({ pool, config, mailer, objectStore = null }) {
     if (!assignments.length) throw apiError('collaboration_assignments_required', '请至少选择一位好友并填写任务内容。', 400);
     for (const recipientId of [...new Set(assignments.map((item) => item.recipientId))]) {
       await requireWorkspaceMessagingPeer(pool, workspace, ownerId, recipientId);
+    }
+    for (const assignment of assignments) {
+      assignment.capabilitySelectionSnapshot = await maybeCaptureCapabilitySelectionSnapshot(pool, {
+        viewerUserId: ownerId,
+        recipientUserId: assignment.recipientId,
+        selection: assignment.capabilitySelection,
+        selectionSecret: collaborationSelectionSecret(config),
+      });
     }
     const groupId = newId('collab_group');
     try {
@@ -2158,12 +2230,16 @@ export function createApp({ pool, config, mailer, objectStore = null }) {
         for (const assignment of assignments) {
           const delegationId = newId('agent_delegate');
           const metadata = { ...jsonObject(req.body?.metadata), ...assignment.metadata, groupId, source: 'collaboration_group', initiatedThroughOwnUBuddy: true };
+          const publicMetadata = {
+            ...publicDelegationMetadata(metadata),
+            ...(assignment.capabilitySelectionSnapshot ? { capabilitySelectionSnapshot: assignment.capabilitySelectionSnapshot } : {}),
+          };
           await client.query(
             `INSERT INTO agent_delegations (
                id, account_workspace_id, requester_user_id, recipient_user_id, sender_agent_id, recipient_agent_id,
                title, instruction, status, group_id, metadata_json
              ) VALUES ($1, $2, $3, $4, 'secretary_agent', 'secretary_agent', $5, $6, 'assigned', $7, $8::jsonb)`,
-            [delegationId, workspace.id, ownerId, assignment.recipientId, assignment.title, assignment.instruction, groupId, JSON.stringify(publicDelegationMetadata(metadata))],
+            [delegationId, workspace.id, ownerId, assignment.recipientId, assignment.title, assignment.instruction, groupId, JSON.stringify(publicMetadata)],
           );
           const requesterPrivateMetadata = privateDelegationMetadata(metadata);
           await client.query(
@@ -2388,6 +2464,12 @@ export function createApp({ pool, config, mailer, objectStore = null }) {
       const instruction = String(assignment.instruction || '').trim().slice(0, 16000);
       if (!instruction) throw apiError('collaboration_assignment_required', '添加成员时必须同时分配具体任务。', 400);
       if (await activeCollaborationMembership(pool, groupId, targetId)) throw apiError('collaboration_member_exists', '该用户已经在任务群中。', 409);
+      const capabilitySelectionSnapshot = await maybeCaptureCapabilitySelectionSnapshot(pool, {
+        viewerUserId: req.auth.user.id,
+        recipientUserId: targetId,
+        selection: jsonObject(assignment.capabilitySelection || assignment.metadata?.capabilitySelection),
+        selectionSecret: collaborationSelectionSecret(config),
+      });
       await inTransaction(pool, async (client) => {
         const lockedGroup = await one(client, 'SELECT * FROM collaboration_groups WHERE id = $1', [groupId]);
         if (lockedGroup?.status === 'closed') throw apiError('collaboration_group_closed', '任务群已解散，不能继续修改。', 409);
@@ -2399,12 +2481,16 @@ export function createApp({ pool, config, mailer, objectStore = null }) {
         );
         const delegationId = newId('agent_delegate');
         const assignmentMetadata = { ...jsonObject(assignment.metadata), groupId, source: 'collaboration_group', initiatedThroughOwnUBuddy: true };
+        const publicMetadata = {
+          ...publicDelegationMetadata(assignmentMetadata),
+          ...(capabilitySelectionSnapshot ? { capabilitySelectionSnapshot } : {}),
+        };
         await client.query(
           `INSERT INTO agent_delegations (
              id, account_workspace_id, requester_user_id, recipient_user_id, sender_agent_id, recipient_agent_id,
              title, instruction, status, group_id, metadata_json
            ) VALUES ($1, $2, $3, $4, 'secretary_agent', 'secretary_agent', $5, $6, 'assigned', $7, $8::jsonb)`,
-          [delegationId, workspace.id, req.auth.user.id, targetId, String(assignment.title || `${group.title} · 新任务`).trim().slice(0, 160), instruction, groupId, JSON.stringify(publicDelegationMetadata(assignmentMetadata))],
+          [delegationId, workspace.id, req.auth.user.id, targetId, String(assignment.title || `${group.title} · 新任务`).trim().slice(0, 160), instruction, groupId, JSON.stringify(publicMetadata)],
         );
         const recipientPrivateMetadata = privateDelegationMetadata(assignmentMetadata);
         await client.query(
@@ -2580,6 +2666,106 @@ export function createApp({ pool, config, mailer, objectStore = null }) {
       transactionIdempotent = true;
     }
     res.json({ ok: true, ...(transactionIdempotent ? { idempotent: true } : {}), delegation: await hydratedDelegation(pool, delegationId, req.auth.user.id), ...(delegation.group_id ? await collaborationGroupDetail(pool, delegation.group_id, req.auth.user.id, { accountWorkspaceId: workspace.id }) : {}) });
+  }));
+
+  app.get('/api/collaboration/state-graph', auth, route(async (req, res) => {
+    requireAgentWorkDetailProjectionCapability(req);
+    res.json(await buildCollaborationStateGraph(pool, {
+      viewerUserId: req.auth.user.id,
+      groupId: String(req.query?.groupId || req.query?.group_id || '').trim(),
+      delegationId: String(req.query?.delegationId || req.query?.delegation_id || '').trim(),
+      apiError,
+    }));
+  }));
+
+  app.get('/api/collaboration/graph', auth, route(async (req, res) => {
+    requireAgentWorkDetailProjectionCapability(req);
+    res.json(await readCollaborationGraph(pool, {
+      viewerUserId: req.auth.user.id,
+      graphId: String(req.query?.graphId || req.query?.graph_id || '').trim(),
+      taskRunId: String(req.query?.taskRunId || req.query?.task_run_id || '').trim(),
+      groupId: String(req.query?.groupId || req.query?.group_id || '').trim(),
+      delegationId: String(req.query?.delegationId || req.query?.delegation_id || '').trim(),
+      afterRevision: Number(req.query?.afterRevision || req.query?.after_revision || 0),
+      apiError,
+    }));
+  }));
+
+  app.post('/api/collaboration/graph', auth, route(async (req, res) => {
+    requireAgentWorkDetailProjectionCapability(req);
+    res.status(202).json(await publishCollaborationGraph(pool, { viewerUserId: req.auth.user.id, graph: req.body || {}, apiError }));
+  }));
+
+  app.get('/api/collaboration/attribution', auth, route(async (req, res) => {
+    requireAgentWorkDetailProjectionCapability(req);
+    res.json(await buildCollaborationAttribution(pool, {
+      viewerUserId: req.auth.user.id,
+      delegationId: String(req.query?.delegationId || req.query?.delegation_id || '').trim(),
+      apiError,
+    }));
+  }));
+
+  app.post('/api/collaboration/attribution/:delegationId/evolution-route', auth, route(async (req, res) => {
+    requireAgentWorkDetailProjectionCapability(req);
+    const delegationId = String(req.params.delegationId || '').trim();
+    const attribution = await buildCollaborationAttribution(pool, {
+      viewerUserId: req.auth.user.id, delegationId, apiError,
+    });
+    const result = await routeCollaborationAttributionToEvolution(pool, {
+      attribution,
+      actorUserId: req.auth.user.id,
+      minConfidence: Number(req.body?.minConfidence ?? 0.6),
+      env: config?.env || process.env,
+    });
+    res.status(202).json(result);
+  }));
+
+  app.get('/api/collaboration/evolution-impact', auth, route(async (req, res) => {
+    requireAgentWorkDetailProjectionCapability(req);
+    const delegationId = String(req.query?.delegationId || req.query?.delegation_id || '').trim();
+    const attribution = await buildCollaborationAttribution(pool, {
+      viewerUserId: req.auth.user.id, delegationId, apiError,
+    });
+    const evidence = (await pool.query(`SELECT e.evidence_id,e.owner_user_id,e.user_agent_instance_id,e.source_kind,e.source_id,
+        e.confidence,e.validation_status,e.occurred_at,e.metadata_json,
+        COALESCE(u.evolution_scope,'') AS evolution_scope,COALESCE(u.status,'') AS usage_status,
+        COALESCE(u.run_id,'') AS run_id
+      FROM cloud_evolution_evidence e
+      LEFT JOIN cloud_evolution_evidence_usage u ON u.evidence_id=e.evidence_id
+      WHERE e.delegation_id=$1 ORDER BY e.occurred_at,e.evidence_id`, [delegationId])).rows;
+    const runIds = [...new Set(evidence.map((item) => item.run_id).filter(Boolean))];
+    const runs = runIds.length
+      ? (await pool.query(`SELECT id,status,evolution_scope,owner_user_id,user_agent_instance_id,evidence_count,trigger_kind,created_at,updated_at,completed_at
+          FROM cloud_evolution_runs WHERE id = ANY($1::text[]) ORDER BY created_at`, [runIds])).rows
+      : [];
+    res.json({
+      impactVersion: 'ubuddy_collaboration_evolution_impact_v1',
+      delegationId,
+      attributionVersion: attribution.attributionVersion,
+      evidence: evidence.map((item) => ({
+        evidenceId: item.evidence_id,
+        ownerUserId: item.owner_user_id,
+        agentInstanceId: item.user_agent_instance_id,
+        sourceKind: item.source_kind,
+        sourceId: item.source_id,
+        confidence: Number(item.confidence || 0),
+        validationStatus: item.validation_status || '',
+        evolutionScope: item.evolution_scope || '',
+        usageStatus: item.usage_status || '',
+        runId: item.run_id || '',
+        occurredAt: toIso(item.occurred_at),
+        metadata: publicTraceMetadata(item.metadata_json),
+      })),
+      runs: runs.map((item) => ({
+        id: item.id, status: item.status, evolutionScope: item.evolution_scope,
+        ownerUserId: item.owner_user_id, agentInstanceId: item.user_agent_instance_id,
+        evidenceCount: Number(item.evidence_count || 0), triggerKind: item.trigger_kind,
+        createdAt: toIso(item.created_at), updatedAt: toIso(item.updated_at), completedAt: toIso(item.completed_at),
+      })),
+      organizationUpdates: attribution.organizationSignals,
+      individualUpdates: attribution.individualSignals,
+      blockedReasons: attribution.evolutionRouting.blockedReasons,
+    });
   }));
 
   app.get('/api/collaboration/groups/:groupId/workspace', auth, route(async (req, res) => {
@@ -3279,12 +3465,20 @@ async function createCollaborationMentionDelegations(db, {
     if (!membership) continue;
     const clientRequestId = `group-mention:${groupMessageId}:${recipientUserId}`.slice(0, 240);
     let delegationId = newId('agent_delegate');
-    const delegationMetadata = publicDelegationMetadata({
+    const capabilitySelectionSnapshot = await maybeCaptureCapabilitySelectionSnapshot(db, {
+      viewerUserId: senderUserId,
+      recipientUserId,
+      selection: {},
+    });
+    const delegationMetadata = {
+      ...publicDelegationMetadata({
       source: 'collaboration_group_mention',
       groupId,
       sourceGroupMessageId: groupMessageId,
       initiatedThroughGroupMention: true,
-    });
+      }),
+      ...(capabilitySelectionSnapshot ? { capabilitySelectionSnapshot } : {}),
+    };
     const inserted = await db.query(`INSERT INTO agent_delegations(
       id,account_workspace_id,requester_user_id,recipient_user_id,client_request_id,sender_agent_id,recipient_agent_id,
       title,instruction,status,group_id,metadata_json
@@ -3608,6 +3802,58 @@ function requireUBuddyCapabilityProfileCapability(req = {}) {
   }
 }
 
+function requireAgentWorkDetailProjectionCapability(req = {}) {
+  const capability = String(req.body?.socialCapability || req.body?.capability || req.query?.socialCapability
+    || req.query?.capability || req.headers?.['x-janus-social-capability'] || '').trim();
+  if (!capability.split(',').map((item) => item.trim()).includes('agent-work-detail-projection-v1')) {
+    throw apiError('agent_work_detail_projection_capability_required', '当前客户端未声明任务细节投影能力。', 426);
+  }
+}
+
+async function maybeCaptureCapabilitySelectionSnapshot(db, {
+  viewerUserId = '', recipientUserId = '', selection = {}, selectionSecret = '',
+} = {}) {
+  const normalizedSelection = jsonObject(selection);
+  const tokenSnapshot = normalizedSelection.selectionToken
+    ? verifyCapabilitySelectionToken(normalizedSelection.selectionToken, selectionSecret || collaborationSelectionSecret())
+    : null;
+  if (normalizedSelection.selectionToken && !tokenSnapshot) {
+    throw apiError('capability_selection_token_invalid', '能力选择确认凭据无效或已被修改。', 400);
+  }
+  if (tokenSnapshot && (tokenSnapshot.selectedByUserId !== viewerUserId
+    || tokenSnapshot.recipientProfile?.ownerUserId !== recipientUserId)) {
+    throw apiError('capability_selection_token_subject_mismatch', '能力选择确认凭据与当前委派双方不匹配。', 403);
+  }
+  const resolvedSelection = tokenSnapshot ? {
+    queryId: tokenSnapshot.queryId,
+    profileRevision: tokenSnapshot.recipientProfile?.profileRevision,
+    contentHash: tokenSnapshot.recipientProfile?.contentHash,
+    requirement: tokenSnapshot.requirement,
+    consideredCandidateUserIds: tokenSnapshot.consideredCandidateUserIds,
+    selectionReason: tokenSnapshot.selectionReason,
+  } : normalizedSelection;
+  const explicitSelection = Object.keys(normalizedSelection).length > 0;
+  try {
+    return await captureCapabilitySelectionSnapshot(db, {
+      viewerUserId,
+      recipientUserId,
+      selection: resolvedSelection,
+      apiError,
+    });
+  } catch (error) {
+    if (!explicitSelection && [
+      'capability_selection_profile_not_found',
+      'capability_selection_profile_not_visible',
+    ].includes(error?.code)) return null;
+    throw error;
+  }
+}
+
+function collaborationSelectionSecret(config = {}) {
+  return String(config?.jwtSecret || config?.env?.JWT_SECRET || config?.env?.JANUS_JWT_SECRET
+    || process.env.JWT_SECRET || process.env.JANUS_JWT_SECRET || 'janus-collaboration-selection-development-secret');
+}
+
 function normalizePublishedUBuddyCapabilityProfile(value = {}, ownerUserId = '') {
   const profile = normalizeUBuddyCapabilityProfile({ ...(value || {}), ownerUserId });
   const validation = validateUBuddyCapabilityProfile(profile);
@@ -3709,15 +3955,161 @@ async function validateGroupMessageAttachments(db, attachments = [], groupId = '
   }
 }
 
-async function recordPostgresCollaborationEvidence(client,{env=process.env,ownerUserId,sourceKind,sourceId,sourceVersionId='',content,
+async function recordPostgresCollaborationEvidence(client,{env=process.env,ownerUserId,userAgentInstanceId='',sourceKind,sourceId,sourceVersionId='',content,
   delegationId='',metadata={}}={}) {
   const keyring=evolutionKeyringFromEnv(env);
   const envelopeKeyring=evolutionEnvelopePublicKeyringFromEnv(env);
   if (!evolutionEncryptionReady(keyring) && !keyring.allowPlaintextTestOnly && !envelopeKeyring.activeKeyId) return null;
-  const instance=(await client.query(`SELECT * FROM cloud_user_agent_instances_v3
-    WHERE user_id=$1 AND agent_family_id='secretary_agent' AND status='active'`,[ownerUserId])).rows[0];
+  const instance=userAgentInstanceId
+    ? (await client.query(`SELECT * FROM cloud_user_agent_instances_v3
+        WHERE user_id=$1 AND id=$2 AND status='active'`,[ownerUserId,userAgentInstanceId])).rows[0]
+    : (await client.query(`SELECT * FROM cloud_user_agent_instances_v3
+        WHERE user_id=$1 AND agent_family_id='secretary_agent' AND status='active'`,[ownerUserId])).rows[0];
   if (!instance) return null;
   return createPostgresAuthoritativeEvidence(client,{keyring,envelopeKeyring,requireEnvelope:env.NODE_ENV==='production',ownerUserId,userAgentInstanceId:instance.id,
     agentFamilyId:instance.agent_family_id,sourceKind,sourceId,sourceVersionId,content,delegationId,
     confidence:0.8,metadata});
+}
+
+async function routeCollaborationAttributionToEvolution(pool, {
+  attribution = {}, actorUserId = '', minConfidence = 0.6, env = process.env,
+} = {}) {
+  const threshold = Math.max(0, Math.min(1, Number(minConfidence || 0.6)));
+  const requesterUserId = attribution.trace?.find((item) => item.eventKind === 'task_created')?.actorUserId || '';
+  const eligiblePersonalSignals = (attribution.individualSignals || [])
+    .filter((item) => Number(item.confidence || 0) >= threshold && item.userId);
+  const personalSignals = eligiblePersonalSignals.filter((item) => item.userId === actorUserId);
+  const eligibleOrganizationSignals = (attribution.organizationSignals || [])
+    .filter((item) => Number(item.confidence || 0) >= threshold);
+  const organizationSignals = actorUserId === requesterUserId ? eligibleOrganizationSignals : [];
+  const blockedReasons = [...(attribution.evolutionRouting?.blockedReasons || [])]
+    .filter((item) => item.code !== 'evolution_evidence_missing');
+  const ownerConfirmationReasons = eligiblePersonalSignals.filter((item) => item.userId !== actorUserId).map((signal) => ({
+      code: 'personal_evolution_owner_confirmation_required',
+      userId: signal.userId,
+      signalKind: signal.kind,
+    }));
+  const organizationConfirmationReasons = actorUserId === requesterUserId ? [] : eligibleOrganizationSignals.map((signal) => ({
+    code: 'organization_evolution_requester_confirmation_required',
+    userId: requesterUserId,
+    signalKind: signal.kind,
+  }));
+  if (blockedReasons.length) {
+    return {
+      routeVersion: 'ubuddy_attribution_evolution_route_v1',
+      status: 'blocked',
+      delegationId: attribution.scope?.delegationId || '',
+      threshold,
+      routedEvidence: [],
+      personalRuns: [],
+      organizationRoute: { status: 'blocked' },
+      blockedReasons: [...blockedReasons, ...ownerConfirmationReasons, ...organizationConfirmationReasons],
+    };
+  }
+  const routedEvidence = [];
+  try {
+    await inTransaction(pool, async (client) => {
+      const delegationId = attribution.scope?.delegationId || '';
+      for (const signal of [...personalSignals, ...organizationSignals]) {
+        const ownerUserId = signal.userId || attribution.trace?.find((item) => item.actorUserId)?.actorUserId || '';
+        if (!ownerUserId) continue;
+        const layer = signal.userId ? 'individual' : 'organization';
+        if (layer === 'individual' && !String(signal.agentInstanceId || '').trim()) {
+          blockedReasons.push({ code: 'personal_agent_instance_missing', userId: ownerUserId, signalKind: signal.kind });
+          continue;
+        }
+        const sourceId = `${delegationId}:attribution:${layer}:${signal.kind}`;
+        const evidence = await recordPostgresCollaborationEvidence(client, {
+          env,
+          ownerUserId,
+          userAgentInstanceId: layer === 'individual' ? String(signal.agentInstanceId || '') : '',
+          sourceKind: 'delegation_event',
+          sourceId,
+          sourceVersionId: attribution.attributionVersion || 'ubuddy_process_attribution_v1',
+          content: JSON.stringify({
+            delegationId,
+            layer,
+            signalKind: signal.kind,
+            confidence: signal.confidence,
+            recommendation: signal.recommendation,
+            evidenceRefs: signal.evidenceRefs || [],
+          }),
+          delegationId,
+          metadata: {
+            attributionVersion: attribution.attributionVersion || '',
+            layer,
+            signalKind: signal.kind,
+            confidence: Number(signal.confidence || 0),
+            acceptanceQuality: Number(signal.confidence || 0),
+          },
+        });
+        if (evidence) routedEvidence.push({ ...evidence, layer, signalKind: signal.kind, ownerUserId });
+        else blockedReasons.push({ code: layer === 'individual' ? 'personal_agent_instance_not_found' : 'evolution_owner_agent_instance_not_found', userId: ownerUserId, signalKind: signal.kind });
+      }
+    });
+  } catch (error) {
+    return {
+      routeVersion: 'ubuddy_attribution_evolution_route_v1',
+      status: 'blocked',
+      delegationId: attribution.scope?.delegationId || '',
+      threshold,
+      routedEvidence,
+      personalRuns: [],
+      organizationRoute: { status: 'blocked' },
+      blockedReasons: [...blockedReasons, { code: error.code || 'evolution_evidence_route_failed', message: error.message }],
+    };
+  }
+  const personalRuns = [];
+  const modelProvider = evolutionModelProviderStatus({ env });
+  for (const userId of [...new Set(personalSignals.map((item) => item.userId))]) {
+    const evidence = routedEvidence.find((item) => item.ownerUserId === userId && item.layer === 'individual');
+    if (!evidence) {
+      blockedReasons.push({ code: 'personal_evolution_evidence_unavailable', userId });
+      continue;
+    }
+    const agentInstanceId = (await one(pool, `SELECT user_agent_instance_id FROM cloud_evolution_evidence
+      WHERE evidence_id=$1`, [evidence.evidenceId]))?.user_agent_instance_id || '';
+    if (!agentInstanceId) {
+      blockedReasons.push({ code: 'personal_agent_instance_missing', userId });
+      continue;
+    }
+    if (!modelProvider.available) {
+      blockedReasons.push({
+        code: modelProvider.code || 'evolution_model_unavailable',
+        userId,
+        message: '进化证据已路由，但个人进化运行需要配置大模型 Provider。',
+      });
+      continue;
+    }
+    try {
+      personalRuns.push(await queuePostgresPersonalEvolutionRun(pool, {
+        userId,
+        agentInstanceId,
+        triggerKind: 'manual',
+        keyring: evolutionKeyringFromEnv(env),
+      }));
+    } catch (error) {
+      blockedReasons.push({ code: error.code || 'personal_evolution_queue_failed', userId, message: error.message });
+    }
+  }
+  return {
+    routeVersion: 'ubuddy_attribution_evolution_route_v1',
+    status: blockedReasons.length ? 'partial' : 'routed',
+    delegationId: attribution.scope?.delegationId || '',
+    threshold,
+    routedEvidence,
+    personalRuns,
+    organizationRoute: {
+      status: organizationSignals.length ? 'evidence_routed_scheduler_owned' : 'not_requested',
+      signalKinds: organizationSignals.map((item) => item.kind),
+    },
+    modelProvider: {
+      available: modelProvider.available,
+      source: modelProvider.source,
+      code: modelProvider.code,
+      model: modelProvider.model || '',
+      reviewModel: modelProvider.reviewModel || '',
+    },
+    blockedReasons: [...blockedReasons, ...ownerConfirmationReasons, ...organizationConfirmationReasons],
+  };
 }

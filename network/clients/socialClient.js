@@ -114,6 +114,95 @@ export class SocialClient {
     });
   }
 
+  queryCollaborationCandidates(state, payload = {}) {
+    return this.request(state, '/api/collaboration/candidates/query', {
+      method: 'POST', body: { ...payload, socialCapability: 'ubuddy-capability-profile-v1' },
+    });
+  }
+
+  confirmCollaborationSelection(state, payload = {}) {
+    return this.request(state, '/api/collaboration/selections/confirm', {
+      method: 'POST', body: { ...payload, socialCapability: 'ubuddy-capability-profile-v1' },
+    });
+  }
+
+  queryCollaborationStateGraph(state, payload = {}) {
+    const params = new URLSearchParams({ capability: 'agent-work-detail-projection-v1' });
+    if (payload.groupId || payload.group_id) params.set('groupId', String(payload.groupId || payload.group_id));
+    if (payload.delegationId || payload.delegation_id) params.set('delegationId', String(payload.delegationId || payload.delegation_id));
+    return this.request(state, `/api/collaboration/state-graph?${params.toString()}`);
+  }
+
+  getCollaborationGraph(state, payload = {}) {
+    const params = new URLSearchParams({ capability: 'agent-work-detail-projection-v1' });
+    for (const key of ['graphId', 'taskRunId', 'groupId', 'delegationId', 'afterRevision']) {
+      if (payload[key] !== undefined && payload[key] !== '') params.set(key, String(payload[key]));
+    }
+    return this.request(state, `/api/collaboration/graph?${params.toString()}`);
+  }
+
+  publishCollaborationGraph(state, payload = {}) {
+    return this.request(state, '/api/collaboration/graph?capability=agent-work-detail-projection-v1', { method: 'POST', body: payload });
+  }
+
+  publishCollaborationGraphDelta(state, payload = {}) {
+    return this.request(state, '/api/collaboration/graph?capability=agent-work-detail-projection-v1', {
+      method: 'POST', body: { ...payload, mode: 'delta' },
+    });
+  }
+
+  queryCollaborationAttribution(state, payload = {}) {
+    const params = new URLSearchParams({ capability: 'agent-work-detail-projection-v1' });
+    if (payload.delegationId || payload.delegation_id) params.set('delegationId', String(payload.delegationId || payload.delegation_id));
+    return this.request(state, `/api/collaboration/attribution?${params.toString()}`);
+  }
+
+  routeCollaborationAttributionToEvolution(state, delegationId, payload = {}) {
+    return this.request(state, `/api/collaboration/attribution/${encodeURIComponent(delegationId)}/evolution-route`, {
+      method: 'POST', body: { ...payload, socialCapability: 'agent-work-detail-projection-v1' },
+    });
+  }
+
+  queryCollaborationEvolutionImpact(state, payload = {}) {
+    const params = new URLSearchParams({
+      capability: 'agent-work-detail-projection-v1',
+      delegationId: String(payload.delegationId || payload.delegation_id || ''),
+    });
+    return this.request(state, `/api/collaboration/evolution-impact?${params.toString()}`);
+  }
+
+  uploadUBuddyOrganizationEvolutionTrace(state, payload = {}) {
+    return this.request(state, '/api/evolution/organization/traces', {
+      method: 'POST', body: { ...payload, capability: 'ubuddy-organization-evolution-v1' },
+    });
+  }
+
+  uBuddyOrganizationEvolutionOverview(state) {
+    return this.request(state, '/api/evolution/organization/overview?capability=ubuddy-organization-evolution-v1');
+  }
+
+  uBuddyOrganizationEvolutionActivePolicy(state) {
+    return this.request(state, '/api/evolution/organization/active-policy?capability=ubuddy-organization-evolution-v1');
+  }
+
+  uBuddyOrganizationEvolutionActivate(state, policyVersionId, payload = {}) {
+    return this.request(state, `/api/evolution/organization/policies/${encodeURIComponent(policyVersionId)}/activate`, {
+      method: 'POST', body: { ...payload, capability: 'ubuddy-organization-evolution-v1' },
+    });
+  }
+
+  uBuddyOrganizationEvolutionDisable(state, payload = {}) {
+    return this.request(state, '/api/evolution/organization/disable', {
+      method: 'POST', body: { ...payload, capability: 'ubuddy-organization-evolution-v1' },
+    });
+  }
+
+  uBuddyOrganizationEvolutionHealth(state, payload = {}) {
+    return this.request(state, '/api/evolution/organization/health', {
+      method: 'POST', body: { ...payload, capability: 'ubuddy-organization-evolution-v1' },
+    });
+  }
+
   async streamSocialEvents(state, { cursor = 0, signal = null, onEvent = null } = {}) {
     const serverUrl = normalizeBaseUrl(state?.server_url || process.env.JANUS_AUTH_URL || '');
     if (!serverUrl) throw new Error('跨设备通信服务器未配置。');

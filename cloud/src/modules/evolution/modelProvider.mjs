@@ -80,11 +80,15 @@ export function createEvolutionModelExecutor({ env = process.env, fetchImpl = gl
 }
 
 function resolveEvolutionModelProvider({ env, fsImpl }) {
+  const compatibleBaseUrl = String(env.OPENAI_BASE_URL || '').trim();
+  const compatibleApiKey = String(env.CRS_OAI_KEY || env.OPENAI_API_KEY || '').trim();
+  const compatibleModel = String(env.OPENAI_MODEL || '').trim()
+    || (compatibleBaseUrl && compatibleApiKey ? 'gpt-5.4-mini' : '');
   const explicit = {
-    baseUrl: String(env.JANUS_EVOLUTION_PROVIDER_BASE_URL || '').trim(),
-    apiKey: String(env.JANUS_EVOLUTION_PROVIDER_API_KEY || '').trim(),
-    model: String(env.JANUS_EVOLUTION_MODEL || '').trim(),
-    reviewModel: String(env.JANUS_EVOLUTION_REVIEW_MODEL || '').trim(),
+    baseUrl: String(env.JANUS_EVOLUTION_PROVIDER_BASE_URL || compatibleBaseUrl).trim(),
+    apiKey: String(env.JANUS_EVOLUTION_PROVIDER_API_KEY || compatibleApiKey).trim(),
+    model: String(env.JANUS_EVOLUTION_MODEL || compatibleModel).trim(),
+    reviewModel: String(env.JANUS_EVOLUTION_REVIEW_MODEL || env.OPENAI_REVIEW_MODEL || '').trim(),
     reasoningEffort: String(env.JANUS_EVOLUTION_REASONING_EFFORT || '').trim(),
   };
   if (explicit.baseUrl || explicit.apiKey || explicit.model || explicit.reviewModel) {
