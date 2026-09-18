@@ -1,0 +1,83 @@
+{
+  "db": "C:\\Users\\zhang\\.janus\\data\\janus.db",
+  "collaborationGraph": {
+    "collaboration_graphs": {
+      "exists": false,
+      "rows": null
+    },
+    "collaboration_graph_nodes": {
+      "exists": false,
+      "rows": null
+    },
+    "collaboration_graph_edges": {
+      "exists": false,
+      "rows": null
+    },
+    "collaboration_graph_events": {
+      "exists": false,
+      "rows": null
+    },
+    "nodesByKind": [],
+    "nodesByDepth": [],
+    "agentsStepNodes": 0,
+    "sequenceOfEdges": 0,
+    "edgesByKind": [],
+    "fieldFillByKind": []
+  },
+  "planChannel": {
+    "activityTypes": {
+      "protocol": 162,
+      "command": 41,
+      "commentary": 29,
+      "status": 20,
+      "agent": 16,
+      "usage": 10,
+      "sandbox": 5,
+      "model": 5,
+      "answer": 5,
+      "reasoning": 4
+    },
+    "siblingsPresent": [
+      "usage",
+      "model",
+      "reasoning",
+      "sandbox",
+      "answer"
+    ],
+    "siblingsMissing": [
+      "goal",
+      "artifact"
+    ],
+    "planRows": 0,
+    "planRowsWithSteps": 0,
+    "planStepFieldShapes": {},
+    "planOwningTaskNodes": [],
+    "planPayloadBytes": {
+      "rows": 0,
+      "min": null,
+      "max": null
+    },
+    "truncatedPayloadRows": 4,
+    "truncationLimit": 12000,
+    "rowsOverTruncationLimit": 31,
+    "planningSessionEvents": 0,
+    "planLikePlanningEvents": 0
+  },
+  "rowCounts": {
+    "task_events": 354,
+    "task_runs": 1,
+    "task_nodes": 2,
+    "task_graph_revisions": 2,
+    "task_node_result_versions": 1,
+    "ubuddy_planning_sessions": 3,
+    "ubuddy_planning_session_events": 0,
+    "collaboration_groups": 2,
+    "agent_delegations": 9
+  },
+  "verdict": {
+    "kind": "no_plan_observed",
+    "explanation": "plan 的同源兄弟（usage/model/reasoning/sandbox/answer）都有行，说明 stdin 通知通道在落库；只有 plan 没有 ⇒ 当前配置下 app-server 没有发出 turn/plan/updated（解释 1）。价值重心应转向 agent_task 层漂移与 status 通道，不要写适配器去补底料。",
+    "graphTablesPresent": false,
+    "agentStepLayerHasMaterial": false
+  }
+}

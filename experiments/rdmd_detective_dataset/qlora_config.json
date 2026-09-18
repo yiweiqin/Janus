@@ -1,0 +1,27 @@
+{
+  "schemaVersion": "rdmd-qlora-v1",
+  "baseModel": "Qwen/Qwen3-8B",
+  "maxLength": 16384,
+  "epochs": 2,
+  "seed": 20260910,
+  "perDeviceTrainBatchSize": 1,
+  "perDeviceEvalBatchSize": 1,
+  "gradientAccumulationSteps": 16,
+  "learningRate": 1e-4,
+  "warmupRatio": 0.03,
+  "precision": "bf16",
+  "quantization": "nf4-double-quant",
+  "lora": {
+    "r": 16,
+    "alpha": 32,
+    "dropout": 0.05,
+    "targetModules": ["q_proj", "k_proj", "v_proj", "o_proj", "gate_proj", "up_proj", "down_proj"]
+  },
+  "scheduler": "cosine",
+  "targets": ["status", "nodeId", "type"],
+  "mainLoss": ["drift", "no_drift", "UNKNOWN"],
+  "mainLossAuthority": "sft/manifest.json#mainLoss",
+  "unknownInMainLoss": true,
+  "testRead": false,
+  "assistantOnlyLoss": true
+}

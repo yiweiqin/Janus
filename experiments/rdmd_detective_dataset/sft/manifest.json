@@ -1,0 +1,92 @@
+{
+  "schemaVersion": "rdmd_detective_sft_v4",
+  "sourceVersion": "rdmd_detective_dataset_v4",
+  "generatedAt": "2026-09-17T13:20:30.422Z",
+  "smoke": false,
+  "instruction": "lib/sft.mjs#DETECTIVE_INSTRUCTION",
+  "mainLoss": [
+    "drift",
+    "no_drift",
+    "UNKNOWN"
+  ],
+  "evalOnly": [],
+  "unknownInMainLoss": 858,
+  "testReadDuringTraining": false,
+  "graphLeak": 0,
+  "rejected": 0,
+  "files": {
+    "train": {
+      "n": 8590,
+      "path": "sft\\train.jsonl",
+      "sha256": "2c28849c836bf0a1521f0c7ecfaff6ba78e2d5251dff592010d88e3632504562"
+    },
+    "development": {
+      "n": 1745,
+      "path": "sft\\development.jsonl",
+      "sha256": "9773b33164607d7b8533c324aa10e83424f1e0b87e881d2479fc10da2b58b09a"
+    },
+    "test": {
+      "n": 1665,
+      "path": "sft\\test.jsonl",
+      "sha256": "b58e3d140e31a0ee3bf45b07869d0f79a5cd211bffad591aeba671464bad11b4"
+    },
+    "eval_unknown": {
+      "n": 142,
+      "path": "sft\\eval_unknown.jsonl",
+      "sha256": "f86047750e281a18a869d48553e1fafa365689e72384cf0adb269020308e0814"
+    },
+    "eval_no_drift": {
+      "n": 111,
+      "path": "sft\\eval_no_drift.jsonl",
+      "sha256": "4d9adc9738144bbcae94e1d7a8e9fa98b4add7a8742cced87c79ff0aeb6e1f49"
+    }
+  },
+  "tokenAudit": {
+    "n": 12000,
+    "chars": {
+      "min": 12061,
+      "p50": 13562,
+      "p95": 16051,
+      "max": 17063,
+      "mean": 14070
+    },
+    "estimatedTokens": {
+      "min": 7587,
+      "p50": 8525,
+      "p95": 10080,
+      "max": 10713,
+      "mean": 8842
+    },
+    "recommendedMaxLength": 16384
+  },
+  "baseline": {
+    "n": 1665,
+    "drift": {
+      "n": 1412,
+      "topologicalHit": 0,
+      "typeHit": 0.12110481586402266,
+      "unknownRate": 0.45821529745042494
+    },
+    "noDrift": {
+      "n": 111,
+      "correct": 1
+    },
+    "unknown": {
+      "n": 142,
+      "correct": 0.7183098591549296
+    }
+  },
+  "counts": {
+    "train": 8590,
+    "development": 1745,
+    "test": 1665,
+    "eval_unknown": 142,
+    "eval_no_drift": 111
+  },
+  "sourceSha256": {
+    "train": "4c6e95fa1e88d516279d2a879b7dcb3f35e0c9835f2187023b65bbdeea5416f7",
+    "development": "00670964d1b5bd0afc2ba0b7a629384797fe8a6b53ea9def7da67b21c0de225c",
+    "test": "cfb5200a26ad7e565ef564473c81c4b3463e9ae207dbed57c1ce31dc264dfa76"
+  },
+  "status": "READY_FOR_QLORA"
+}

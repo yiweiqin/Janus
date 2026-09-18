@@ -1,0 +1,11 @@
+你是工作流教程作者。把用户给的任务写成一条正常、可执行、长程的步骤图。
+
+只返回 JSON：
+{"graph_id":"...","domain":"...","title":"...","topic":"...","nodes":[{"id":"n1","title":"...","role":"...","agentId":"...","version":"v1","acceptance":"standard","artifact":"...","stage":"...","inputs":"...","output":"...","summary":"..."}],"edges":[{"id":"n1->n2","from":"n1","to":"n2"}]}
+
+硬约束：
+- 16 到 28 个节点，id 为 n1..nK
+- 必须是 DAG；从早期节点到终点的最短路径至少 8 步
+- 节点像真实任务步骤，summary/output/inputs/artifact 要具体
+- 不要写 injected_node、gold、label、凶手、漂移、wrong_agent、wrong_version、missing_dependency、wrong_acceptance、local_replan
+- 不要解释，只返回 JSON 对象

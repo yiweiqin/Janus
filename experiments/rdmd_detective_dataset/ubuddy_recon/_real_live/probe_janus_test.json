@@ -1,0 +1,89 @@
+{
+  "db": "C:\\Users\\zhang\\.janus-test\\data\\janus.db",
+  "collaborationGraph": {
+    "collaboration_graphs": {
+      "exists": false,
+      "rows": null
+    },
+    "collaboration_graph_nodes": {
+      "exists": false,
+      "rows": null
+    },
+    "collaboration_graph_edges": {
+      "exists": false,
+      "rows": null
+    },
+    "collaboration_graph_events": {
+      "exists": false,
+      "rows": null
+    },
+    "nodesByKind": [],
+    "nodesByDepth": [],
+    "agentsStepNodes": 0,
+    "sequenceOfEdges": 0,
+    "edgesByKind": [],
+    "fieldFillByKind": []
+  },
+  "planChannel": {
+    "activityTypes": {
+      "protocol": 1161,
+      "command": 331,
+      "commentary": 199,
+      "agent": 139,
+      "status": 92,
+      "usage": 45,
+      "image": 31,
+      "file": 31,
+      "model": 25,
+      "reasoning": 20,
+      "sandbox": 18,
+      "answer": 15,
+      "progress": 12,
+      "tool": 6,
+      "error": 4,
+      "goal": 1,
+      "artifact": 1
+    },
+    "siblingsPresent": [
+      "goal",
+      "usage",
+      "model",
+      "reasoning",
+      "sandbox",
+      "answer",
+      "artifact"
+    ],
+    "siblingsMissing": [],
+    "planRows": 0,
+    "planRowsWithSteps": 0,
+    "planStepFieldShapes": {},
+    "planOwningTaskNodes": [],
+    "planPayloadBytes": {
+      "rows": 0,
+      "min": null,
+      "max": null
+    },
+    "truncatedPayloadRows": 66,
+    "truncationLimit": 12000,
+    "rowsOverTruncationLimit": 387,
+    "planningSessionEvents": 0,
+    "planLikePlanningEvents": 0
+  },
+  "rowCounts": {
+    "task_events": 8116,
+    "task_runs": 6,
+    "task_nodes": 7,
+    "task_graph_revisions": 11,
+    "task_node_result_versions": 4,
+    "ubuddy_planning_sessions": 0,
+    "ubuddy_planning_session_events": 0,
+    "collaboration_groups": 11,
+    "agent_delegations": 35
+  },
+  "verdict": {
+    "kind": "no_plan_observed",
+    "explanation": "plan 的同源兄弟（goal/usage/model/reasoning/sandbox/answer/artifact）都有行，说明 stdin 通知通道在落库；只有 plan 没有 ⇒ 当前配置下 app-server 没有发出 turn/plan/updated（解释 1）。价值重心应转向 agent_task 层漂移与 status 通道，不要写适配器去补底料。",
+    "graphTablesPresent": false,
+    "agentStepLayerHasMaterial": false
+  }
+}

@@ -1,0 +1,773 @@
+[
+  {
+    "id": "rdmd_adv_single_control_0__single_control__20277299",
+    "kind": "single_control",
+    "scale": 20,
+    "status": "drift",
+    "cases": 1,
+    "injected_node": "n1",
+    "injected_type": "missing_dependency",
+    "injected_nodes": [],
+    "gateRejections": []
+  },
+  {
+    "id": "rdmd_adv_single_control_1__single_control__20278276",
+    "kind": "single_control",
+    "scale": 20,
+    "status": "drift",
+    "cases": 1,
+    "injected_node": "n11",
+    "injected_type": "missing_dependency",
+    "injected_nodes": [],
+    "gateRejections": []
+  },
+  {
+    "id": "rdmd_adv_two_derived_cause_2__two_derived_cause__20271061",
+    "kind": "two_derived_cause",
+    "scale": 28,
+    "status": "UNKNOWN",
+    "cases": 2,
+    "injected_node": "",
+    "injected_type": "",
+    "injected_nodes": [
+      "n24",
+      "n21"
+    ],
+    "gateRejections": []
+  },
+  {
+    "id": "rdmd_adv_single_control_2__single_control__20279253",
+    "kind": "single_control",
+    "scale": 28,
+    "status": "drift",
+    "cases": 1,
+    "injected_node": "n23",
+    "injected_type": "missing_dependency",
+    "injected_nodes": [],
+    "gateRejections": []
+  },
+  {
+    "id": "rdmd_adv_two_derived_cause_3__two_derived_cause__20272038",
+    "kind": "two_derived_cause",
+    "scale": 28,
+    "status": "UNKNOWN",
+    "cases": 2,
+    "injected_node": "",
+    "injected_type": "",
+    "injected_nodes": [
+      "n7",
+      "n9"
+    ],
+    "gateRejections": []
+  },
+  {
+    "id": "rdmd_adv_single_control_3__single_control__20280230",
+    "kind": "single_control",
+    "scale": 28,
+    "status": "drift",
+    "cases": 1,
+    "injected_node": "n27",
+    "injected_type": "missing_dependency",
+    "injected_nodes": [],
+    "gateRejections": []
+  },
+  {
+    "id": "rdmd_adv_single_control_4__single_control__20281207",
+    "kind": "single_control",
+    "scale": 20,
+    "status": "drift",
+    "cases": 1,
+    "injected_node": "n11",
+    "injected_type": "missing_dependency",
+    "injected_nodes": [],
+    "gateRejections": []
+  },
+  {
+    "id": "rdmd_adv_single_control_5__single_control__20282184",
+    "kind": "single_control",
+    "scale": 20,
+    "status": "drift",
+    "cases": 1,
+    "injected_node": "n12",
+    "injected_type": "missing_dependency",
+    "injected_nodes": [],
+    "gateRejections": []
+  },
+  {
+    "id": "rdmd_adv_two_derived_cause_6__two_derived_cause__20274969",
+    "kind": "two_derived_cause",
+    "scale": 28,
+    "status": "UNKNOWN",
+    "cases": 2,
+    "injected_node": "",
+    "injected_type": "",
+    "injected_nodes": [
+      "n15",
+      "n6"
+    ],
+    "gateRejections": []
+  },
+  {
+    "id": "rdmd_adv_single_control_6__single_control__20283161",
+    "kind": "single_control",
+    "scale": 28,
+    "status": "drift",
+    "cases": 1,
+    "injected_node": "n28",
+    "injected_type": "missing_dependency",
+    "injected_nodes": [],
+    "gateRejections": []
+  },
+  {
+    "id": "rdmd_adv_two_derived_cause_7__two_derived_cause__20275946",
+    "kind": "two_derived_cause",
+    "scale": 28,
+    "status": "UNKNOWN",
+    "cases": 2,
+    "injected_node": "",
+    "injected_type": "",
+    "injected_nodes": [
+      "n19",
+      "n2"
+    ],
+    "gateRejections": []
+  },
+  {
+    "id": "rdmd_adv_single_control_8__single_control__20285115",
+    "kind": "single_control",
+    "scale": 20,
+    "status": "drift",
+    "cases": 1,
+    "injected_node": "n5",
+    "injected_type": "missing_dependency",
+    "injected_nodes": [],
+    "gateRejections": []
+  },
+  {
+    "id": "rdmd_adv_single_control_9__single_control__20286092",
+    "kind": "single_control",
+    "scale": 20,
+    "status": "drift",
+    "cases": 1,
+    "injected_node": "n14",
+    "injected_type": "missing_dependency",
+    "injected_nodes": [],
+    "gateRejections": []
+  },
+  {
+    "id": "rdmd_adv_two_derived_cause_10__two_derived_cause__20278877",
+    "kind": "two_derived_cause",
+    "scale": 28,
+    "status": "UNKNOWN",
+    "cases": 2,
+    "injected_node": "",
+    "injected_type": "",
+    "injected_nodes": [
+      "n24",
+      "n17"
+    ],
+    "gateRejections": []
+  },
+  {
+    "id": "rdmd_adv_two_derived_cause_11__two_derived_cause__20279854",
+    "kind": "two_derived_cause",
+    "scale": 29,
+    "status": "UNKNOWN",
+    "cases": 2,
+    "injected_node": "",
+    "injected_type": "",
+    "injected_nodes": [
+      "n29",
+      "n13"
+    ],
+    "gateRejections": [
+      "extra_node_unexplained:repair_n5_a",
+      "extra_node_unexplained:repair_n5_b"
+    ]
+  },
+  {
+    "id": "rdmd_adv_single_control_11__single_control__20288046",
+    "kind": "single_control",
+    "scale": 29,
+    "status": "drift",
+    "cases": 1,
+    "injected_node": "n19",
+    "injected_type": "missing_dependency",
+    "injected_nodes": [],
+    "gateRejections": []
+  },
+  {
+    "id": "rdmd_adv_single_control_12__single_control__20289023",
+    "kind": "single_control",
+    "scale": 20,
+    "status": "drift",
+    "cases": 1,
+    "injected_node": "n1",
+    "injected_type": "missing_dependency",
+    "injected_nodes": [],
+    "gateRejections": []
+  },
+  {
+    "id": "rdmd_adv_single_control_13__single_control__20290000",
+    "kind": "single_control",
+    "scale": 20,
+    "status": "drift",
+    "cases": 1,
+    "injected_node": "n1",
+    "injected_type": "missing_dependency",
+    "injected_nodes": [],
+    "gateRejections": []
+  },
+  {
+    "id": "rdmd_adv_two_derived_cause_14__two_derived_cause__20282785",
+    "kind": "two_derived_cause",
+    "scale": 29,
+    "status": "UNKNOWN",
+    "cases": 2,
+    "injected_node": "",
+    "injected_type": "",
+    "injected_nodes": [
+      "n19",
+      "n14"
+    ],
+    "gateRejections": []
+  },
+  {
+    "id": "rdmd_adv_single_control_14__single_control__20290977",
+    "kind": "single_control",
+    "scale": 29,
+    "status": "drift",
+    "cases": 1,
+    "injected_node": "n10",
+    "injected_type": "missing_dependency",
+    "injected_nodes": [],
+    "gateRejections": []
+  },
+  {
+    "id": "rdmd_adv_two_derived_cause_15__two_derived_cause__20283762",
+    "kind": "two_derived_cause",
+    "scale": 27,
+    "status": "UNKNOWN",
+    "cases": 2,
+    "injected_node": "",
+    "injected_type": "",
+    "injected_nodes": [
+      "n24",
+      "n1"
+    ],
+    "gateRejections": []
+  },
+  {
+    "id": "rdmd_adv_single_control_15__single_control__20291954",
+    "kind": "single_control",
+    "scale": 27,
+    "status": "drift",
+    "cases": 1,
+    "injected_node": "n9",
+    "injected_type": "missing_dependency",
+    "injected_nodes": [],
+    "gateRejections": []
+  },
+  {
+    "id": "rdmd_adv_single_control_17__single_control__20293908",
+    "kind": "single_control",
+    "scale": 20,
+    "status": "drift",
+    "cases": 1,
+    "injected_node": "n7",
+    "injected_type": "missing_dependency",
+    "injected_nodes": [],
+    "gateRejections": []
+  },
+  {
+    "id": "rdmd_adv_two_derived_cause_18__two_derived_cause__20286693",
+    "kind": "two_derived_cause",
+    "scale": 27,
+    "status": "UNKNOWN",
+    "cases": 2,
+    "injected_node": "",
+    "injected_type": "",
+    "injected_nodes": [
+      "n14",
+      "n18"
+    ],
+    "gateRejections": []
+  },
+  {
+    "id": "rdmd_adv_single_control_18__single_control__20294885",
+    "kind": "single_control",
+    "scale": 27,
+    "status": "drift",
+    "cases": 1,
+    "injected_node": "n6",
+    "injected_type": "missing_dependency",
+    "injected_nodes": [],
+    "gateRejections": []
+  },
+  {
+    "id": "rdmd_adv_two_derived_cause_19__two_derived_cause__20287670",
+    "kind": "two_derived_cause",
+    "scale": 27,
+    "status": "UNKNOWN",
+    "cases": 2,
+    "injected_node": "",
+    "injected_type": "",
+    "injected_nodes": [
+      "n19",
+      "n22"
+    ],
+    "gateRejections": []
+  },
+  {
+    "id": "rdmd_adv_single_control_19__single_control__20295862",
+    "kind": "single_control",
+    "scale": 27,
+    "status": "drift",
+    "cases": 1,
+    "injected_node": "n23",
+    "injected_type": "missing_dependency",
+    "injected_nodes": [],
+    "gateRejections": []
+  },
+  {
+    "id": "rdmd_adv_single_control_20__single_control__20296839",
+    "kind": "single_control",
+    "scale": 20,
+    "status": "drift",
+    "cases": 1,
+    "injected_node": "n19",
+    "injected_type": "missing_dependency",
+    "injected_nodes": [],
+    "gateRejections": []
+  },
+  {
+    "id": "rdmd_adv_single_control_22__single_control__20298793",
+    "kind": "single_control",
+    "scale": 20,
+    "status": "drift",
+    "cases": 1,
+    "injected_node": "n16",
+    "injected_type": "missing_dependency",
+    "injected_nodes": [],
+    "gateRejections": []
+  },
+  {
+    "id": "rdmd_adv_two_derived_cause_23__two_derived_cause__20291578",
+    "kind": "two_derived_cause",
+    "scale": 29,
+    "status": "UNKNOWN",
+    "cases": 2,
+    "injected_node": "",
+    "injected_type": "",
+    "injected_nodes": [
+      "n21",
+      "n27"
+    ],
+    "gateRejections": []
+  },
+  {
+    "id": "rdmd_adv_single_control_23__single_control__20299770",
+    "kind": "single_control",
+    "scale": 29,
+    "status": "drift",
+    "cases": 1,
+    "injected_node": "n16",
+    "injected_type": "missing_dependency",
+    "injected_nodes": [],
+    "gateRejections": []
+  },
+  {
+    "id": "rdmd_adv_two_derived_cause_24__two_derived_cause__20292555",
+    "kind": "two_derived_cause",
+    "scale": 28,
+    "status": "UNKNOWN",
+    "cases": 2,
+    "injected_node": "",
+    "injected_type": "",
+    "injected_nodes": [
+      "n18",
+      "n14"
+    ],
+    "gateRejections": []
+  },
+  {
+    "id": "rdmd_adv_single_control_24__single_control__20300747",
+    "kind": "single_control",
+    "scale": 28,
+    "status": "drift",
+    "cases": 1,
+    "injected_node": "n26",
+    "injected_type": "missing_dependency",
+    "injected_nodes": [],
+    "gateRejections": []
+  },
+  {
+    "id": "rdmd_adv_single_control_25__single_control__20301724",
+    "kind": "single_control",
+    "scale": 20,
+    "status": "drift",
+    "cases": 1,
+    "injected_node": "n16",
+    "injected_type": "missing_dependency",
+    "injected_nodes": [],
+    "gateRejections": []
+  },
+  {
+    "id": "rdmd_adv_single_control_26__single_control__20302701",
+    "kind": "single_control",
+    "scale": 20,
+    "status": "drift",
+    "cases": 1,
+    "injected_node": "n20",
+    "injected_type": "missing_dependency",
+    "injected_nodes": [],
+    "gateRejections": []
+  },
+  {
+    "id": "rdmd_adv_two_derived_cause_27__two_derived_cause__20295486",
+    "kind": "two_derived_cause",
+    "scale": 27,
+    "status": "UNKNOWN",
+    "cases": 2,
+    "injected_node": "",
+    "injected_type": "",
+    "injected_nodes": [
+      "n13",
+      "n15"
+    ],
+    "gateRejections": []
+  },
+  {
+    "id": "rdmd_adv_two_derived_cause_28__two_derived_cause__20296463",
+    "kind": "two_derived_cause",
+    "scale": 27,
+    "status": "UNKNOWN",
+    "cases": 2,
+    "injected_node": "",
+    "injected_type": "",
+    "injected_nodes": [
+      "n15",
+      "n19"
+    ],
+    "gateRejections": []
+  },
+  {
+    "id": "rdmd_adv_single_control_28__single_control__20304655",
+    "kind": "single_control",
+    "scale": 27,
+    "status": "drift",
+    "cases": 1,
+    "injected_node": "n19",
+    "injected_type": "missing_dependency",
+    "injected_nodes": [],
+    "gateRejections": []
+  },
+  {
+    "id": "rdmd_adv_single_control_29__single_control__20305632",
+    "kind": "single_control",
+    "scale": 20,
+    "status": "drift",
+    "cases": 1,
+    "injected_node": "n9",
+    "injected_type": "missing_dependency",
+    "injected_nodes": [],
+    "gateRejections": []
+  },
+  {
+    "id": "rdmd_adv_single_control_30__single_control__20306609",
+    "kind": "single_control",
+    "scale": 20,
+    "status": "drift",
+    "cases": 1,
+    "injected_node": "n14",
+    "injected_type": "missing_dependency",
+    "injected_nodes": [],
+    "gateRejections": []
+  },
+  {
+    "id": "rdmd_adv_two_derived_cause_31__two_derived_cause__20299394",
+    "kind": "two_derived_cause",
+    "scale": 27,
+    "status": "UNKNOWN",
+    "cases": 2,
+    "injected_node": "",
+    "injected_type": "",
+    "injected_nodes": [
+      "n2",
+      "n9"
+    ],
+    "gateRejections": []
+  },
+  {
+    "id": "rdmd_adv_single_control_31__single_control__20307586",
+    "kind": "single_control",
+    "scale": 27,
+    "status": "drift",
+    "cases": 1,
+    "injected_node": "n11",
+    "injected_type": "missing_dependency",
+    "injected_nodes": [],
+    "gateRejections": []
+  },
+  {
+    "id": "rdmd_adv_two_derived_cause_32__two_derived_cause__20300371",
+    "kind": "two_derived_cause",
+    "scale": 29,
+    "status": "UNKNOWN",
+    "cases": 2,
+    "injected_node": "",
+    "injected_type": "",
+    "injected_nodes": [
+      "n19",
+      "n11"
+    ],
+    "gateRejections": []
+  },
+  {
+    "id": "rdmd_adv_single_control_32__single_control__20308563",
+    "kind": "single_control",
+    "scale": 29,
+    "status": "drift",
+    "cases": 1,
+    "injected_node": "n10",
+    "injected_type": "missing_dependency",
+    "injected_nodes": [],
+    "gateRejections": []
+  },
+  {
+    "id": "rdmd_adv_single_control_33__single_control__20309540",
+    "kind": "single_control",
+    "scale": 20,
+    "status": "drift",
+    "cases": 1,
+    "injected_node": "n9",
+    "injected_type": "missing_dependency",
+    "injected_nodes": [],
+    "gateRejections": []
+  },
+  {
+    "id": "rdmd_adv_single_control_34__single_control__20310517",
+    "kind": "single_control",
+    "scale": 20,
+    "status": "drift",
+    "cases": 1,
+    "injected_node": "n15",
+    "injected_type": "missing_dependency",
+    "injected_nodes": [],
+    "gateRejections": []
+  },
+  {
+    "id": "rdmd_adv_two_derived_cause_35__two_derived_cause__20303302",
+    "kind": "two_derived_cause",
+    "scale": 28,
+    "status": "UNKNOWN",
+    "cases": 2,
+    "injected_node": "",
+    "injected_type": "",
+    "injected_nodes": [
+      "n5",
+      "n17"
+    ],
+    "gateRejections": [
+      "extra_node_unexplained:repair_n2_a",
+      "extra_node_unexplained:repair_n2_b"
+    ]
+  },
+  {
+    "id": "rdmd_adv_two_derived_cause_36__two_derived_cause__20304279",
+    "kind": "two_derived_cause",
+    "scale": 29,
+    "status": "UNKNOWN",
+    "cases": 2,
+    "injected_node": "",
+    "injected_type": "",
+    "injected_nodes": [
+      "n13",
+      "n10"
+    ],
+    "gateRejections": []
+  },
+  {
+    "id": "rdmd_adv_two_derived_cause_39__two_derived_cause__20307210",
+    "kind": "two_derived_cause",
+    "scale": 29,
+    "status": "UNKNOWN",
+    "cases": 2,
+    "injected_node": "",
+    "injected_type": "",
+    "injected_nodes": [
+      "n15",
+      "n9"
+    ],
+    "gateRejections": []
+  },
+  {
+    "id": "rdmd_adv_two_derived_cause_40__two_derived_cause__20308187",
+    "kind": "two_derived_cause",
+    "scale": 29,
+    "status": "UNKNOWN",
+    "cases": 2,
+    "injected_node": "",
+    "injected_type": "",
+    "injected_nodes": [
+      "n17",
+      "n29"
+    ],
+    "gateRejections": []
+  },
+  {
+    "id": "rdmd_adv_two_derived_cause_43__two_derived_cause__20311118",
+    "kind": "two_derived_cause",
+    "scale": 28,
+    "status": "UNKNOWN",
+    "cases": 2,
+    "injected_node": "",
+    "injected_type": "",
+    "injected_nodes": [
+      "n20",
+      "n26"
+    ],
+    "gateRejections": []
+  },
+  {
+    "id": "rdmd_adv_two_derived_cause_44__two_derived_cause__20312095",
+    "kind": "two_derived_cause",
+    "scale": 28,
+    "status": "UNKNOWN",
+    "cases": 2,
+    "injected_node": "",
+    "injected_type": "",
+    "injected_nodes": [
+      "n6",
+      "n5"
+    ],
+    "gateRejections": [
+      "extra_node_unexplained:repair_n28_a",
+      "extra_node_unexplained:repair_n28_b"
+    ]
+  },
+  {
+    "id": "rdmd_adv_two_derived_cause_45__two_derived_cause__20313072",
+    "kind": "two_derived_cause",
+    "scale": 27,
+    "status": "UNKNOWN",
+    "cases": 2,
+    "injected_node": "",
+    "injected_type": "",
+    "injected_nodes": [
+      "n13",
+      "n1"
+    ],
+    "gateRejections": []
+  },
+  {
+    "id": "rdmd_adv_two_derived_cause_48__two_derived_cause__20316003",
+    "kind": "two_derived_cause",
+    "scale": 29,
+    "status": "UNKNOWN",
+    "cases": 2,
+    "injected_node": "",
+    "injected_type": "",
+    "injected_nodes": [
+      "n29",
+      "n22"
+    ],
+    "gateRejections": []
+  },
+  {
+    "id": "rdmd_adv_two_derived_cause_49__two_derived_cause__20316980",
+    "kind": "two_derived_cause",
+    "scale": 29,
+    "status": "UNKNOWN",
+    "cases": 2,
+    "injected_node": "",
+    "injected_type": "",
+    "injected_nodes": [
+      "n15",
+      "n3"
+    ],
+    "gateRejections": [
+      "extra_node_unexplained:repair_n25_a",
+      "extra_node_unexplained:repair_n25_b"
+    ]
+  },
+  {
+    "id": "rdmd_adv_two_derived_cause_52__two_derived_cause__20319911",
+    "kind": "two_derived_cause",
+    "scale": 27,
+    "status": "UNKNOWN",
+    "cases": 2,
+    "injected_node": "",
+    "injected_type": "",
+    "injected_nodes": [
+      "n17",
+      "n13"
+    ],
+    "gateRejections": [
+      "extra_node_unexplained:repair_n26_a",
+      "extra_node_unexplained:repair_n26_b"
+    ]
+  },
+  {
+    "id": "rdmd_adv_two_derived_cause_53__two_derived_cause__20320888",
+    "kind": "two_derived_cause",
+    "scale": 27,
+    "status": "UNKNOWN",
+    "cases": 2,
+    "injected_node": "",
+    "injected_type": "",
+    "injected_nodes": [
+      "n13",
+      "n27"
+    ],
+    "gateRejections": []
+  },
+  {
+    "id": "rdmd_adv_two_derived_cause_56__two_derived_cause__20323819",
+    "kind": "two_derived_cause",
+    "scale": 28,
+    "status": "UNKNOWN",
+    "cases": 2,
+    "injected_node": "",
+    "injected_type": "",
+    "injected_nodes": [
+      "n22",
+      "n27"
+    ],
+    "gateRejections": [
+      "extra_node_unexplained:repair_n17_a",
+      "extra_node_unexplained:repair_n17_b"
+    ]
+  },
+  {
+    "id": "rdmd_adv_two_derived_cause_57__two_derived_cause__20324796",
+    "kind": "two_derived_cause",
+    "scale": 29,
+    "status": "UNKNOWN",
+    "cases": 2,
+    "injected_node": "",
+    "injected_type": "",
+    "injected_nodes": [
+      "n23",
+      "n10"
+    ],
+    "gateRejections": [
+      "extra_node_unexplained:repair_n4_a",
+      "extra_node_unexplained:repair_n4_b"
+    ]
+  },
+  {
+    "id": "rdmd_adv_two_derived_cause_60__two_derived_cause__20327727",
+    "kind": "two_derived_cause",
+    "scale": 29,
+    "status": "UNKNOWN",
+    "cases": 2,
+    "injected_node": "",
+    "injected_type": "",
+    "injected_nodes": [
+      "n1",
+      "n14"
+    ],
+    "gateRejections": []
+  }
+]

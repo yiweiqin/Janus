@@ -1,0 +1,46 @@
+[load] base=/root/autodl-tmp/models/Qwen3-8B adapter=/root/autodl-tmp/rdmd_runs/qlora-v3/adapter device=cuda:0
+Loading weights:   0%|          | 0/399 [00:00<?, ?it/s]Loading weights:   0%|          | 1/399 [00:00<00:54,  7.30it/s]Loading weights:   1%|          | 2/399 [00:00<01:05,  6.07it/s]Loading weights:   4%|▍         | 17/399 [00:00<00:07, 53.09it/s]Loading weights:   9%|▉         | 36/399 [00:00<00:03, 94.98it/s]Loading weights:  12%|█▏        | 48/399 [00:00<00:03, 100.05it/s]Loading weights:  15%|█▌        | 60/399 [00:00<00:03, 94.01it/s] Loading weights:  18%|█▊        | 71/399 [00:00<00:03, 95.76it/s]Loading weights:  21%|██        | 82/399 [00:01<00:03, 97.72it/s]Loading weights:  23%|██▎       | 93/399 [00:01<00:03, 99.63it/s]Loading weights:  26%|██▌       | 104/399 [00:01<00:02, 98.43it/s]Loading weights:  29%|██▉       | 115/399 [00:01<00:02, 98.00it/s]Loading weights:  32%|███▏      | 126/399 [00:01<00:02, 99.48it/s]Loading weights:  34%|███▍      | 137/399 [00:01<00:02, 92.36it/s]Loading weights:  37%|███▋      | 149/399 [00:01<00:02, 96.33it/s]Loading weights:  40%|████      | 160/399 [00:01<00:02, 97.41it/s]Loading weights:  43%|████▎     | 171/399 [00:01<00:02, 98.25it/s]Loading weights:  46%|████▌     | 182/399 [00:02<00:02, 95.46it/s]Loading weights:  48%|████▊     | 193/399 [00:02<00:02, 96.69it/s]Loading weights:  51%|█████     | 204/399 [00:02<00:02, 96.95it/s]Loading weights:  54%|█████▍    | 215/399 [00:02<00:01, 96.54it/s]Loading weights:  57%|█████▋    | 226/399 [00:02<00:01, 97.04it/s]Loading weights:  59%|█████▉    | 236/399 [00:02<00:01, 94.75it/s]Loading weights:  62%|██████▏   | 248/399 [00:02<00:01, 99.58it/s]Loading weights:  65%|██████▍   | 259/399 [00:02<00:01, 98.95it/s]Loading weights:  68%|██████▊   | 270/399 [00:02<00:01, 99.68it/s]Loading weights:  70%|███████   | 281/399 [00:03<00:01, 98.77it/s]Loading weights:  73%|███████▎  | 292/399 [00:03<00:01, 100.31it/s]Loading weights:  76%|███████▌  | 303/399 [00:03<00:00, 101.06it/s]Loading weights:  79%|███████▊  | 314/399 [00:03<00:00, 99.37it/s] Loading weights:  81%|████████▏ | 325/399 [00:03<00:00, 100.02it/s]Loading weights:  84%|████████▍ | 336/399 [00:03<00:00, 100.73it/s]Loading weights:  87%|████████▋ | 347/399 [00:03<00:00, 97.52it/s] Loading weights:  90%|████████▉ | 358/399 [00:03<00:00, 97.31it/s]Loading weights:  92%|█████████▏| 369/399 [00:03<00:00, 97.03it/s]Loading weights:  95%|█████████▌| 380/399 [00:04<00:00, 97.96it/s]Loading weights:  98%|█████████▊| 391/399 [00:04<00:00, 97.63it/s]Loading weights: 100%|██████████| 399/399 [00:04<00:00, 95.39it/s]
+[1/43] rdmd_ood_chain_side_16_0__chain_side__no_drift__20265010 -> no_drift
+[2/43] rdmd_ood_chain_side_16_0__chain_side__UNKNOWN__20269106 -> UNKNOWN
+[3/43] rdmd_ood_wide_fan_16_1__wide_fan__no_drift__20265987 -> no_drift
+[4/43] rdmd_ood_nested_diamond_16_2__nested_diamond__no_drift__20266964 -> no_drift
+[5/43] rdmd_ood_layered_mesh_16_3__layered_mesh__drift__20264107 -> drift n4
+[6/43] rdmd_ood_layered_mesh_16_3__layered_mesh__no_drift__20267941 -> no_drift
+[7/43] rdmd_ood_chain_side_24_4__chain_side__drift__20264953 -> drift n10
+[8/43] rdmd_ood_chain_side_24_4__chain_side__no_drift__20268918 -> no_drift
+[9/43] rdmd_ood_chain_side_24_4__chain_side__drift_derived_only__20281206 -> drift n4
+[10/43] rdmd_ood_chain_side_24_4__chain_side__UNKNOWN__20273145 -> UNKNOWN
+[11/43] rdmd_ood_wide_fan_24_5__wide_fan__drift__20265799 -> drift n3
+[12/43] rdmd_ood_wide_fan_24_5__wide_fan__no_drift__20269895 -> no_drift
+[13/43] rdmd_ood_wide_fan_24_5__wide_fan__drift_derived_only__20282183 -> drift n7
+[14/43] rdmd_ood_nested_diamond_24_6__nested_diamond__drift__20266776 -> drift n23
+[15/43] rdmd_ood_nested_diamond_24_6__nested_diamond__no_drift__20270872 -> no_drift
+[16/43] rdmd_ood_nested_diamond_24_6__nested_diamond__drift_derived_only__20283160 -> drift n13
+[17/43] rdmd_ood_layered_mesh_24_7__layered_mesh__drift__20267753 -> drift n15
+[18/43] rdmd_ood_layered_mesh_24_7__layered_mesh__no_drift__20271849 -> no_drift
+[19/43] rdmd_ood_layered_mesh_24_7__layered_mesh__drift_derived_only__20284137 -> drift n21
+[20/43] rdmd_ood_chain_side_32_8__chain_side__drift__20268730 -> drift n28
+[21/43] rdmd_ood_chain_side_32_8__chain_side__no_drift__20272826 -> no_drift
+[22/43] rdmd_ood_chain_side_32_8__chain_side__drift_derived_only__20285114 -> drift n19
+[23/43] rdmd_ood_chain_side_32_8__chain_side__UNKNOWN__20276922 -> UNKNOWN
+[24/43] rdmd_ood_wide_fan_32_9__wide_fan__drift__20269838 -> drift n32
+[25/43] rdmd_ood_wide_fan_32_9__wide_fan__no_drift__20273803 -> no_drift
+[26/43] rdmd_ood_wide_fan_32_9__wide_fan__drift_derived_only__20286091 -> drift n9
+[27/43] rdmd_ood_nested_diamond_32_10__nested_diamond__drift__20270684 -> drift n8
+[28/43] rdmd_ood_nested_diamond_32_10__nested_diamond__no_drift__20274780 -> no_drift
+[29/43] rdmd_ood_layered_mesh_32_11__layered_mesh__drift__20271661 -> drift n15
+[30/43] rdmd_ood_layered_mesh_32_11__layered_mesh__no_drift__20275757 -> no_drift
+[31/43] rdmd_ood_layered_mesh_48_12__layered_mesh__drift__20272638 -> drift n13
+[32/43] rdmd_ood_layered_mesh_48_12__layered_mesh__no_drift__20276734 -> no_drift
+[33/43] rdmd_ood_layered_mesh_48_12__layered_mesh__drift_derived_only__20289022 -> drift n18
+[34/43] rdmd_ood_layered_mesh_48_12__layered_mesh__UNKNOWN__20280830 -> UNKNOWN
+[35/43] rdmd_ood_nested_diamond_48_13__nested_diamond__drift__20273615 -> drift n8
+[36/43] rdmd_ood_nested_diamond_48_13__nested_diamond__no_drift__20277711 -> no_drift
+[37/43] rdmd_ood_nested_diamond_48_13__nested_diamond__drift_derived_only__20289999 -> drift n45
+[38/43] rdmd_ood_layered_mesh_80_14__layered_mesh__drift__20274723 -> drift n55
+[39/43] rdmd_ood_layered_mesh_80_14__layered_mesh__no_drift__20278688 -> no_drift
+[40/43] rdmd_ood_layered_mesh_80_14__layered_mesh__drift_derived_only__20290976 -> drift n45
+[41/43] rdmd_ood_chain_side_80_15__chain_side__drift__20275569 -> drift n15
+[42/43] rdmd_ood_chain_side_80_15__chain_side__no_drift__20279665 -> no_drift
+[43/43] rdmd_ood_chain_side_80_15__chain_side__drift_derived_only__20291953 -> drift n1
+[done] 43 cases, 0 invalid

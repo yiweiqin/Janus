@@ -1,0 +1,131 @@
+{
+  "generatedAt": "2026-09-15T17:49:48.286Z",
+  "db": "janus.db",
+  "tpmVersion": "ubuddy_task_public_memory_v1",
+  "perTask": [
+    {
+      "taskRunId": "task_4e1015ef-cf5a-465a-98ab-caabfa343ee8",
+      "title": "向 test-1 询问其近期完成的工作和进展，并将回复整理成一份简明报告。",
+      "foundation": {
+        "planNodes": 1,
+        "planEdges": 0,
+        "execNodes": 2,
+        "execEdges": 0
+      },
+      "elevation": 2,
+      "raw": 1,
+      "supersessions": 11,
+      "roundTrip": {
+        "planPreserved": true,
+        "execPreserved": true,
+        "rawPreserved": true,
+        "elevationPreserved": true
+      }
+    },
+    {
+      "taskRunId": "task_1a8c7a0b-2142-40e6-b469-61e2e36912f0",
+      "title": "撰写生成式推荐系统介绍 Word 文档",
+      "foundation": {
+        "planNodes": 1,
+        "planEdges": 0,
+        "execNodes": 1,
+        "execEdges": 0
+      },
+      "elevation": 0,
+      "raw": 0,
+      "supersessions": 0,
+      "roundTrip": {
+        "planPreserved": true,
+        "execPreserved": true,
+        "rawPreserved": true,
+        "elevationPreserved": true
+      }
+    },
+    {
+      "taskRunId": "task_a16f57dd-7a51-48f7-961f-331ec26546db",
+      "title": "由测试账号 01 撰写一篇关于 Agent 与推荐系统融合科研方向的调研报告，梳理研究现状、关键融合路径、代表性工作、主要挑战及值得探索的未来课题。",
+      "foundation": {
+        "planNodes": 1,
+        "planEdges": 0,
+        "execNodes": 1,
+        "execEdges": 0
+      },
+      "elevation": 1,
+      "raw": 2,
+      "supersessions": 0,
+      "roundTrip": {
+        "planPreserved": true,
+        "execPreserved": true,
+        "rawPreserved": true,
+        "elevationPreserved": true
+      }
+    },
+    {
+      "taskRunId": "task_6ce70b9f-bd38-462e-bca7-22402c43e83a",
+      "title": "由测试账号 01 撰写一篇关于最新 Agent Harness 的中文调研报告，并以 Word 文档交付。",
+      "foundation": {
+        "planNodes": 1,
+        "planEdges": 0,
+        "execNodes": 1,
+        "execEdges": 0
+      },
+      "elevation": 1,
+      "raw": 1,
+      "supersessions": 0,
+      "roundTrip": {
+        "planPreserved": true,
+        "execPreserved": true,
+        "rawPreserved": true,
+        "elevationPreserved": true
+      }
+    },
+    {
+      "taskRunId": "task_7270b516-037b-4612-b690-82d19651c11f",
+      "title": "环境污染与治理资料研究",
+      "foundation": {
+        "planNodes": 1,
+        "planEdges": 0,
+        "execNodes": 1,
+        "execEdges": 0
+      },
+      "elevation": 0,
+      "raw": 0,
+      "supersessions": 0,
+      "roundTrip": {
+        "planPreserved": true,
+        "execPreserved": true,
+        "rawPreserved": true,
+        "elevationPreserved": true
+      }
+    },
+    {
+      "taskRunId": "task_30a1a3fc-7fab-4546-a4d3-2cb071c6c4ef",
+      "title": "RAG 技术基础与研究脉络调研",
+      "foundation": {
+        "planNodes": 1,
+        "planEdges": 0,
+        "execNodes": 1,
+        "execEdges": 0
+      },
+      "elevation": 0,
+      "raw": 0,
+      "supersessions": 0,
+      "roundTrip": {
+        "planPreserved": true,
+        "execPreserved": true,
+        "rawPreserved": true,
+        "elevationPreserved": true
+      }
+    }
+  ],
+  "totals": {
+    "tasks": 6,
+    "planNodes": 6,
+    "planEdges": 0,
+    "execNodes": 7,
+    "execEdges": 0,
+    "elevation": 4,
+    "raw": 4,
+    "roundTripAllPreserved": true
+  }
+}

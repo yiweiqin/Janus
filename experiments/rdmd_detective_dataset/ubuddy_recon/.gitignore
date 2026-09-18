@@ -1,0 +1,17 @@
+# 真实导出物绝不入库。这是生产数据，只应留在本地做侦察。
+# 导出脚本默认写到本目录，所以把它的产物全部挡在版本库外。
+*.jsonl
+recon_summary.json
+recon_report.md
+manifest.json
+
+# 分析器/测试的临时产物
+_verify_out/
+_verify_empty/
+
+# 明细图是**真实任务内容**：gplan_gexec.json 里带着真实任务标题（例「撰写并生成生成式
+# 推荐系统介绍文档」）与会话 id，route_evolution_e2e.json 同理。它们是 build_gplan_gexec.mjs /
+# route_evolution_e2e.mjs 的产物，不是源码。只留 gplan_gexec_summary.json 这类聚合摘要 ——
+# 计数与形状足够复核结论，真实标题不必入库。
+_graphs/gplan_gexec.json
+_e2e/route_evolution_e2e.json

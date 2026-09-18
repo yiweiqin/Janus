@@ -1,0 +1,83 @@
+{
+  "byScale": {
+    "20": {
+      "n": 60,
+      "drift_n": 30,
+      "base_node": 30,
+      "model_node": 30,
+      "base_type": 30,
+      "model_type": 30,
+      "base_status": 60,
+      "model_status": 55,
+      "abstain_n": 30,
+      "base_abstain": 30,
+      "model_abstain": 25,
+      "invalid": 0,
+      "errors": []
+    }
+  },
+  "byKind": {
+    "single_control": {
+      "n": 30,
+      "drift_n": 30,
+      "base_node": 30,
+      "model_node": 30,
+      "base_type": 30,
+      "model_type": 30,
+      "base_status": 30,
+      "model_status": 30,
+      "abstain_n": 0,
+      "base_abstain": 0,
+      "model_abstain": 0,
+      "invalid": 0,
+      "errors": []
+    },
+    "two_derived_cause": {
+      "n": 30,
+      "drift_n": 0,
+      "base_node": 0,
+      "model_node": 0,
+      "base_type": 0,
+      "model_type": 0,
+      "base_status": 30,
+      "model_status": 25,
+      "abstain_n": 30,
+      "base_abstain": 30,
+      "model_abstain": 25,
+      "invalid": 0,
+      "errors": []
+    }
+  },
+  "byDifficulty": {
+    "drift: cause field": {
+      "n": 30,
+      "drift_n": 30,
+      "base_node": 30,
+      "model_node": 30,
+      "base_type": 30,
+      "model_type": 30,
+      "base_status": 30,
+      "model_status": 30,
+      "abstain_n": 0,
+      "base_abstain": 0,
+      "model_abstain": 0,
+      "invalid": 0,
+      "errors": []
+    },
+    "UNKNOWN": {
+      "n": 30,
+      "drift_n": 0,
+      "base_node": 0,
+      "model_node": 0,
+      "base_type": 0,
+      "model_type": 0,
+      "base_status": 30,
+      "model_status": 25,
+      "abstain_n": 30,
+      "base_abstain": 30,
+      "model_abstain": 25,
+      "invalid": 0,
+      "errors": []
+    }
+  }
+}

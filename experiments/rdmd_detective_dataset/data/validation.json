@@ -1,0 +1,41 @@
+{
+  "n": 12000,
+  "counts": {
+    "drift": 10000,
+    "no_drift": 1000,
+    "UNKNOWN": 1000
+  },
+  "splits": {
+    "train": 8590,
+    "development": 1745,
+    "test": 1665
+  },
+  "invalid": 0,
+  "graphLeak": 0,
+  "baseline": {
+    "n": 1412,
+    "topologicalHit": 0,
+    "typeHit": 0.12110481586402266,
+    "unknownRate": 0.45821529745042494
+  },
+  "shortcut": {
+    "n": 10000,
+    "lowestIdNodeTop1": 0.215,
+    "limit": 0.35,
+    "ok": true
+  },
+  "statusShortcut": {
+    "n": 10000,
+    "statusOnlyTop1": 0.1872,
+    "statusOnlyFired": 0.0891,
+    "limit": 0.35,
+    "ok": true
+  },
+  "longRange": {
+    "meanHop": 3.2682,
+    "minHop": 3,
+    "forms": 180
+  },
+  "pass": true,
+  "errors": []
+}

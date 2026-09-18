@@ -1,0 +1,61 @@
+{
+  "shots": {
+    "train": {
+      "drift": {
+        "n": 140,
+        "ruleA_lowestIdCauseField_nodeTop1": 0.7142857142857143,
+        "ruleB_lowestIdChanged_nodeTop1": 0.07857142857142857,
+        "ruleC_changedRootUnique_nodeTop1": 0.0,
+        "ruleD_cascadeRoot_nodeTop1": 1.0,
+        "ruleE_full_baseline_nodeTop1": 1.0,
+        "ruleE_full_baseline_typeTop1": 0.7142857142857143
+      },
+      "no_drift": {
+        "n": 20,
+        "ruleE_identicalTrees_correct": 1.0
+      },
+      "UNKNOWN": {
+        "n": 7,
+        "ruleE_multipleDisjointCauses_abstainRate": 1.0
+      }
+    },
+    "development": {
+      "drift": {
+        "n": 0,
+        "ruleA_lowestIdCauseField_nodeTop1": 0.0,
+        "ruleB_lowestIdChanged_nodeTop1": 0.0,
+        "ruleC_changedRootUnique_nodeTop1": 0.0,
+        "ruleD_cascadeRoot_nodeTop1": 0.0,
+        "ruleE_full_baseline_nodeTop1": 0.0,
+        "ruleE_full_baseline_typeTop1": 0.0
+      },
+      "no_drift": {
+        "n": 0,
+        "ruleE_identicalTrees_correct": 0.0
+      },
+      "UNKNOWN": {
+        "n": 24,
+        "ruleE_multipleDisjointCauses_abstainRate": 1.0
+      }
+    },
+    "test": {
+      "drift": {
+        "n": 0,
+        "ruleA_lowestIdCauseField_nodeTop1": 0.0,
+        "ruleB_lowestIdChanged_nodeTop1": 0.0,
+        "ruleC_changedRootUnique_nodeTop1": 0.0,
+        "ruleD_cascadeRoot_nodeTop1": 0.0,
+        "ruleE_full_baseline_nodeTop1": 0.0,
+        "ruleE_full_baseline_typeTop1": 0.0
+      },
+      "no_drift": {
+        "n": 0,
+        "ruleE_identicalTrees_correct": 0.0
+      },
+      "UNKNOWN": {
+        "n": 9,
+        "ruleE_multipleDisjointCauses_abstainRate": 1.0
+      }
+    }
+  }
+}

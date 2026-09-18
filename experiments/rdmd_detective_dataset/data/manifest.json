@@ -1,0 +1,36 @@
+{
+  "version": "rdmd_detective_dataset_v4",
+  "generatedAt": "2026-09-17T13:18:17.194Z",
+  "backend": "local",
+  "model": "local-tutorial-writer",
+  "seed": 20260910,
+  "smoke": false,
+  "groupShare": 0.5,
+  "counts": {
+    "drift": 10000,
+    "no_drift": 1000,
+    "UNKNOWN": 1000
+  },
+  "splits": {
+    "train": 8590,
+    "development": 1745,
+    "test": 1665
+  },
+  "families": {
+    "flat_work_units": 6025,
+    "layered_group": 5975
+  },
+  "stepForms": {
+    "missing_dependency": 142,
+    "wrong_agent": 257,
+    "wrong_version": 251,
+    "local_replan": 241
+  },
+  "graphs": 1537,
+  "rejected": 0,
+  "sha256": {
+    "train": "4c6e95fa1e88d516279d2a879b7dcb3f35e0c9835f2187023b65bbdeea5416f7",
+    "development": "00670964d1b5bd0afc2ba0b7a629384797fe8a6b53ea9def7da67b21c0de225c",
+    "test": "cfb5200a26ad7e565ef564473c81c4b3463e9ae207dbed57c1ce31dc264dfa76"
+  }
+}

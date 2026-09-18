@@ -1,0 +1,217 @@
+{
+  "generatedAt": "2026-09-15T17:49:44.783Z",
+  "source": {
+    "db": "janus.db",
+    "codexRoot": "C:\\Users\\zhang\\.janus-test\\data\\codex_backend_sessions"
+  },
+  "organizational": {
+    "pairCount": 6,
+    "planNodeCounts": [
+      1,
+      1,
+      1,
+      1,
+      1,
+      1
+    ],
+    "execNodeCounts": [
+      2,
+      1,
+      1,
+      1,
+      1,
+      1
+    ],
+    "planEdgeTotal": 0,
+    "execEdgeTotal": 0,
+    "supersessionTotal": 11
+  },
+  "agentLongHorizon": {
+    "graphCount": 19,
+    "chainLengths": [
+      16,
+      13,
+      16,
+      9,
+      9,
+      11,
+      24,
+      6,
+      14,
+      10,
+      28,
+      82,
+      107,
+      110,
+      81,
+      11,
+      83,
+      25,
+      51
+    ],
+    "edgeTotal": 687,
+    "nodeTotal": 706,
+    "interactionTotal": 25,
+    "bytesTotal": 18222262
+  },
+  "sessionJoin": [
+    {
+      "sessionId": "session_882a2d3a-fd47-4c0b-b9e8-b11e209a4311",
+      "inSessionsTable": true,
+      "codexThreadId": "",
+      "rolloutCount": 5
+    },
+    {
+      "sessionId": "session_989d72f7-95d1-454b-a05d-048aab547aac",
+      "inSessionsTable": true,
+      "codexThreadId": "019ff5bb-090f-7f60-bfcc-c285490b5e30",
+      "rolloutCount": 2
+    },
+    {
+      "sessionId": "session_b2b8adab-dfd1-4d8e-8425-78a848e323a3",
+      "inSessionsTable": true,
+      "codexThreadId": "",
+      "rolloutCount": 2
+    },
+    {
+      "sessionId": "session_f9bf8697-f4b0-4c2f-a3e3-e38a9189520a",
+      "inSessionsTable": true,
+      "codexThreadId": "01a010f2-3e8c-7f73-9f19-f0b6180ec26c",
+      "rolloutCount": 1
+    },
+    {
+      "sessionId": "session_task_node_1b186bab715c78157334197ee76c9d2a",
+      "inSessionsTable": true,
+      "codexThreadId": "01a0012c-8936-7751-9fb1-990fe5d183fb",
+      "rolloutCount": 5
+    },
+    {
+      "sessionId": "session_task_node_dd130d363426741e85eb5ee4d8760a71",
+      "inSessionsTable": true,
+      "codexThreadId": "",
+      "rolloutCount": 4
+    }
+  ],
+  "driftDiagnostics": [
+    {
+      "taskRunId": "task_4e1015ef-cf5a-465a-98ab-caabfa343ee8",
+      "verdict": {
+        "status": "drift",
+        "nodeId": "node_d03c03d1-957f-49d9-8755-e6418ff73fe8",
+        "edgeId": "",
+        "type": "local_replan",
+        "evidenceNodeIds": [
+          "node_d03c03d1-957f-49d9-8755-e6418ff73fe8"
+        ],
+        "contrast": {
+          "involvedNodeIds": [
+            "node_d03c03d1-957f-49d9-8755-e6418ff73fe8"
+          ],
+          "extraNodeIds": [
+            "node_d03c03d1-957f-49d9-8755-e6418ff73fe8"
+          ],
+          "missingNodeIds": [],
+          "missingEdgeKeys": [],
+          "extraEdgeKeys": [],
+          "nodeCountDiff": 1,
+          "edgeCountDiff": 0
+        }
+      }
+    },
+    {
+      "taskRunId": "task_1a8c7a0b-2142-40e6-b469-61e2e36912f0",
+      "verdict": {
+        "status": "no_drift",
+        "nodeId": "",
+        "edgeId": "",
+        "type": "",
+        "evidenceNodeIds": [],
+        "contrast": {
+          "involvedNodeIds": [],
+          "extraNodeIds": [],
+          "missingNodeIds": [],
+          "missingEdgeKeys": [],
+          "extraEdgeKeys": [],
+          "nodeCountDiff": 0,
+          "edgeCountDiff": 0
+        }
+      }
+    },
+    {
+      "taskRunId": "task_a16f57dd-7a51-48f7-961f-331ec26546db",
+      "verdict": {
+        "status": "no_drift",
+        "nodeId": "",
+        "edgeId": "",
+        "type": "",
+        "evidenceNodeIds": [],
+        "contrast": {
+          "involvedNodeIds": [],
+          "extraNodeIds": [],
+          "missingNodeIds": [],
+          "missingEdgeKeys": [],
+          "extraEdgeKeys": [],
+          "nodeCountDiff": 0,
+          "edgeCountDiff": 0
+        }
+      }
+    },
+    {
+      "taskRunId": "task_6ce70b9f-bd38-462e-bca7-22402c43e83a",
+      "verdict": {
+        "status": "no_drift",
+        "nodeId": "",
+        "edgeId": "",
+        "type": "",
+        "evidenceNodeIds": [],
+        "contrast": {
+          "involvedNodeIds": [],
+          "extraNodeIds": [],
+          "missingNodeIds": [],
+          "missingEdgeKeys": [],
+          "extraEdgeKeys": [],
+          "nodeCountDiff": 0,
+          "edgeCountDiff": 0
+        }
+      }
+    },
+    {
+      "taskRunId": "task_7270b516-037b-4612-b690-82d19651c11f",
+      "verdict": {
+        "status": "no_drift",
+        "nodeId": "",
+        "edgeId": "",
+        "type": "",
+        "evidenceNodeIds": [],
+        "contrast": {
+          "involvedNodeIds": [],
+          "extraNodeIds": [],
+          "missingNodeIds": [],
+          "missingEdgeKeys": [],
+          "extraEdgeKeys": [],
+          "nodeCountDiff": 0,
+          "edgeCountDiff": 0
+        }
+      }
+    },
+    {
+      "taskRunId": "task_30a1a3fc-7fab-4546-a4d3-2cb071c6c4ef",
+      "verdict": {
+        "status": "no_drift",
+        "nodeId": "",
+        "edgeId": "",
+        "type": "",
+        "evidenceNodeIds": [],
+        "contrast": {
+          "involvedNodeIds": [],
+          "extraNodeIds": [],
+          "missingNodeIds": [],
+          "missingEdgeKeys": [],
+          "extraEdgeKeys": [],
+          "nodeCountDiff": 0,
+          "edgeCountDiff": 0
+        }
+      }
+    }
+  ]
+}

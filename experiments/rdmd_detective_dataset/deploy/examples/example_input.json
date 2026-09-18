@@ -1,0 +1,1108 @@
+{
+  "id": "rdmd_local_294__drift__missing_dependency__n13__20261205",
+  "G_star": {
+    "graph_id": "rdmd_local_294",
+    "domain": "code",
+    "title": "功能开发：客户答疑包",
+    "topic": "客户答疑包",
+    "nodes": [
+      {
+        "id": "n17",
+        "title": "实现核心逻辑",
+        "role": "code",
+        "agentId": "code_agent_1_2",
+        "version": "v1",
+        "acceptance": "standard",
+        "artifact": "客户答疑包-实现核心逻辑",
+        "stage": "交付",
+        "inputs": "协作线1的产出",
+        "output": "实现核心逻辑产出（客户答疑包）",
+        "summary": "在「客户答疑包」中完成「实现核心逻辑」，所属域：功能开发。",
+        "kind": "agent_task",
+        "status": "completed"
+      },
+      {
+        "id": "n2",
+        "title": "协作线2：按意见改",
+        "role": "code",
+        "agentId": "code_ubuddy_2",
+        "version": "v1",
+        "acceptance": "standard",
+        "artifact": "客户答疑包-协作线2：按意见改",
+        "stage": "准备",
+        "inputs": "组织「客户答疑包」协作的产出",
+        "output": "协作线2：按意见改产出（客户答疑包）",
+        "summary": "在「客户答疑包」中完成「协作线2：按意见改」，所属域：功能开发。",
+        "kind": "ubuddy",
+        "status": "completed"
+      },
+      {
+        "id": "n20",
+        "title": "设计接口·取证",
+        "role": "",
+        "agentId": "code_agent_1_1",
+        "version": "v1",
+        "acceptance": "standard",
+        "artifact": "",
+        "stage": "",
+        "inputs": "",
+        "output": "",
+        "summary": "",
+        "kind": "agent_step",
+        "status": "completed"
+      },
+      {
+        "id": "n1",
+        "title": "协作线3：冻结标签",
+        "role": "code",
+        "agentId": "code_ubuddy_3",
+        "version": "v1",
+        "acceptance": "standard",
+        "artifact": "客户答疑包-协作线3：冻结标签",
+        "stage": "准备",
+        "inputs": "组织「客户答疑包」协作的产出",
+        "output": "协作线3：冻结标签产出（客户答疑包）",
+        "summary": "在「客户答疑包」中完成「协作线3：冻结标签」，所属域：功能开发。",
+        "kind": "ubuddy",
+        "status": "completed"
+      },
+      {
+        "id": "n25",
+        "title": "组织「客户答疑包」协作",
+        "role": "code",
+        "agentId": "code_ubuddy",
+        "version": "v1",
+        "acceptance": "standard",
+        "artifact": "客户答疑包-组织「客户答疑包」协作",
+        "stage": "准备",
+        "inputs": "客户答疑包任务说明",
+        "output": "组织「客户答疑包」协作产出（客户答疑包）",
+        "summary": "在「客户答疑包」中完成「组织「客户答疑包」协作」，所属域：功能开发。",
+        "kind": "root",
+        "status": "completed"
+      },
+      {
+        "id": "n23",
+        "title": "观察日志·列要点",
+        "role": "",
+        "agentId": "code_agent_2_2",
+        "version": "v1",
+        "acceptance": "standard",
+        "artifact": "",
+        "stage": "",
+        "inputs": "",
+        "output": "",
+        "summary": "",
+        "kind": "agent_step",
+        "status": "completed"
+      },
+      {
+        "id": "n6",
+        "title": "观察日志·核对口径",
+        "role": "",
+        "agentId": "code_agent_2_2",
+        "version": "v1",
+        "acceptance": "standard",
+        "artifact": "",
+        "stage": "",
+        "inputs": "",
+        "output": "",
+        "summary": "",
+        "kind": "agent_step",
+        "status": "completed"
+      },
+      {
+        "id": "n11",
+        "title": "按意见改·列要点",
+        "role": "",
+        "agentId": "code_agent_2_1",
+        "version": "v1",
+        "acceptance": "standard",
+        "artifact": "",
+        "stage": "",
+        "inputs": "",
+        "output": "",
+        "summary": "",
+        "kind": "agent_step",
+        "status": "completed"
+      },
+      {
+        "id": "n14",
+        "title": "跑主路径·列要点",
+        "role": "",
+        "agentId": "code_agent_1_3",
+        "version": "v1",
+        "acceptance": "standard",
+        "artifact": "",
+        "stage": "",
+        "inputs": "",
+        "output": "",
+        "summary": "",
+        "kind": "agent_step",
+        "status": "completed"
+      },
+      {
+        "id": "n7",
+        "title": "跑主路径·留痕",
+        "role": "",
+        "agentId": "code_agent_1_3",
+        "version": "v1",
+        "acceptance": "standard",
+        "artifact": "",
+        "stage": "",
+        "inputs": "",
+        "output": "",
+        "summary": "",
+        "kind": "agent_step",
+        "status": "completed"
+      },
+      {
+        "id": "n19",
+        "title": "实现核心逻辑·列要点",
+        "role": "",
+        "agentId": "code_agent_1_2",
+        "version": "v1",
+        "acceptance": "standard",
+        "artifact": "",
+        "stage": "",
+        "inputs": "",
+        "output": "",
+        "summary": "",
+        "kind": "agent_step",
+        "status": "completed"
+      },
+      {
+        "id": "n16",
+        "title": "按意见改·取证",
+        "role": "",
+        "agentId": "code_agent_2_1",
+        "version": "v1",
+        "acceptance": "standard",
+        "artifact": "",
+        "stage": "",
+        "inputs": "",
+        "output": "",
+        "summary": "",
+        "kind": "agent_step",
+        "status": "completed"
+      },
+      {
+        "id": "n18",
+        "title": "按意见改",
+        "role": "code",
+        "agentId": "code_agent_2_1",
+        "version": "v1",
+        "acceptance": "standard",
+        "artifact": "客户答疑包-按意见改",
+        "stage": "准备",
+        "inputs": "协作线2的产出",
+        "output": "按意见改产出（客户答疑包）",
+        "summary": "在「客户答疑包」中完成「按意见改」，所属域：功能开发。",
+        "kind": "agent_task",
+        "status": "completed"
+      },
+      {
+        "id": "n8",
+        "title": "跑主路径·写摘要",
+        "role": "",
+        "agentId": "code_agent_1_3",
+        "version": "v1",
+        "acceptance": "standard",
+        "artifact": "",
+        "stage": "",
+        "inputs": "",
+        "output": "",
+        "summary": "",
+        "kind": "agent_step",
+        "status": "completed"
+      },
+      {
+        "id": "n15",
+        "title": "跑主路径·交叉验证",
+        "role": "",
+        "agentId": "code_agent_1_3",
+        "version": "v1",
+        "acceptance": "standard",
+        "artifact": "",
+        "stage": "",
+        "inputs": "",
+        "output": "",
+        "summary": "",
+        "kind": "agent_step",
+        "status": "completed"
+      },
+      {
+        "id": "n9",
+        "title": "跑主路径·取证",
+        "role": "",
+        "agentId": "code_agent_1_3",
+        "version": "v1",
+        "acceptance": "standard",
+        "artifact": "",
+        "stage": "",
+        "inputs": "",
+        "output": "",
+        "summary": "",
+        "kind": "agent_step",
+        "status": "completed"
+      },
+      {
+        "id": "n4",
+        "title": "跑主路径",
+        "role": "code",
+        "agentId": "code_agent_1_3",
+        "version": "v1",
+        "acceptance": "standard",
+        "artifact": "客户答疑包-跑主路径",
+        "stage": "交付",
+        "inputs": "协作线1的产出",
+        "output": "跑主路径产出（客户答疑包）",
+        "summary": "在「客户答疑包」中完成「跑主路径」，所属域：功能开发。",
+        "kind": "agent_task",
+        "status": "completed"
+      },
+      {
+        "id": "n3",
+        "title": "冻结标签·列要点",
+        "role": "",
+        "agentId": "code_agent_3_1",
+        "version": "v1",
+        "acceptance": "standard",
+        "artifact": "",
+        "stage": "",
+        "inputs": "",
+        "output": "",
+        "summary": "",
+        "kind": "agent_step",
+        "status": "completed"
+      },
+      {
+        "id": "n22",
+        "title": "协作线1：设计接口",
+        "role": "code",
+        "agentId": "code_ubuddy_1",
+        "version": "v1",
+        "acceptance": "standard",
+        "artifact": "客户答疑包-协作线1：设计接口",
+        "stage": "准备",
+        "inputs": "组织「客户答疑包」协作的产出",
+        "output": "协作线1：设计接口产出（客户答疑包）",
+        "summary": "在「客户答疑包」中完成「协作线1：设计接口」，所属域：功能开发。",
+        "kind": "ubuddy",
+        "status": "completed"
+      },
+      {
+        "id": "n27",
+        "title": "设计接口·列要点",
+        "role": "",
+        "agentId": "code_agent_1_1",
+        "version": "v1",
+        "acceptance": "standard",
+        "artifact": "",
+        "stage": "",
+        "inputs": "",
+        "output": "",
+        "summary": "",
+        "kind": "agent_step",
+        "status": "completed"
+      },
+      {
+        "id": "n10",
+        "title": "冻结标签",
+        "role": "code",
+        "agentId": "code_agent_3_1",
+        "version": "v1",
+        "acceptance": "standard",
+        "artifact": "客户答疑包-冻结标签",
+        "stage": "准备",
+        "inputs": "协作线3的产出",
+        "output": "冻结标签产出（客户答疑包）",
+        "summary": "在「客户答疑包」中完成「冻结标签」，所属域：功能开发。",
+        "kind": "agent_task",
+        "status": "completed"
+      },
+      {
+        "id": "n21",
+        "title": "观察日志·取证",
+        "role": "",
+        "agentId": "code_agent_2_2",
+        "version": "v1",
+        "acceptance": "standard",
+        "artifact": "",
+        "stage": "",
+        "inputs": "",
+        "output": "",
+        "summary": "",
+        "kind": "agent_step",
+        "status": "completed"
+      },
+      {
+        "id": "n26",
+        "title": "观察日志",
+        "role": "code",
+        "agentId": "code_agent_2_2",
+        "version": "v1",
+        "acceptance": "standard",
+        "artifact": "客户答疑包-观察日志",
+        "stage": "交付",
+        "inputs": "协作线2的产出",
+        "output": "观察日志产出（客户答疑包）",
+        "summary": "在「客户答疑包」中完成「观察日志」，所属域：功能开发。",
+        "kind": "agent_task",
+        "status": "completed"
+      },
+      {
+        "id": "n24",
+        "title": "设计接口",
+        "role": "code",
+        "agentId": "code_agent_1_1",
+        "version": "v1",
+        "acceptance": "standard",
+        "artifact": "客户答疑包-设计接口",
+        "stage": "准备",
+        "inputs": "协作线1的产出",
+        "output": "设计接口产出（客户答疑包）",
+        "summary": "在「客户答疑包」中完成「设计接口」，所属域：功能开发。",
+        "kind": "agent_task",
+        "status": "completed"
+      },
+      {
+        "id": "n5",
+        "title": "实现核心逻辑·取证",
+        "role": "",
+        "agentId": "code_agent_1_2",
+        "version": "v1",
+        "acceptance": "standard",
+        "artifact": "",
+        "stage": "",
+        "inputs": "",
+        "output": "",
+        "summary": "",
+        "kind": "agent_step",
+        "status": "completed"
+      },
+      {
+        "id": "n13",
+        "title": "跑主路径·核对口径",
+        "role": "",
+        "agentId": "code_agent_1_3",
+        "version": "v1",
+        "acceptance": "standard",
+        "artifact": "",
+        "stage": "",
+        "inputs": "",
+        "output": "",
+        "summary": "",
+        "kind": "agent_step",
+        "status": "completed"
+      },
+      {
+        "id": "n12",
+        "title": "冻结标签·取证",
+        "role": "",
+        "agentId": "code_agent_3_1",
+        "version": "v1",
+        "acceptance": "standard",
+        "artifact": "",
+        "stage": "",
+        "inputs": "",
+        "output": "",
+        "summary": "",
+        "kind": "agent_step",
+        "status": "completed"
+      }
+    ],
+    "edges": [
+      {
+        "id": "n8->n15",
+        "from": "n8",
+        "to": "n15"
+      },
+      {
+        "id": "n24->n17",
+        "from": "n24",
+        "to": "n17"
+      },
+      {
+        "id": "n1->n10",
+        "from": "n1",
+        "to": "n10"
+      },
+      {
+        "id": "n9->n13",
+        "from": "n9",
+        "to": "n13"
+      },
+      {
+        "id": "n10->n3",
+        "from": "n10",
+        "to": "n3"
+      },
+      {
+        "id": "n21->n6",
+        "from": "n21",
+        "to": "n6"
+      },
+      {
+        "id": "n18->n11",
+        "from": "n18",
+        "to": "n11"
+      },
+      {
+        "id": "n11->n16",
+        "from": "n11",
+        "to": "n16"
+      },
+      {
+        "id": "n18->n26",
+        "from": "n18",
+        "to": "n26"
+      },
+      {
+        "id": "n19->n5",
+        "from": "n19",
+        "to": "n5"
+      },
+      {
+        "id": "n24->n27",
+        "from": "n24",
+        "to": "n27"
+      },
+      {
+        "id": "n14->n9",
+        "from": "n14",
+        "to": "n9"
+      },
+      {
+        "id": "n23->n21",
+        "from": "n23",
+        "to": "n21"
+      },
+      {
+        "id": "n15->n7",
+        "from": "n15",
+        "to": "n7"
+      },
+      {
+        "id": "n17->n4",
+        "from": "n17",
+        "to": "n4"
+      },
+      {
+        "id": "n25->n22",
+        "from": "n25",
+        "to": "n22"
+      },
+      {
+        "id": "n26->n23",
+        "from": "n26",
+        "to": "n23"
+      },
+      {
+        "id": "n2->n18",
+        "from": "n2",
+        "to": "n18"
+      },
+      {
+        "id": "n4->n14",
+        "from": "n4",
+        "to": "n14"
+      },
+      {
+        "id": "n3->n12",
+        "from": "n3",
+        "to": "n12"
+      },
+      {
+        "id": "n25->n2",
+        "from": "n25",
+        "to": "n2"
+      },
+      {
+        "id": "n17->n19",
+        "from": "n17",
+        "to": "n19"
+      },
+      {
+        "id": "n27->n20",
+        "from": "n27",
+        "to": "n20"
+      },
+      {
+        "id": "n25->n1",
+        "from": "n25",
+        "to": "n1"
+      },
+      {
+        "id": "n22->n24",
+        "from": "n22",
+        "to": "n24"
+      },
+      {
+        "id": "n13->n8",
+        "from": "n13",
+        "to": "n8"
+      }
+    ]
+  },
+  "G_prime": {
+    "graph_id": "rdmd_local_294",
+    "domain": "code",
+    "title": "功能开发：客户答疑包",
+    "topic": "客户答疑包",
+    "nodes": [
+      {
+        "id": "n17",
+        "title": "实现核心逻辑",
+        "role": "code",
+        "agentId": "code_agent_1_2",
+        "version": "v1",
+        "acceptance": "standard",
+        "artifact": "客户答疑包-实现核心逻辑",
+        "stage": "交付",
+        "inputs": "协作线1的产出",
+        "output": "实现核心逻辑产出（客户答疑包）",
+        "summary": "在「客户答疑包」中完成「实现核心逻辑」，所属域：功能开发。",
+        "kind": "agent_task",
+        "status": "completed"
+      },
+      {
+        "id": "n2",
+        "title": "协作线2：按意见改",
+        "role": "code",
+        "agentId": "code_ubuddy_2",
+        "version": "v1",
+        "acceptance": "standard",
+        "artifact": "客户答疑包-协作线2：按意见改",
+        "stage": "准备",
+        "inputs": "组织「客户答疑包」协作的产出",
+        "output": "协作线2：按意见改产出（客户答疑包）",
+        "summary": "在「客户答疑包」中完成「协作线2：按意见改」，所属域：功能开发。",
+        "kind": "ubuddy",
+        "status": "completed"
+      },
+      {
+        "id": "n20",
+        "title": "设计接口·取证",
+        "role": "",
+        "agentId": "code_agent_1_1",
+        "version": "v1",
+        "acceptance": "standard",
+        "artifact": "",
+        "stage": "",
+        "inputs": "",
+        "output": "",
+        "summary": "",
+        "kind": "agent_step",
+        "status": "completed"
+      },
+      {
+        "id": "n1",
+        "title": "协作线3：冻结标签",
+        "role": "code",
+        "agentId": "code_ubuddy_3",
+        "version": "v1",
+        "acceptance": "standard",
+        "artifact": "客户答疑包-协作线3：冻结标签",
+        "stage": "准备",
+        "inputs": "组织「客户答疑包」协作的产出",
+        "output": "协作线3：冻结标签产出（客户答疑包）",
+        "summary": "在「客户答疑包」中完成「协作线3：冻结标签」，所属域：功能开发。",
+        "kind": "ubuddy",
+        "status": "completed"
+      },
+      {
+        "id": "n25",
+        "title": "组织「客户答疑包」协作",
+        "role": "code",
+        "agentId": "code_ubuddy",
+        "version": "v1",
+        "acceptance": "standard",
+        "artifact": "客户答疑包-组织「客户答疑包」协作",
+        "stage": "准备",
+        "inputs": "客户答疑包任务说明",
+        "output": "组织「客户答疑包」协作产出（客户答疑包）",
+        "summary": "在「客户答疑包」中完成「组织「客户答疑包」协作」，所属域：功能开发。",
+        "kind": "root",
+        "status": "completed"
+      },
+      {
+        "id": "n23",
+        "title": "观察日志·列要点",
+        "role": "",
+        "agentId": "code_agent_2_2",
+        "version": "v1",
+        "acceptance": "standard",
+        "artifact": "",
+        "stage": "",
+        "inputs": "",
+        "output": "",
+        "summary": "",
+        "kind": "agent_step",
+        "status": "completed"
+      },
+      {
+        "id": "n6",
+        "title": "观察日志·核对口径",
+        "role": "",
+        "agentId": "code_agent_2_2",
+        "version": "v1",
+        "acceptance": "standard",
+        "artifact": "",
+        "stage": "",
+        "inputs": "",
+        "output": "",
+        "summary": "",
+        "kind": "agent_step",
+        "status": "completed"
+      },
+      {
+        "id": "n11",
+        "title": "按意见改·列要点",
+        "role": "",
+        "agentId": "code_agent_2_1",
+        "version": "v1",
+        "acceptance": "standard",
+        "artifact": "",
+        "stage": "",
+        "inputs": "",
+        "output": "",
+        "summary": "",
+        "kind": "agent_step",
+        "status": "completed"
+      },
+      {
+        "id": "n14",
+        "title": "跑主路径·列要点",
+        "role": "",
+        "agentId": "code_agent_1_3",
+        "version": "v1",
+        "acceptance": "standard",
+        "artifact": "",
+        "stage": "",
+        "inputs": "",
+        "output": "",
+        "summary": "",
+        "kind": "agent_step",
+        "status": "completed"
+      },
+      {
+        "id": "n7",
+        "title": "跑主路径·留痕·改用另一条线的产出继续",
+        "role": "",
+        "agentId": "code_agent_1_3",
+        "version": "v1",
+        "acceptance": "standard",
+        "artifact": "",
+        "stage": "",
+        "inputs": "",
+        "output": "",
+        "summary": "",
+        "kind": "agent_step",
+        "status": "blocked"
+      },
+      {
+        "id": "n19",
+        "title": "实现核心逻辑·列要点",
+        "role": "",
+        "agentId": "code_agent_1_2",
+        "version": "v1",
+        "acceptance": "standard",
+        "artifact": "",
+        "stage": "",
+        "inputs": "",
+        "output": "",
+        "summary": "",
+        "kind": "agent_step",
+        "status": "completed"
+      },
+      {
+        "id": "n16",
+        "title": "按意见改·取证",
+        "role": "",
+        "agentId": "code_agent_2_1",
+        "version": "v1",
+        "acceptance": "standard",
+        "artifact": "",
+        "stage": "",
+        "inputs": "",
+        "output": "",
+        "summary": "",
+        "kind": "agent_step",
+        "status": "completed"
+      },
+      {
+        "id": "n18",
+        "title": "按意见改",
+        "role": "code",
+        "agentId": "code_agent_2_1",
+        "version": "v1",
+        "acceptance": "standard",
+        "artifact": "客户答疑包-按意见改",
+        "stage": "准备",
+        "inputs": "协作线2的产出",
+        "output": "按意见改产出（客户答疑包）",
+        "summary": "在「客户答疑包」中完成「按意见改」，所属域：功能开发。",
+        "kind": "agent_task",
+        "status": "completed"
+      },
+      {
+        "id": "n8",
+        "title": "跑主路径·写摘要",
+        "role": "",
+        "agentId": "code_agent_1_3",
+        "version": "v1",
+        "acceptance": "standard",
+        "artifact": "",
+        "stage": "",
+        "inputs": "",
+        "output": "",
+        "summary": "",
+        "kind": "agent_step",
+        "status": "completed"
+      },
+      {
+        "id": "n15",
+        "title": "跑主路径·交叉验证",
+        "role": "",
+        "agentId": "code_agent_1_3",
+        "version": "v1",
+        "acceptance": "standard",
+        "artifact": "",
+        "stage": "",
+        "inputs": "",
+        "output": "",
+        "summary": "",
+        "kind": "agent_step",
+        "status": "completed"
+      },
+      {
+        "id": "n9",
+        "title": "跑主路径·取证",
+        "role": "",
+        "agentId": "code_agent_1_3",
+        "version": "v1",
+        "acceptance": "standard",
+        "artifact": "",
+        "stage": "",
+        "inputs": "",
+        "output": "",
+        "summary": "",
+        "kind": "agent_step",
+        "status": "completed"
+      },
+      {
+        "id": "n4",
+        "title": "跑主路径",
+        "role": "code",
+        "agentId": "code_agent_1_3",
+        "version": "v1",
+        "acceptance": "standard",
+        "artifact": "客户答疑包-跑主路径",
+        "stage": "交付",
+        "inputs": "协作线1的产出",
+        "output": "跑主路径产出（客户答疑包）",
+        "summary": "在「客户答疑包」中完成「跑主路径」，所属域：功能开发。",
+        "kind": "agent_task",
+        "status": "completed"
+      },
+      {
+        "id": "n3",
+        "title": "冻结标签·列要点",
+        "role": "",
+        "agentId": "code_agent_3_1",
+        "version": "v1",
+        "acceptance": "standard",
+        "artifact": "",
+        "stage": "",
+        "inputs": "",
+        "output": "",
+        "summary": "",
+        "kind": "agent_step",
+        "status": "completed"
+      },
+      {
+        "id": "n22",
+        "title": "协作线1：设计接口",
+        "role": "code",
+        "agentId": "code_ubuddy_1",
+        "version": "v1",
+        "acceptance": "standard",
+        "artifact": "客户答疑包-协作线1：设计接口",
+        "stage": "准备",
+        "inputs": "组织「客户答疑包」协作的产出",
+        "output": "协作线1：设计接口产出（客户答疑包）",
+        "summary": "在「客户答疑包」中完成「协作线1：设计接口」，所属域：功能开发。",
+        "kind": "ubuddy",
+        "status": "completed"
+      },
+      {
+        "id": "n27",
+        "title": "设计接口·列要点",
+        "role": "",
+        "agentId": "code_agent_1_1",
+        "version": "v1",
+        "acceptance": "standard",
+        "artifact": "",
+        "stage": "",
+        "inputs": "",
+        "output": "",
+        "summary": "",
+        "kind": "agent_step",
+        "status": "completed"
+      },
+      {
+        "id": "n10",
+        "title": "冻结标签",
+        "role": "code",
+        "agentId": "code_agent_3_1",
+        "version": "v1",
+        "acceptance": "standard",
+        "artifact": "客户答疑包-冻结标签",
+        "stage": "准备",
+        "inputs": "协作线3的产出",
+        "output": "冻结标签产出（客户答疑包）",
+        "summary": "在「客户答疑包」中完成「冻结标签」，所属域：功能开发。",
+        "kind": "agent_task",
+        "status": "completed"
+      },
+      {
+        "id": "n21",
+        "title": "观察日志·取证",
+        "role": "",
+        "agentId": "code_agent_2_2",
+        "version": "v1",
+        "acceptance": "standard",
+        "artifact": "",
+        "stage": "",
+        "inputs": "",
+        "output": "",
+        "summary": "",
+        "kind": "agent_step",
+        "status": "completed"
+      },
+      {
+        "id": "n26",
+        "title": "观察日志",
+        "role": "code",
+        "agentId": "code_agent_2_2",
+        "version": "v1",
+        "acceptance": "standard",
+        "artifact": "客户答疑包-观察日志",
+        "stage": "交付",
+        "inputs": "协作线2的产出",
+        "output": "观察日志产出（客户答疑包）",
+        "summary": "在「客户答疑包」中完成「观察日志」，所属域：功能开发。",
+        "kind": "agent_task",
+        "status": "completed"
+      },
+      {
+        "id": "n24",
+        "title": "设计接口",
+        "role": "code",
+        "agentId": "code_agent_1_1",
+        "version": "v1",
+        "acceptance": "standard",
+        "artifact": "客户答疑包-设计接口",
+        "stage": "准备",
+        "inputs": "协作线1的产出",
+        "output": "设计接口产出（客户答疑包）",
+        "summary": "在「客户答疑包」中完成「设计接口」，所属域：功能开发。",
+        "kind": "agent_task",
+        "status": "completed"
+      },
+      {
+        "id": "n5",
+        "title": "实现核心逻辑·取证",
+        "role": "",
+        "agentId": "code_agent_1_2",
+        "version": "v1",
+        "acceptance": "standard",
+        "artifact": "",
+        "stage": "",
+        "inputs": "",
+        "output": "",
+        "summary": "",
+        "kind": "agent_step",
+        "status": "completed"
+      },
+      {
+        "id": "n13",
+        "title": "跑主路径·核对口径",
+        "role": "",
+        "agentId": "code_agent_1_3",
+        "version": "v1",
+        "acceptance": "standard",
+        "artifact": "",
+        "stage": "",
+        "inputs": "",
+        "output": "",
+        "summary": "",
+        "kind": "agent_step",
+        "status": "completed"
+      },
+      {
+        "id": "n12",
+        "title": "冻结标签·取证",
+        "role": "",
+        "agentId": "code_agent_3_1",
+        "version": "v1",
+        "acceptance": "standard",
+        "artifact": "",
+        "stage": "",
+        "inputs": "",
+        "output": "",
+        "summary": "",
+        "kind": "agent_step",
+        "status": "completed"
+      },
+      {
+        "id": "n31",
+        "title": "观察日志·取证·补一步复核",
+        "role": "",
+        "agentId": "code_agent_2_2",
+        "version": "v1",
+        "acceptance": "standard",
+        "artifact": "",
+        "stage": "",
+        "inputs": "",
+        "output": "",
+        "summary": "",
+        "kind": "agent_step",
+        "status": "completed"
+      }
+    ],
+    "edges": [
+      {
+        "id": "n8->n15",
+        "from": "n8",
+        "to": "n15"
+      },
+      {
+        "id": "n24->n17",
+        "from": "n24",
+        "to": "n17"
+      },
+      {
+        "id": "n1->n10",
+        "from": "n1",
+        "to": "n10"
+      },
+      {
+        "id": "n10->n3",
+        "from": "n10",
+        "to": "n3"
+      },
+      {
+        "id": "n21->n6",
+        "from": "n21",
+        "to": "n6"
+      },
+      {
+        "id": "n18->n11",
+        "from": "n18",
+        "to": "n11"
+      },
+      {
+        "id": "n11->n16",
+        "from": "n11",
+        "to": "n16"
+      },
+      {
+        "id": "n18->n26",
+        "from": "n18",
+        "to": "n26"
+      },
+      {
+        "id": "n19->n5",
+        "from": "n19",
+        "to": "n5"
+      },
+      {
+        "id": "n24->n27",
+        "from": "n24",
+        "to": "n27"
+      },
+      {
+        "id": "n14->n9",
+        "from": "n14",
+        "to": "n9"
+      },
+      {
+        "id": "n23->n21",
+        "from": "n23",
+        "to": "n21"
+      },
+      {
+        "id": "n15->n7",
+        "from": "n15",
+        "to": "n7"
+      },
+      {
+        "id": "n17->n4",
+        "from": "n17",
+        "to": "n4"
+      },
+      {
+        "id": "n25->n22",
+        "from": "n25",
+        "to": "n22"
+      },
+      {
+        "id": "n26->n23",
+        "from": "n26",
+        "to": "n23"
+      },
+      {
+        "id": "n2->n18",
+        "from": "n2",
+        "to": "n18"
+      },
+      {
+        "id": "n4->n14",
+        "from": "n4",
+        "to": "n14"
+      },
+      {
+        "id": "n3->n12",
+        "from": "n3",
+        "to": "n12"
+      },
+      {
+        "id": "n25->n2",
+        "from": "n25",
+        "to": "n2"
+      },
+      {
+        "id": "n17->n19",
+        "from": "n17",
+        "to": "n19"
+      },
+      {
+        "id": "n27->n20",
+        "from": "n27",
+        "to": "n20"
+      },
+      {
+        "id": "n25->n1",
+        "from": "n25",
+        "to": "n1"
+      },
+      {
+        "id": "n22->n24",
+        "from": "n22",
+        "to": "n24"
+      },
+      {
+        "id": "n13->n8",
+        "from": "n13",
+        "to": "n8"
+      },
+      {
+        "id": "n21->n31",
+        "from": "n21",
+        "to": "n31"
+      }
+    ]
+  }
+}

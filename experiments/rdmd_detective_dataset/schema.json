@@ -1,0 +1,40 @@
+{
+  "name": "rdmd_detective_dataset_v4",
+  "version": "rdmd_detective_dataset_v4",
+  "driftTypes": [
+    "missing_dependency",
+    "wrong_agent",
+    "wrong_version",
+    "wrong_acceptance",
+    "local_replan"
+  ],
+  "status": ["drift", "no_drift", "UNKNOWN"],
+  "nodeFields": ["id", "title", "role", "agentId", "version", "acceptance", "artifact", "stage", "inputs", "output", "summary", "kind", "status"],
+  "nodeStatuses": ["completed", "running", "queued", "cancelled", "blocked", "failed"],
+  "nodeKinds": ["root", "ubuddy", "agent_task", "agent_step"],
+  "edgeFields": ["id", "from", "to"],
+  "sampleFields": [
+    "id", "split", "graph_id", "G_star", "G_prime", "label",
+    "changed_node_ids", "generator_id", "backend", "model", "seed", "visibility"
+  ],
+  "labelFields": ["status", "injected_node", "injected_type", "injected_edge", "injected_form", "hop_to_first_effect", "decoy_nodes"],
+  "targets": {
+    "drift": 10000,
+    "no_drift": 1000,
+    "UNKNOWN": 1000
+  },
+  "nodeCount": { "starMin": 16, "starMax": 32, "primeMax": 40 },
+  "minHopToFirstEffect": 3,
+  "splitBy": "graph_id",
+  "splitRatio": { "train": 0.8, "development": 0.1, "test": 0.1 },
+  "graphFamilies": ["flat_work_units", "layered_group"],
+  "groupShare": 0.5,
+  "forbiddenGraphKeys": [
+    "injected_node", "injected_type", "injected_edge", "injected_form", "gold", "label", "murderer"
+  ],
+  "forbiddenGraphRootKeys": ["status"],
+  "forbiddenText": [
+    "wrong_agent", "wrong_version", "missing_dependency", "wrong_acceptance", "local_replan",
+    "[stale]", "[alt-agent]", "[from:", "injected_node", "最小漂移"
+  ]
+}

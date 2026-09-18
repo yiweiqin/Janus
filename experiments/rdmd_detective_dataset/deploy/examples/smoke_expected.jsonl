@@ -1,0 +1,12 @@
+{"id": "rdmd_local_294__drift__missing_dependency__n13__20261205", "status": "drift", "nodeId": "n13", "edgeId": "n9->n13", "type": "missing_dependency", "evidenceNodeIds": ["n13"]}
+{"id": "rdmd_local_361__drift__missing_dependency__n6__20261272", "status": "drift", "nodeId": "n6", "edgeId": "n8->n6", "type": "missing_dependency", "evidenceNodeIds": ["n6"]}
+{"id": "rdmd_local_290__drift__missing_dependency__n27__20261201", "status": "drift", "nodeId": "n27", "edgeId": "n17->n27", "type": "missing_dependency", "evidenceNodeIds": ["n27"]}
+{"id": "rdmd_local_291__drift__missing_dependency__n24__20261202", "status": "drift", "nodeId": "n24", "edgeId": "n17->n24", "type": "missing_dependency", "evidenceNodeIds": ["n24"]}
+{"id": "rdmd_local_290__no_drift__none__none__20261200", "status": "no_drift", "nodeId": "", "edgeId": "", "type": "", "evidenceNodeIds": []}
+{"id": "rdmd_local_291__no_drift__none__none__20261201", "status": "no_drift", "nodeId": "", "edgeId": "", "type": "", "evidenceNodeIds": []}
+{"id": "rdmd_local_292__no_drift__none__none__20261202", "status": "no_drift", "nodeId": "", "edgeId": "", "type": "", "evidenceNodeIds": []}
+{"id": "rdmd_local_293__no_drift__none__none__20261203", "status": "no_drift", "nodeId": "", "edgeId": "", "type": "", "evidenceNodeIds": []}
+{"id": "rdmd_local_290__UNKNOWN__none__none__20261014", "status": "UNKNOWN", "nodeId": "", "edgeId": "", "type": "", "evidenceNodeIds": ["n13", "n18"]}
+{"id": "rdmd_local_292__UNKNOWN__none__none__20261015", "status": "UNKNOWN", "nodeId": "", "edgeId": "", "type": "", "evidenceNodeIds": ["n15", "n7"]}
+{"id": "rdmd_local_293__UNKNOWN__none__none__20261016", "status": "UNKNOWN", "nodeId": "", "edgeId": "", "type": "", "evidenceNodeIds": ["n4", "n2"]}
+{"id": "rdmd_local_294__UNKNOWN__none__none__20261017", "status": "UNKNOWN", "nodeId": "", "edgeId": "", "type": "", "evidenceNodeIds": ["n2", "n4"]}

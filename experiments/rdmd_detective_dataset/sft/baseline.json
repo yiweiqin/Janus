@@ -1,0 +1,17 @@
+{
+  "n": 1665,
+  "drift": {
+    "n": 1412,
+    "topologicalHit": 0,
+    "typeHit": 0.12110481586402266,
+    "unknownRate": 0.45821529745042494
+  },
+  "noDrift": {
+    "n": 111,
+    "correct": 1
+  },
+  "unknown": {
+    "n": 142,
+    "correct": 0.7183098591549296
+  }
+}

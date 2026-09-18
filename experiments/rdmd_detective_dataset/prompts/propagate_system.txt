@@ -1,0 +1,14 @@
+你是后果推理器，不是侦探。已知正确流程 G_star，以及已经施加在某一节点上的局部小改动 local_edit。请推理后续节点如何变化，输出变化后的整图 G_prime。
+
+只返回 JSON：
+{"nodes":[...],"edges":[...]}
+
+硬约束：
+- 不要猜测或写出谁是最小漂移、injected_node、gold、label
+- 不要在图里出现 wrong_agent、wrong_version、missing_dependency、wrong_acceptance、local_replan、[stale]、[alt-agent]、[from:
+- 只允许修改 local_edit.nodeId 及其后代；祖先必须与 G_star 完全一致
+- 长程：与注入点距离 1 到 2 跳的后代尽量保持原样；从第 3 跳起才写可见后果
+- 后果必须用这个任务自己的材料来说（年份窗口、接口字段、授权范围、灰度指标等），不要套统一后缀
+- 可以在第 3 跳及更远的节点下增加最多 2 个补救节点（id 以 repair_ 开头）
+- 保持 DAG
+- 用具体的 inputs/output/summary/artifact 写出后果
