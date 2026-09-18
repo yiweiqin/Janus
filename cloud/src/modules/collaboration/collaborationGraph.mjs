@@ -1,3 +1,5 @@
+import { collaborationMaxDepth } from '../../../../src/shared/contracts/uBuddyCollaborationGraph.js';
+
 const GRAPH_VERSION = 'ubuddy_collaboration_graph_v1';
 
 export async function publishCollaborationGraph(pool, { viewerUserId = '', graph = {}, apiError = defaultApiError } = {}) {
@@ -67,7 +69,7 @@ export async function publishCollaborationGraph(pool, { viewerUserId = '', graph
       owner_user_id=excluded.owner_user_id,owner_agent_id=excluded.owner_agent_id,owner_agent_instance_id=excluded.owner_agent_instance_id,title=excluded.title,
       public_summary=excluded.public_summary,status=excluded.status,progress=excluded.progress,depth=excluded.depth,visibility=excluded.visibility,
       public_metadata_json=excluded.public_metadata_json,source_revision=GREATEST(collaboration_graph_nodes.source_revision,excluded.source_revision),updated_at=now()
-      WHERE excluded.source_revision=0 OR collaboration_graph_nodes.source_revision<=excluded.source_revision`, [graphId, String(node.nodeId || ''), String(node.parentNodeId || ''), String(node.kind || 'agent_task'), String(node.taskRunId || ''), String(node.delegationId || ''), String(node.taskNodeId || ''), String(node.ownerUserId || ''), String(node.ownerAgentId || ''), String(node.ownerAgentInstanceId || ''), String(node.title || '').slice(0, 240), String(node.publicSummary || '').slice(0, 2000), String(node.status || 'queued'), Math.max(0, Math.min(100, Number(node.progress || 0))), Math.max(0, Math.min(2, Number(node.depth || 0))), String(node.visibility || 'participants'), safePublicJson(node.publicMetadata), Math.max(0, Number(node.sourceRevision || 0))]);
+      WHERE excluded.source_revision=0 OR collaboration_graph_nodes.source_revision<=excluded.source_revision`, [graphId, String(node.nodeId || ''), String(node.parentNodeId || ''), String(node.kind || 'agent_task'), String(node.taskRunId || ''), String(node.delegationId || ''), String(node.taskNodeId || ''), String(node.ownerUserId || ''), String(node.ownerAgentId || ''), String(node.ownerAgentInstanceId || ''), String(node.title || '').slice(0, 240), String(node.publicSummary || '').slice(0, 2000), String(node.status || 'queued'), Math.max(0, Math.min(100, Number(node.progress || 0))), boundedNodeDepth(node), String(node.visibility || 'participants'), safePublicJson(node.publicMetadata), Math.max(0, Number(node.sourceRevision || 0))]);
     for (const edge of (graph.edges || []).slice(0, 1000)) await client.query(`INSERT INTO collaboration_graph_edges(graph_id,edge_id,kind,from_node_id,to_node_id,public_metadata_json,source_revision,updated_at)
       VALUES($1,$2,$3,$4,$5,$6,$7,now()) ON CONFLICT(graph_id,edge_id) DO UPDATE SET public_metadata_json=excluded.public_metadata_json,
       source_revision=GREATEST(collaboration_graph_edges.source_revision,excluded.source_revision),updated_at=now()
@@ -109,7 +111,13 @@ async function upsertNode(client, graphId, node) {
     graph_id,node_id,parent_node_id,kind,task_run_id,delegation_id,task_node_id,owner_user_id,owner_agent_id,owner_agent_instance_id,title,public_summary,status,progress,depth,visibility,public_metadata_json,source_revision,updated_at
     ) VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,now()) ON CONFLICT(graph_id,node_id) DO UPDATE SET
     parent_node_id=excluded.parent_node_id,task_run_id=excluded.task_run_id,delegation_id=excluded.delegation_id,task_node_id=excluded.task_node_id,owner_user_id=excluded.owner_user_id,owner_agent_id=excluded.owner_agent_id,owner_agent_instance_id=excluded.owner_agent_instance_id,title=excluded.title,public_summary=excluded.public_summary,status=excluded.status,progress=excluded.progress,depth=excluded.depth,visibility=excluded.visibility,public_metadata_json=excluded.public_metadata_json,source_revision=GREATEST(collaboration_graph_nodes.source_revision,excluded.source_revision),updated_at=now()
-    WHERE excluded.source_revision=0 OR collaboration_graph_nodes.source_revision<=excluded.source_revision`, [graphId, String(node.nodeId || ''), String(node.parentNodeId || ''), String(node.kind || 'agent_task'), String(node.taskRunId || ''), String(node.delegationId || ''), String(node.taskNodeId || ''), String(node.ownerUserId || ''), String(node.ownerAgentId || ''), String(node.ownerAgentInstanceId || ''), String(node.title || '').slice(0, 240), String(node.publicSummary || '').slice(0, 2000), String(node.status || 'queued'), Math.max(0, Math.min(100, Number(node.progress || 0))), Math.max(0, Math.min(2, Number(node.depth || 0))), String(node.visibility || 'participants'), safePublicJson(node.publicMetadata), Math.max(0, Number(node.sourceRevision || 0))]);
+    WHERE excluded.source_revision=0 OR collaboration_graph_nodes.source_revision<=excluded.source_revision`, [graphId, String(node.nodeId || ''), String(node.parentNodeId || ''), String(node.kind || 'agent_task'), String(node.taskRunId || ''), String(node.delegationId || ''), String(node.taskNodeId || ''), String(node.ownerUserId || ''), String(node.ownerAgentId || ''), String(node.ownerAgentInstanceId || ''), String(node.title || '').slice(0, 240), String(node.publicSummary || '').slice(0, 2000), String(node.status || 'queued'), Math.max(0, Math.min(100, Number(node.progress || 0))), boundedNodeDepth(node), String(node.visibility || 'participants'), safePublicJson(node.publicMetadata), Math.max(0, Number(node.sourceRevision || 0))]);
+}
+
+// 深度上限按 kind 分级（root 0 / ubuddy 1 / agent_task 2 / agent_step 3）。
+// 与桌面端共用同一份契约，避免两边各写一套钳制规则而慢慢分叉。
+function boundedNodeDepth(node = {}) {
+  return Math.max(0, Math.min(collaborationMaxDepth(node.kind), Number(node.depth || 0)));
 }
 
 async function upsertEdge(client, graphId, edge) {

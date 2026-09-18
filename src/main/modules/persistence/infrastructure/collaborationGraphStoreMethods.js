@@ -1,7 +1,26 @@
 import { all, get, run } from '../../../db.js';
 import { newId, nowIso, safeJsonParse } from '../../../utils.js';
 import {
+  UBUDDY_AGENT_PLAN_STEP_VERSION,
+  agentPlanEventsFromTaskEvents,
+  firstAgentPlan,
+  foldAgentPlanEvents,
+} from '../../../../shared/contracts/uBuddyAgentPlanSteps.js';
+import {
+  PLAN_EXEC_CONSTANTS,
+  PLAN_EXEC_FIELD_SOURCES,
+  buildPlanExecGraphs,
+  planExecCase,
+  planExecContractGaps,
+  planExecMetricReadiness,
+  planExecPublicMemory,
+  summarizePlanExecGaps,
+} from '../../../../shared/contracts/uBuddyPlanExec.js';
+import {
+  COLLABORATION_GRAPH_MAX_DEPTH,
   UBUDDY_COLLABORATION_GRAPH_VERSION,
+  UBUDDY_COLLABORATION_MAX_UBUDDY_DEPTH,
+  collaborationMaxDepth,
   collaborationNodeProgress,
   normalizeCollaborationGraphEdge,
   normalizeCollaborationGraphNode,
@@ -14,7 +33,9 @@ import {
   stableCollaborationNodeId,
 } from '../../../../shared/contracts/uBuddyCollaborationGraph.js';
 
-const STRUCTURAL_EDGE_KINDS = new Set(['parent_of', 'delegates_to', 'assigned_to']);
+// 参与环检测的边类型（`graphPathExists` 的邻接表来源）。
+// `sequence_of` 也在其中：它是有向顺序关系，顺序链上出现环同样是坏图。
+const STRUCTURAL_EDGE_KINDS = new Set(['parent_of', 'delegates_to', 'assigned_to', 'sequence_of']);
 
 export function installCollaborationGraphStoreMethods(prototype) {
   Object.assign(prototype, {
@@ -82,8 +103,13 @@ export function installCollaborationGraphStoreMethods(prototype) {
     upsertCollaborationGraphNode({ graphId = '', node = {}, idempotencyKey = '', eventType = 'node_upserted', actorUserId = '', actorAgentInstanceId = '' } = {}) {
       const normalized = normalizeCollaborationGraphNode(node);
       if (!graphId || !normalized.nodeId) throw new Error('collaboration_graph_node_identity_required');
-      if ((normalized.kind === 'ubuddy' && normalized.depth > 1) || (normalized.kind === 'agent_task' && normalized.depth > 2)) {
-        const error = new Error('已达到首版协作深度限制');
+      // 深度上限按 kind 分级判定，且必须看**归一化之前**的请求值：
+      // normalizeCollaborationGraphNode 会把越界深度钳到该 kind 的上限，
+      // 若用钳后的值判定，越界输入会被静默接受（旧代码就是这个盲区）。
+      const requestedDepth = Math.max(0, Math.floor(Number(node.depth || 0)));
+      const maxDepth = collaborationMaxDepth(normalized.kind);
+      if (requestedDepth > maxDepth) {
+        const error = new Error(`已达到协作深度限制：${normalized.kind} 最多 depth ${maxDepth}`);
         error.code = 'UBUDDY_MAX_DEPTH_REACHED';
         throw error;
       }
@@ -201,9 +227,11 @@ export function installCollaborationGraphStoreMethods(prototype) {
       } });
       const changedNodes = [];
       const changedEdges = [];
+      const taskNodeParents = new Map();
       for (const taskNode of task.nodes || []) {
         const nodeId = stableCollaborationNodeId('agent_task', taskNode.id);
         const sourceRevision = timestampRevision(taskNode.updatedAt || task.updatedAt);
+        taskNodeParents.set(taskNode.id, { nodeId, agentId: taskNode.agentId || '', agentInstanceId: taskNode.agentInstanceId || '' });
         const nodeResult = this.upsertCollaborationGraphNode({ graphId: graph.graphId,
           idempotencyKey: `task-node:${taskNode.id}:${sourceRevision}`, eventType: `task_node_${normalizeCollaborationStatus(taskNode.status)}`, node: {
             nodeId, parentNodeId, kind: 'agent_task', taskRunId: task.id, delegationId, taskNodeId: taskNode.id,
@@ -230,8 +258,126 @@ export function installCollaborationGraphStoreMethods(prototype) {
           if (dependencyEdge.applied) changedEdges.push(dependencyEdge.edge);
         }
       }
+      const planProjection = projectAgentPlanSteps(this, { graphId: graph.graphId, task, taskNodeParents });
+      changedNodes.push(...planProjection.nodes);
+      changedEdges.push(...planProjection.edges);
       const snapshot = this.getCollaborationGraph({ graphId: graph.graphId, afterRevision: Math.max(0, Number(change.afterRevision || 0)), skipAuthorization: true });
-      return { ...snapshot, changedNodes, changedEdges };
+      return { ...snapshot, changedNodes, changedEdges, planProjection: planProjection.summary };
+    },
+
+    // uBuddy <-> uBuddy 的协调边。
+    //
+    // 群任务图上原本只有 root -> ubuddy 的放射边（delegates_to / parent_of），看不出
+    // 「接收方的 uBuddy 向发起方的 uBuddy 请求对齐」这件事。而依赖阻塞导致的返工恰恰是
+    // 最值钱的漂移信号：规划图上这是一条顺滑的依赖，执行图上它逼出了一次跨人协调。
+    //
+    // 数据来源是**真实发生过的协调动作**（createDelegationRuntimeApi 里
+    // `metadata.type === 'ubuddy_peer_coordination'` 那条消息成功发出之后），不是从库里猜的。
+    // 方向固定为「接收方 uBuddy → 发起方 uBuddy」，也就是反向的那一条，
+    // 两个方向合起来才说明这两个 uBuddy 真的打过交道。
+    //
+    // 刻意**只在图已存在时补边**：协调是图上的新信息，不该顺手把图建出来。
+    // 也因此刻意**不把 coordinates_with 放进 STRUCTURAL_EDGE_KINDS** ——
+    // 它的方向和 delegates_to 正好相反，算进环检测会把正常的 root->ubuddy 误判成环。
+    //
+    // 边界身份是结构性的（graphId + kind + from + to，见 stableCollaborationEdgeId），
+    // 所以一对 uBuddy 之间**只有一条** coordinates_with。多次协调不是多条边，而是把
+    // reason 累积进 `reasons` —— 这反而更贴近 RDMD 要的信号：同一个依赖点反复摩擦了几次、
+    // 分别因为什么。纯重放不会改变这条边（幂等），只有新 reason 才会。
+    recordCollaborationCoordinationEdge({ groupId = '', delegationId = '', reason = '', sourceEventId = '' } = {}) {
+      const cleanDelegationId = String(delegationId || '').trim();
+      if (!cleanDelegationId) return { applied: false, reason: 'delegation_required' };
+      const graph = resolveGraphRow(this.db, { groupId: String(groupId || '').trim(), delegationId: cleanDelegationId });
+      if (!graph) return { applied: false, reason: 'graph_not_found' };
+      const nodes = all(this.db, 'SELECT node_id,kind,delegation_id FROM collaboration_graph_nodes WHERE graph_id=?', [graph.id]);
+      const fromNodeId = String(nodes.find((node) => node.kind === 'ubuddy' && node.delegation_id === cleanDelegationId)?.node_id || '');
+      const toNodeId = String(nodes.find((node) => node.kind === 'root')?.node_id || graph.root_node_id || '');
+      if (!fromNodeId || !toNodeId || fromNodeId === toNodeId) return { applied: false, reason: 'coordination_endpoints_missing' };
+      const edgeId = stableCollaborationEdgeId(graph.id, 'coordinates_with', fromNodeId, toNodeId);
+      const previous = safeJsonParse(get(this.db, 'SELECT public_metadata_json FROM collaboration_graph_edges WHERE graph_id=? AND edge_id=?', [graph.id, edgeId])?.public_metadata_json, {});
+      const cleanReason = String(reason || '').trim();
+      const reasons = [...new Set([...(Array.isArray(previous.reasons) ? previous.reasons : []), cleanReason].filter(Boolean))];
+      const edge = this.upsertCollaborationGraphEdge({ graphId: graph.id,
+        idempotencyKey: `peer-coordination:${cleanDelegationId}:${cleanReason}`,
+        edge: { kind: 'coordinates_with', fromNodeId, toNodeId,
+          publicMetadata: { reasons, source: 'ubuddy_peer_coordination', lastSourceEventId: String(sourceEventId || '') } } });
+      return { ...edge, fromNodeId, toNodeId, reasons };
+    },
+
+    // 产品侧的 (G_plan, G_exec) 读取通路。
+    //
+    // 语义与字段来源见 `src/shared/contracts/uBuddyPlanExec.js` 与
+    // `ubuddy_recon/PLAN_EXEC_TRUTH.zh-CN.md`。这里只负责把四份数据凑齐喂给纯函数：
+    //   1. collaboration graph 快照                    -> 执行层骨架
+    //   2. task_runs.metadata_json.taskGraphProposal   -> 组织层规划
+    //   3. task_events 的**首版** plan                 -> agent 层规划
+    //   4. task_nodes.result_text                      -> 11 字段里的 output
+    //
+    // ## 为什么不用事件 replay 还原「第 N 版图」（计划里留的那个待决问题）
+    //
+    // 因为 G_plan 与 G_exec 的差异**不是同一张图的第几版**，而是两个不同来源：
+    // 组织层是 planner 的提案 vs 真实 task_nodes，agent 层是首版 plan vs 折叠后的最终状态。
+    //
+    // 事件 replay 只能给出一张图的演化轨迹。它给不出「规划了但从未发生」——
+    // 提案里有、执行里没有的节点**从头到尾就没有任何事件**，replay 再多次也看不见它。
+    // 而「规划了一个永远不会发生的节点」恰恰是最值钱的那类漂移。
+    // 所以 replay 在这里是错工具：它恰好对最有价值的信号盲。
+    readPlanExecGraphs({ taskRunId = '', delegationId = '', groupId = '', viewerUserId = '', skipAuthorization = false } = {}) {
+      const snapshot = this.getCollaborationGraph({ taskRunId, delegationId, groupId, viewerUserId, skipAuthorization });
+      if (!snapshot) return null;
+      const taskRunIds = [...new Set(snapshot.nodes.map((node) => String(node.taskRunId || '')).filter(Boolean))];
+      const proposalNodesByTaskRun = {};
+      const resultTextByTaskNode = {};
+      const planEventsByTaskNode = new Map();
+      for (const runId of taskRunIds) {
+        const task = this.getTaskRun(runId);
+        if (!task) continue;
+        const proposalNodes = proposalNodesFromTaskRun(task);
+        if (proposalNodes.length) proposalNodesByTaskRun[runId] = proposalNodes;
+        for (const node of task.nodes || []) {
+          if (node.resultText) resultTextByTaskNode[node.id] = node.resultText;
+        }
+        for (const event of agentPlanEventsFromTaskEvents(task.events)) {
+          const taskNodeId = String(event.taskNodeId || '').trim();
+          if (!taskNodeId) continue;
+          const list = planEventsByTaskNode.get(taskNodeId) || [];
+          list.push(event);
+          planEventsByTaskNode.set(taskNodeId, list);
+        }
+      }
+      const firstPlanStepsByTaskNode = {};
+      for (const [taskNodeId, events] of planEventsByTaskNode) {
+        const first = firstAgentPlan(events);
+        if (first.supported) firstPlanStepsByTaskNode[taskNodeId] = first.steps;
+      }
+      const graphs = buildPlanExecGraphs({ graphNodes: snapshot.nodes, graphEdges: snapshot.edges,
+        proposalNodesByTaskRun, firstPlanStepsByTaskNode, resultTextByTaskNode });
+      const caseId = String(groupId || delegationId || taskRunId || snapshot.graphId);
+      const modelCase = planExecCase({ id: caseId, plan: graphs.plan, exec: graphs.exec });
+      const gaps = planExecContractGaps(modelCase);
+      const participantUserIds = [...new Set([
+        String(snapshot.root?.ownerUserId || ''),
+        ...snapshot.nodes.map((node) => String(node.ownerUserId || '')),
+      ].filter(Boolean))];
+      return {
+        scope: { graphId: snapshot.graphId, revision: snapshot.revision,
+          taskRunId: String(taskRunId || ''), delegationId: String(delegationId || ''),
+          groupId: String(groupId || ''), taskRunIds },
+        plan: graphs.plan,
+        exec: graphs.exec,
+        mapping: graphs.mapping,
+        // 模型输入：11 字段 + kind，可以直接喂 `detectMinimalDrift` / `planExecProximity`，
+        // `planExecContractGaps(case)` 为空时才可以喂模型。
+        case: modelCase,
+        gaps,
+        gapSummary: summarizePlanExecGaps(gaps),
+        // 「相近效果」度量与模型契约**分开报**：度量今天就能跑，模型还不能。
+        metric: planExecMetricReadiness(graphs.plan, graphs.exec),
+        constants: PLAN_EXEC_CONSTANTS,
+        fieldSources: PLAN_EXEC_FIELD_SOURCES,
+        memory: planExecPublicMemory({ taskId: caseId, ownerUserId: String(snapshot.root?.ownerUserId || ''),
+          participantUserIds, plan: graphs.plan, exec: graphs.exec }),
+      };
     },
 
     getCollaborationGraph({ graphId = '', taskRunId = '', delegationId = '', groupId = '', afterRevision = 0, viewerUserId = '', viewerAgentInstanceId = '', skipAuthorization = false } = {}) {
@@ -259,6 +405,17 @@ export function installCollaborationGraphStoreMethods(prototype) {
       return {
         graphVersion: row.graph_version || UBUDDY_COLLABORATION_GRAPH_VERSION,
         graphId: row.id,
+        // 群作用域必须随快照出去。
+        //
+        // 云侧 publishCollaborationGraph 的第一版是拿 `graph.groupId` 算 scopeGroupId、
+        // 并把它写进 collaboration_graphs.root_group_id；而云侧读授权
+        // （storedGraphParticipant）与后续每个 delta 的写授权都用那一列去查
+        // collaboration_group_members。云侧从来不自己能从别处推出这个 id。
+        //
+        // 之前这里不返回 groupId，于是 root_group_id 永远是空串，云侧那条
+        // 「群成员可读可写」的分支成了死代码：本地（graphPermissions 用本地
+        // root_group_id）认为群成员能读，云端却会 403。两边口径不一致。
+        groupId: String(row.root_group_id || ''),
         revision: Number(row.current_revision || 0),
         root: nodes.find((node) => node.nodeId === row.root_node_id) || nodes.find((node) => node.kind === 'root') || null,
         nodes, edges, recentEvents, permissions,
@@ -295,7 +452,7 @@ export function installCollaborationGraphStoreMethods(prototype) {
         graphId: graph.graphId,
         eventId: stableCollaborationEventId(graph.graphId, `depth-limit:${task?.id || sourceDelegationId}`),
         eventType: 'delegation_depth_blocked', nodeId: graph.nodes.find((node) => node.delegationId === sourceDelegationId)?.nodeId || graph.root?.nodeId || '',
-        publicPatch: { status: 'blocked', reason: '已达到首版协作深度限制', recoverable: true, maxUBuddyDepth: 1 }, actorUserId,
+        publicPatch: { status: 'blocked', reason: '已达到首版协作深度限制', recoverable: true, maxUBuddyDepth: UBUDDY_COLLABORATION_MAX_UBUDDY_DEPTH }, actorUserId,
       });
       return true;
     },
@@ -321,10 +478,83 @@ function timestampRevision(value = '') {
   return Number.isFinite(time) ? Math.max(1, time) : 0;
 }
 
+// 把 agent 自己规划的执行步骤（plan steps）投影成 `agent_step` 节点 + `sequence_of` 顺序链。
+//
+// 为什么需要它：root / ubuddy / agent_task 之间只有包含与指派关系，没有任何顺序关系，
+// 所以三级以内的图**不可能**表达「漂移的后果要 >=3 跳后才可见」—— 没有链，就没有级联。
+// `sequence_of` 是整张图上唯一的真链来源。
+//
+// 隐私边界：`public_summary` 对参与者可见，所以这里**只投影步骤名（title）与状态**，
+// 不投影 `step.detail`（可能是工具原始输出、文件内容）也不投影 `plan.explanation`。
+// 本地比对（G_plan/G_exec）需要这些内容时直接从 `task_events` 读，不进公开投影。
+// 步骤名本身仍过一遍 `sanitizeCollaborationPublicValue`，命中路径/密钥特征就记成 [redacted]。
+function projectAgentPlanSteps(store, { graphId = '', task = {}, taskNodeParents = new Map() } = {}) {
+  const summary = { appliedNodes: 0, appliedEdges: 0, taskNodesWithPlan: 0, revisions: 0, skippedEvents: 0 };
+  const nodes = [];
+  const edges = [];
+  const planEvents = agentPlanEventsFromTaskEvents(task.events);
+  if (!planEvents.length) return { nodes, edges, summary };
+  const eventsByTaskNode = new Map();
+  for (const event of planEvents) {
+    const taskNodeId = String(event.taskNodeId || '').trim();
+    if (!taskNodeId || !taskNodeParents.has(taskNodeId)) continue;
+    const list = eventsByTaskNode.get(taskNodeId) || [];
+    list.push(event);
+    eventsByTaskNode.set(taskNodeId, list);
+  }
+  for (const [taskNodeId, nodeEvents] of eventsByTaskNode) {
+    const parent = taskNodeParents.get(taskNodeId);
+    const folded = foldAgentPlanEvents(nodeEvents, { revisionOf: (event) => timestampRevision(event.createdAt) });
+    summary.revisions += folded.revisions;
+    summary.skippedEvents += folded.skipped;
+    if (!folded.steps.length && !folded.cancelled.length) continue;
+    summary.taskNodesWithPlan += 1;
+    const upsertStep = ({ index, label, status, revision, updatedAt = '' }) => {
+      const nodeId = stableCollaborationNodeId('agent_step', `${taskNodeId}:${index}`);
+      const result = store.upsertCollaborationGraphNode({ graphId,
+        idempotencyKey: `agent-step:${taskNodeId}:${index}:${revision}:${status}`,
+        eventType: `agent_step_${status}`, node: {
+          nodeId, parentNodeId: parent.nodeId, kind: 'agent_step', taskRunId: task.id, taskNodeId,
+          ownerUserId: task.ownerUserId, ownerAgentId: parent.agentId, ownerAgentInstanceId: parent.agentInstanceId,
+          title: sanitizeCollaborationPublicValue(label), publicSummary: '', status,
+          progress: collaborationNodeProgress(status), depth: COLLABORATION_GRAPH_MAX_DEPTH.agent_step,
+          publicMetadata: { planStepIndex: index, planRevision: revision, planStepVersion: UBUDDY_AGENT_PLAN_STEP_VERSION },
+          sourceRevision: revision, updatedAt,
+        } });
+      if (result.applied) { nodes.push(result.node); summary.appliedNodes += 1; }
+      // 归属边是节点自身的属性（包含关系），和它是第几步、在不在顺序链上无关，
+      // 所以放在这里：被砍掉的步骤也仍然属于这个 task。
+      const parentEdge = store.upsertCollaborationGraphEdge({ graphId, edge: {
+        kind: 'parent_of', fromNodeId: parent.nodeId, toNodeId: nodeId, sourceRevision: revision,
+      } });
+      if (parentEdge.applied) { edges.push(parentEdge.edge); summary.appliedEdges += 1; }
+      return nodeId;
+    };
+    let previousStepNodeId = '';
+    for (const step of folded.steps) {
+      const nodeId = upsertStep(step);
+      if (previousStepNodeId) {
+        const sequenceEdge = store.upsertCollaborationGraphEdge({ graphId, edge: {
+          kind: 'sequence_of', fromNodeId: previousStepNodeId, toNodeId: nodeId, sourceRevision: step.revision,
+        } });
+        if (sequenceEdge.applied) { edges.push(sequenceEdge.edge); summary.appliedEdges += 1; }
+      }
+      previousStepNodeId = nodeId;
+    }
+    // 后续版本把某个 step 砍掉了 -> 标成 cancelled，而不是留着它上一版的 running 状态骗人。
+    // 用 lastRevision 作为源版本，保证这次修正不会被 source_revision 守卫判成过期。
+    for (const step of folded.cancelled) {
+      upsertStep({ ...step, status: 'cancelled', updatedAt: '', revision: folded.lastRevision });
+    }
+  }
+  return { nodes, edges, summary };
+}
+
 function graphPathExists(db, graphId, startNodeId, targetNodeId) {
   const adjacency = new Map();
+  const kinds = [...STRUCTURAL_EDGE_KINDS];
   for (const row of all(db, `SELECT from_node_id,to_node_id FROM collaboration_graph_edges
-    WHERE graph_id=? AND kind IN ('parent_of','delegates_to','assigned_to')`, [graphId])) {
+    WHERE graph_id=? AND kind IN (${kinds.map(() => '?').join(',')})`, [graphId, ...kinds])) {
     const values = adjacency.get(row.from_node_id) || [];
     values.push(row.to_node_id);
     adjacency.set(row.from_node_id, values);
@@ -397,6 +627,28 @@ function normalizeGraphNodeRow(row) {
     publicSummary: row.public_summary, status: row.status, progress: Number(row.progress || 0), depth: Number(row.depth || 0),
     visibility: row.visibility, publicMetadata: safeJsonParse(row.public_metadata_json, {}), sourceRevision: Number(row.source_revision || 0),
     createdAt: row.created_at, updatedAt: row.updated_at } : null;
+}
+
+// planner 提案 -> 纯函数要的形状。
+//
+// `metadata_json.taskGraphProposal` 的形状见
+// `src/main/modules/orchestration/application/uBuddyTaskGraphPlanner.js#validateUBuddyTaskGraphProposal`：
+// 每个节点带 localId / title / objective / agentId / dependencies[] / outputFormat / isFinal ...
+// 这里只取组图用得上的四个。`localId` 缺失时退回 `node_<i>` —— 提案校验本来就会补，
+// 但读到一条历史脏数据不该让整条读取通路炸掉。
+function proposalNodesFromTaskRun(task = {}) {
+  const source = task.metadata?.taskGraphProposal;
+  const nodes = Array.isArray(source?.nodes) ? source.nodes : [];
+  return nodes.map((node, index) => {
+    const item = node && typeof node === 'object' ? node : {};
+    return {
+      localId: String(item.localId || item.id || `node_${index + 1}`).trim(),
+      title: String(item.title || item.objective || '').replace(/\s+/g, ' ').trim().slice(0, 240),
+      agentId: String(item.agentId || '').trim(),
+      dependencies: [...new Set((Array.isArray(item.dependencies) ? item.dependencies : [])
+        .map((dependency) => String(dependency || '').trim()).filter(Boolean))],
+    };
+  }).filter((node) => node.localId);
 }
 
 function normalizeGraphEdgeRow(row) {

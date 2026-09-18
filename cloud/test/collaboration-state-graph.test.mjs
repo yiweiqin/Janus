@@ -3,7 +3,187 @@ import { test } from 'node:test';
 
 import { newDb } from 'pg-mem';
 
-import { buildCollaborationAttribution, buildCollaborationStateGraph } from '../src/modules/collaboration/stateGraph.mjs';
+import { buildCollaborationAttribution, buildCollaborationStateGraph, projectDecisionRelativeGraph } from '../src/modules/collaboration/stateGraph.mjs';
+import { createInMemoryTdbSnapshotStore } from '../../src/shared/contracts/uBuddyTdbSnapshotStore.js';
+import { taskDependencyBundleTraceFromEvents, taskDependencyBundleReplaySnapshot, replayTaskDependencyBundleTrace } from '../../src/shared/contracts/uBuddyTaskDependencyBundle.js';
+
+test('TDB replay snapshot is deterministic across input order and exposes divergence hashes', () => {
+  const seed = { taskId: 'run-1', edgeId: 'delegation:d1', sourceNodeId: 'alice', targetNodeId: 'bob' };
+  const events = [
+    { id: 'e2', task_run_id: 'run-1', event_type: 'execution_completed', created_at: '2026-09-05T10:02:00Z', payload_json: JSON.stringify({ dimensions: { quality: { score: .9 } } }) },
+    { id: 'e1', task_run_id: 'run-1', event_type: 'task_assigned', created_at: '2026-09-05T10:01:00Z' },
+  ];
+  const first = taskDependencyBundleReplaySnapshot(events, seed);
+  const second = taskDependencyBundleReplaySnapshot([...events].reverse(), seed);
+  assert.deepEqual(second, first);
+  assert.equal(first.eventCount, 2);
+  assert.deepEqual(first.orderedEventIds, ['e1', 'e2']);
+  assert.notEqual(first.initialHash, first.finalHash);
+  assert.equal(first.replayToken.length, 64);
+  assert.equal(first.traceHash.length, 64);
+  assert.deepEqual(replayTaskDependencyBundleTrace(events, seed), taskDependencyBundleTraceFromEvents(events, seed));
+  const changed = taskDependencyBundleReplaySnapshot(events.map((event) => event.id === 'e2' ? { ...event, id: 'e3' } : event), seed);
+  assert.notEqual(changed.replayToken, first.replayToken);
+});
+
+test('runtime task events fold into task-relation-time TDB trace', () => {
+  const trace = taskDependencyBundleTraceFromEvents([
+    { id: 'e2', task_run_id: 'run-1', task_node_id: 'node-1', event_type: 'execution_failed', owner_user_id: 'bob', created_at: '2026-08-19T10:02:00Z' },
+    { id: 'e1', task_run_id: 'run-1', task_node_id: 'node-1', event_type: 'task_assigned', owner_user_id: 'alice', created_at: '2026-08-19T10:01:00Z' },
+  ], { taskId: 'run-1', edgeId: 'delegation:d1', sourceNodeId: 'alice', targetNodeId: 'bob', relationType: 'delegates_to' });
+  assert.equal(trace.length, 2);
+  assert.equal(trace[0].eventId, 'e1');
+  assert.equal(trace[0].state, 'planned');
+  assert.equal(trace[1].eventId, 'e2');
+  assert.equal(trace[1].state, 'failed');
+  assert.equal(trace[1].taskId, 'run-1');
+  assert.equal(trace[1].edgeId, 'delegation:d1');
+  assert.equal(trace[1].evidenceRefs[0].kind, 'task_event');
+});
+
+test('decision-relative projection is receiver and query conditioned', () => {
+  const projection = projectDecisionRelativeGraph({
+    viewerUserId: 'bob',
+    nodes: [{ userId: 'alice' }, { userId: 'bob' }],
+    edges: [
+      { id: 'e1', delegationId: 'd1', from: 'ubuddy:alice', to: 'ubuddy:bob' },
+      { id: 'e2', delegationId: 'd2', from: 'ubuddy:carol', to: 'ubuddy:dave' },
+    ],
+    stateItems: [{ kind: 'delegation_status', owner: 'delegation:d1' }, { kind: 'private_workspace_activity', owner: 'ubuddy:bob' }],
+    resultVersions: [{ delegationId: 'd1' }, { delegationId: 'd2' }],
+  }, { receiverUserId: 'bob', decision: 'accept_result', requestedFields: ['edges'] });
+  assert.equal(projection.projectionVersion, 'decision_relative_tdb_projection_v1');
+  assert.equal(projection.fields.tdbBundles.length, 0);
+  assert.equal(typeof projection.tdbHash, 'string');
+  assert.equal(projection.fields.edges.length, 1);
+  assert.equal(projection.fields.stateItems.length, 0);
+  assert.equal(projection.fields.resultVersions.length, 0);
+  assert.equal(projection.sufficiency.status, 'UNKNOWN');
+  assert.equal(projection.crossTaskApplicability.reason, 'cross_task_binding_missing');
+  assert.throws(() => projectDecisionRelativeGraph({ viewerUserId: 'alice' }, { receiverUserId: 'bob' }), /authorized graph viewer/);
+  const altered = projectDecisionRelativeGraph({ viewerUserId: 'bob', scope: { delegationId: 'd2' }, nodes: [], edges: [], stateItems: [], resultVersions: [] }, { receiverUserId: 'bob', decision: 'accept_result' });
+  assert.notEqual(projection.contentHash, altered.contentHash);
+  assert.throws(() => projectDecisionRelativeGraph({ viewerUserId: 'bob' }, { receiverUserId: 'bob', decision: 'unknown' }), /unsupported decision query/);
+  assert.throws(() => projectDecisionRelativeGraph({ viewerUserId: 'bob' }, { receiverUserId: 'bob', requestedFields: ['secret'] }), /requested field/);
+  const sameSize = (decision) => projectDecisionRelativeGraph({ viewerUserId: 'bob', edges: [{ delegationId: 'd1', from: 'ubuddy:bob' }], resultVersions: [{ delegationId: 'd1', decision }] }, { receiverUserId: 'bob' });
+  assert.equal(sameSize('adopted').disclosureCost, sameSize('rejected').disclosureCost);
+  assert.notEqual(sameSize('adopted').contentHash, sameSize('rejected').contentHash);
+});
+
+test('decision projection evaluates cross-task applicability only with explicit binding', () => {
+  const sourceBundle = {
+    taskId: 'task-a', relationType: 'depends_on', state: 'completed',
+    observedAt: '2026-09-05T00:00:00.000Z',
+    dimensions: { quality: { version: 'q-v1', value: 'verified' } },
+    evidenceRefs: [{ kind: 'task_event', id: 'evt-a' }],
+  };
+  const graph = { viewerUserId: 'bob', edges: [{ delegationId: 'd1', from: 'ubuddy:alice', to: 'ubuddy:bob' }] };
+  const projection = projectDecisionRelativeGraph(graph, {
+    receiverUserId: 'bob', decision: 'accept_result', sourceBundle,
+    crossTaskBinding: {
+      targetTaskId: 'task-b', targetScope: 'accept_result', expectedSourceTaskId: 'task-a',
+      relationType: 'depends_on', requiredDimensions: ['quality'], maxAgeMs: 3600000,
+    }, now: '2026-09-05T00:30:00.000Z',
+  });
+  assert.equal(projection.crossTaskApplicability.status, 'CERTIFIED');
+  assert.equal(projection.crossTaskApplicability.applicability, 'APPLICABLE');
+  assert.equal(projection.crossTaskApplicability.targetTaskId, 'task-b');
+  assert.deepEqual(projection.targetBinding, {
+    version: 'ubuddy_target_binding_v1', status: 'UNKNOWN',
+    reason: 'target_binding_draft_only', receiverUserId: 'bob',
+    query: 'accept_result', scope: {}, tdbHash: projection.tdbHash,
+    targetTaskId: 'task-b',
+  });
+  const blocked = projectDecisionRelativeGraph(graph, {
+    receiverUserId: 'bob', decision: 'accept_result', sourceBundle,
+    crossTaskBinding: { targetTaskId: 'task-b', targetScope: 'accept_result', maxAgeMs: 1 },
+    now: '2026-09-05T00:30:00.000Z',
+  });
+  assert.equal(blocked.crossTaskApplicability.status, 'UNKNOWN');
+});
+
+test('decision projection resolves a uniquely identified graph TDB source without inferring target-only bindings', () => {
+  const graph = {
+    viewerUserId: 'bob',
+    edges: [{ delegationId: 'd1', from: 'ubuddy:alice', to: 'ubuddy:bob' }],
+    tdbBundles: [{
+      delegationId: 'd1', taskId: 'task-a', edgeId: 'delegation:d1', relationType: 'depends_on',
+      state: 'completed', sequence: 2, observedAt: '2026-09-05T00:00:00.000Z',
+      dimensions: { quality: { version: 'q-v1', value: 'verified' } },
+      evidenceRefs: [{ kind: 'task_event', id: 'evt-a' }],
+    }],
+  };
+  const resolved = projectDecisionRelativeGraph(graph, {
+    receiverUserId: 'bob', decision: 'accept_result',
+    crossTaskBinding: {
+      targetTaskId: 'task-b', targetScope: 'accept_result', expectedSourceTaskId: 'task-a',
+      relationType: 'depends_on', requiredDimensions: ['quality'], maxAgeMs: 3600000,
+    }, now: '2026-09-05T00:30:00.000Z',
+  });
+  assert.equal(resolved.crossTaskApplicability.status, 'CERTIFIED');
+  assert.equal(resolved.crossTaskApplicability.sourceResolution, 'graph_tdb_explicit_source_binding');
+
+  const targetOnly = projectDecisionRelativeGraph(graph, {
+    receiverUserId: 'bob', decision: 'accept_result',
+    crossTaskBinding: { targetTaskId: 'task-b', targetScope: 'accept_result', maxAgeMs: 3600000 },
+    now: '2026-09-05T00:30:00.000Z',
+  });
+  assert.equal(targetOnly.crossTaskApplicability.status, 'UNKNOWN');
+  assert.equal(targetOnly.crossTaskApplicability.reason, 'source_bundle_missing');
+  assert.equal(targetOnly.crossTaskApplicability.sourceResolution, 'source_identity_missing');
+  assert.equal(targetOnly.targetBinding.targetTaskId, 'task-b');
+  assert.equal(targetOnly.targetBinding.status, 'UNKNOWN');
+});
+
+test('target binding draft is hash-bound and never inferred from graph data', () => {
+  const graph = {
+    viewerUserId: 'bob', scope: { delegationId: 'd1' },
+    edges: [{ delegationId: 'd1', from: 'ubuddy:alice', to: 'ubuddy:bob' }],
+    tdbBundles: [{ delegationId: 'd1', taskId: 'task-a', state: 'completed', sequence: 1 }],
+  };
+  const absent = projectDecisionRelativeGraph(graph, { receiverUserId: 'bob' });
+  assert.equal(absent.targetBinding.targetTaskId, null);
+  assert.equal(absent.targetBinding.reason, 'target_task_missing');
+  const explicit = projectDecisionRelativeGraph(graph, {
+    receiverUserId: 'bob', crossTaskBinding: { targetTaskId: 'task-b' },
+  });
+  assert.equal(explicit.targetBinding.status, 'UNKNOWN');
+  assert.equal(explicit.targetBinding.targetTaskId, 'task-b');
+  assert.notEqual(explicit.contentHash, absent.contentHash);
+  const changed = projectDecisionRelativeGraph(graph, {
+    receiverUserId: 'bob', crossTaskBinding: { targetTaskId: 'task-c' },
+  });
+  assert.notEqual(changed.contentHash, explicit.contentHash);
+});
+
+test('decision projection only certifies with a hash-bound, live finite model', () => {
+  const graph = { viewerUserId: 'bob', scope: { delegationId: 'd1' }, edges: [{ delegationId: 'd1', from: 'ubuddy:alice', to: 'ubuddy:bob' }], tdbBundles: [{ delegationId: 'd1', taskId: 'run-1', edgeId: 'delegation:d1', state: 'completed', sequence: 2, hash: 'bundle-hash-1', dimensions: { quality: 'verified' }, evidenceRefs: [{ kind: 'task_event', id: 'e2' }] }] };
+  const base = projectDecisionRelativeGraph(graph, { receiverUserId: 'bob', decision: 'accept_result' });
+  const model = {
+    worlds: [{ id: 'w1', support: true, utility: { accept: 1, reject: 0 }, safe: { accept: true, reject: true } }],
+    coverage: { complete: true, basisRef: 'trace:d1:v1' },
+    utility: (world, action) => world.utility[action],
+    hardContract: (world, action) => world.safe[action],
+    binding: {
+      projectionHash: base.contentHash, tdbHash: base.tdbHash, receiverUserId: 'bob', query: 'accept_result', actionSet: ['accept', 'reject'],
+      scope: { graphId: 'd1' }, modelVersion: 'finite-v1', evaluatorVersion: 'eval-v1',
+      issuedAt: '2026-08-19T10:00:00.000Z', expiresAt: '2026-08-19T11:00:00.000Z',
+    },
+  };
+  const certified = projectDecisionRelativeGraph(graph, { receiverUserId: 'bob', decision: 'accept_result', finiteModel: model, now: '2026-08-19T10:30:00.000Z' });
+  assert.equal(certified.sufficiency.status, 'CERTIFIED');
+  assert.equal(certified.sufficiency.action, 'accept');
+  assert.equal(certified.sufficiency.binding.projectionHash, base.contentHash);
+  assert.equal(certified.sufficiency.binding.tdbHash, base.tdbHash);
+  const expired = projectDecisionRelativeGraph(graph, { receiverUserId: 'bob', decision: 'accept_result', finiteModel: model, now: '2026-08-19T11:00:00.000Z' });
+  assert.equal(expired.sufficiency.status, 'UNKNOWN');
+  assert.equal(expired.sufficiency.reason, 'model_binding_invalid');
+  const tampered = projectDecisionRelativeGraph({ ...graph, edges: [{ ...graph.edges[0], status: 'changed' }] }, { receiverUserId: 'bob', decision: 'accept_result', finiteModel: model, now: '2026-08-19T10:30:00.000Z' });
+  assert.equal(tampered.sufficiency.status, 'UNKNOWN');
+  const tdbTampered = projectDecisionRelativeGraph({ ...graph, tdbBundles: [{ ...graph.tdbBundles[0], state: 'failed' }] }, { receiverUserId: 'bob', decision: 'accept_result', finiteModel: model, now: '2026-08-19T10:30:00.000Z' });
+  assert.equal(tdbTampered.sufficiency.status, 'UNKNOWN');
+  assert.equal(tdbTampered.sufficiency.reason, 'model_binding_invalid');
+});
 import {
   captureCapabilitySelectionSnapshot,
   createCapabilitySelectionToken,
@@ -405,7 +585,8 @@ test('collaboration state graph and attribution prototype', async (t) => {
     [j({ ownerUserId: 'bob', uBuddyAgentInstanceId: 'ubuddy-agent', version: 'ubuddy_capability_profile_v1', profileRevision: 2, supportedTaskTypes: ['research'], deliverableTypes: ['report'], capabilityTags: ['研究', '新版'], visibility: 'friends' }), now(15)],
   );
 
-  const graph = await buildCollaborationStateGraph(pool, { viewerUserId: 'alice', groupId: 'group_1' });
+  const snapshotStore = createInMemoryTdbSnapshotStore();
+  const graph = await buildCollaborationStateGraph(pool, { viewerUserId: 'alice', groupId: 'group_1', tdbSnapshotStore: snapshotStore });
   assert.equal(graph.graphVersion, 'ubuddy_collaboration_state_graph_v1');
   assert.equal(graph.scope.groupId, 'group_1');
   assert.equal(graph.nodes.find((item) => item.userId === 'bob')?.capabilityProfile?.accessScope, 'friends');
@@ -416,6 +597,21 @@ test('collaboration state graph and attribution prototype', async (t) => {
   assert.equal(graph.stateItems.some((item) => item.kind === 'private_workspace_activity' && item.owner === 'ubuddy:bob' && item.summary.messageCount === 1), true);
   assert.equal(graph.resultVersions.some((item) => item.action === 'submit' && item.decision === 'superseded'), true);
   assert.equal(graph.resultVersions.some((item) => item.sourceKind === 'task_node_result_version' && item.decision === 'adopted'), true);
+  assert.equal(graph.tdbProviderAvailability.source, 'cloud_task_events');
+  assert.equal(graph.tdbProviderAvailability.available, true);
+  assert.equal(graph.tdbBundles.find((item) => item.delegationId === 'delegation_1')?.providerAvailability?.available, true);
+  assert.equal(graph.tdbBundles.find((item) => item.delegationId === 'delegation_1')?.providerAvailability?.eventCount > 0, true);
+  const graphTdb = graph.tdbBundles.find((item) => item.delegationId === 'delegation_1');
+  assert.equal(graphTdb?.replaySnapshot?.replayToken?.length, 64);
+  assert.equal(graphTdb?.replaySnapshot?.traceHash?.length, 64);
+  assert.equal(graphTdb?.replayStore?.enabled, true);
+  assert.equal(graphTdb?.replayStore?.action, 'saved');
+  const graphReloaded = await buildCollaborationStateGraph(pool, { viewerUserId: 'alice', groupId: 'group_1', tdbSnapshotStore: snapshotStore });
+  const reloadedTdb = graphReloaded.tdbBundles.find((item) => item.delegationId === 'delegation_1');
+  assert.equal(reloadedTdb?.replayStore?.action, 'loaded');
+  assert.equal(reloadedTdb?.replayStore?.verification?.ok, true);
+  const graphNoStore = await buildCollaborationStateGraph(pool, { viewerUserId: 'alice', groupId: 'group_1' });
+  assert.equal(graphNoStore.tdbBundles.find((item) => item.delegationId === 'delegation_1')?.replayStore?.enabled, false);
   assert.equal(JSON.stringify(graph).includes('/home/bob/private/report.md'), false);
   assert.equal(JSON.stringify(graph).includes('Bob 的 uBuddy 私有初稿'), false);
   await assert.rejects(
@@ -432,8 +628,14 @@ test('collaboration state graph and attribution prototype', async (t) => {
   assert.equal(attribution.organizationSignals.some((item) => item.kind === 'collaboration_route_validated'), true);
   assert.equal(attribution.organizationSignals.some((item) => item.kind === 'capability_selection_validated'), true);
   assert.equal(attribution.individualSignals.some((item) => item.userId === 'bob' && item.kind === 'delivery_capability_supported'), true);
+  assert.equal(attribution.individualSignals.every((item) => item.attributionMode === 'observational'), true);
+  assert.equal(attribution.evolutionRouting.personalCandidates.length, 0);
+  assert.equal(attribution.evolutionRouting.blockedReasons.some((item) => item.code === 'probe_support_missing'), true);
   assert.equal(attribution.evolutionEvidenceRefs.some((item) => item.sourceKind === 'delegation_event'), true);
   assert.equal(attribution.evolutionEvidenceRefs.some((item) => item.sourceKind === 'collaboration_message'), true);
+  assert.equal(attribution.tdbReplaySnapshot?.replayToken?.length, 64);
+  assert.equal(attribution.trace.some((item) => item.eventKind === 'tdb_replay_snapshot' && item.metadata?.replayToken?.length === 64), true);
+  assert.equal(attribution.evolutionEvidenceRefs.every((item) => item.tdbReplayToken?.length === 64), true);
   assert.equal(attribution.evolutionRouting.blockedReasons.some((item) => item.code === 'capability_selection_snapshot_missing'), false);
   assert.equal(JSON.stringify(attribution).includes('/home/bob/private/report.md'), false);
   assert.equal(JSON.stringify(attribution).includes('Bob 的 uBuddy 私有初稿'), false);

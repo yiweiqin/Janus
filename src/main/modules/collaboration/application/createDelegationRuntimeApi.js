@@ -3802,6 +3802,12 @@ export function createDelegationRuntimeApi(context) {
                   },
                 });
                 detail.messages = published?.messages || detail.messages;
+                // 协调真的发出去了，才在图上补一条 uBuddy <-> uBuddy 的反向边。
+                // 放在 publish 成功之后而不是之前，是因为这条边表达的是既成事实。
+                store.recordCollaborationCoordinationEdge?.({
+                  groupId: group.id, delegationId: task.id,
+                  reason: coordinationRequest.reason, sourceEventId,
+                });
               } catch {
                 // The deterministic source event is retried after relay recovery.
               }
