@@ -1898,6 +1898,62 @@ export class CloudSyncService {
     return this.withAuthenticatedCloudIdentity((authState) => this.client.evolutionGrants(this.state(), { accessToken: authState.access_token }));
   }
 
+  /**
+   * RDMD 云侧推理：提交一条 case，必要时轮询到终态判定。
+   *
+   * 为什么轮询放在这一层而不是 `planExecDriftService` 里：轮询要用的凭据刷新
+   * （`withAuthenticatedCloudIdentity` 会在 401 时换一次 token）、服务器地址、HTTP 客户端
+   * 都在这一层。放到上层去重写一遍，就会得到两份必然会分叉的实现。
+   *
+   * **失败一律抛**，由上层归一成 `record_only` 的原因。这一层不做"降级"决定 ——
+   * 它没有资格替产品决定"云不可用时该干什么"。
+   *
+   * 返回：`{ status, reason, jobId, verdict, errorCode }`，status ∈
+   * `not_eligible`（隐私边界拒绝）| `unavailable`（云侧无模型）| `completed` | `queued`（超时未终态）。
+   */
+  async rdmdInfer({ taskRunId = '', case: caseValue = {}, conversationKind = '' } = {}) {
+    const payload = { taskRunId: String(taskRunId || ''), case: caseValue, conversationKind: String(conversationKind || '') };
+    const submitted = await this.withAuthenticatedCloudIdentity(
+      (authState) => this.client.submitRdmdJob(this.state(), payload, { accessToken: authState.access_token }),
+    );
+    const jobId = String(submitted?.jobId || '');
+    const submittedStatus = String(submitted?.status || '');
+    const immediate = (result = {}) => ({
+      status: String(result.status || ''), reason: String(result.reason || ''),
+      jobId, verdict: result.verdict || null, errorCode: String(result.errorCode || ''),
+    });
+    // 空后端在提交时就给了判定（status=unavailable）；`not_eligible` 是隐私边界拒绝。
+    // 只有 `queued` 需要等 GPU 盒上的 worker 出站领活。
+    if (!jobId || submittedStatus !== 'queued') return immediate(submitted);
+
+    const waitMs = boundedMs(process.env.RDMD_CLOUD_WAIT_MS, 90_000, 1_000, 15 * 60_000);
+    const pollMs = boundedMs(process.env.RDMD_CLOUD_POLL_MS, 2_000, 250, 60_000);
+    const deadline = Date.now() + waitMs;
+    while (Date.now() < deadline) {
+      await sleep(Math.min(pollMs, Math.max(0, deadline - Date.now())));
+      const polled = await this.withAuthenticatedCloudIdentity(
+        (authState) => this.client.rdmdJob(this.state(), jobId, { accessToken: authState.access_token }),
+      );
+      const status = String(polled?.status || '');
+      // 还在路上的一律继续等。`failed_retryable` 也等 —— 那是 worker 侧的暂时失败，
+      // 租约到期后会被重新领取，不代表这条 case 判不出来。
+      if (!RDMD_TERMINAL_JOB_STATUSES.includes(status)) continue;
+      if (status === 'failed_terminal') {
+        // 判定不出来是**终态**，但结论仍是"没有可用判定"。抛出去让上层记 record_only，
+        // 不要在这里编一个 UNKNOWN 判定 —— 那会让人以为模型跑过。
+        const failure = new Error(`RDMD job ${jobId} failed terminally: ${String(polled?.errorCode || '')}.`);
+        failure.code = 'rdmd_cloud_job_failed';
+        failure.status = 409;
+        throw failure;
+      }
+      return immediate({ ...polled, reason: polled?.errorCode || '' });
+    }
+    // deadline 到了还没有终态。**不编判定**：如实报超时，上层记 record_only。
+    const error = new Error(`RDMD verdict for job ${jobId} did not reach a terminal state in ${waitMs}ms.`);
+    error.code = 'rdmd_cloud_timeout';
+    throw error;
+  }
+
   async approveDeviceGrant(deviceId = '') {
     const state = this.state();
     await this.ensureDeviceGrant(state);
@@ -5454,9 +5510,35 @@ function publicState(row) {
   };
 }
 
+/**
+ * RDMD 作业的**终态**。只有这三种停下来等没有意义。
+ *
+ * 特别注意 `failed_retryable` **不在**里面：那是 worker 侧的暂时失败（比如一次 OOM、
+ * 一次网络抖动），租约到期后会被重新领取。把它当终态会让一次可恢复的失败变成一条
+ * "判不出来"的记录。
+ */
+const RDMD_TERMINAL_JOB_STATUSES = Object.freeze(['completed', 'unavailable', 'failed_terminal']);
+
+function boundedMs(value, fallback, min, max) {
+  const parsed = Number(value);
+  if (!Number.isFinite(parsed)) return fallback;
+  return Math.max(min, Math.min(max, Math.floor(parsed)));
+}
+
+function sleep(ms = 0) {
+  return new Promise((resolve) => { setTimeout(resolve, Math.max(0, Number(ms) || 0)); });
+}
+
 function readDesktopPackageVersion() {
   try {
-    return String(JSON.parse(fs.readFileSync(new URL('../../package.json', import.meta.url), 'utf8')).version || '0.0.0');
+    // 必须剥掉 BOM 再解析：`JSON.parse` 对 U+FEFF 是硬失败，而这个 catch 会把
+    // 失败**静默**降级成 '0.0.0'。后果不是"版本号不好看"，而是 0.0.0 <
+    // DATABASE_SYNC_MINIMUM_APP_VERSION(0.3.0) → 云端一致性检查同时报
+    // `app_version_too_old` 与 `required_migration_missing`（0.0.0 对应的迁移列表是空的），
+    // 整条 Sync V6 通道被判为不兼容。实测：package.json 被带 BOM 的工具重写后，
+    // 三个 desktop-sync-v6 用例就是以此报错的，错误信息里完全看不出是 BOM。
+    const raw = fs.readFileSync(new URL('../../package.json', import.meta.url), 'utf8').replace(/^\uFEFF/, '');
+    return String(JSON.parse(raw).version || '0.0.0');
   } catch {
     return '0.0.0';
   }

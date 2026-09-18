@@ -109,6 +109,18 @@ export class CloudSyncClient {
     return this.fetchJson(state, '/api/evolution/grants', { tokenOverride: accessToken });
   }
 
+  // RDMD 云侧推理（P4）。两条都是交互式通路（JWT），因为提交发生在用户自己的任务上：
+  // 提交时会同步拿到判定（空后端）或一个作业 id（gpu_worker 后端），后者再轮询。
+  submitRdmdJob(state, payload = {}, { accessToken = '' } = {}) {
+    return this.fetchJson(state, '/api/rdmd/jobs', {
+      method: 'POST', body: JSON.stringify(payload), tokenOverride: accessToken,
+    });
+  }
+
+  rdmdJob(state, jobId = '', { accessToken = '' } = {}) {
+    return this.fetchJson(state, `/api/rdmd/jobs/${encodeURIComponent(jobId)}`, { tokenOverride: accessToken });
+  }
+
   revokeEvolutionGrant(state, deviceId = '', { accessToken = '' } = {}) {
     return this.fetchJson(state, `/api/evolution/grants/${encodeURIComponent(deviceId)}`, {
       method: 'DELETE', tokenOverride: accessToken,

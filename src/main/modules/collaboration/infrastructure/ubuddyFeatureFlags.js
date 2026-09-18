@@ -25,6 +25,30 @@ export const UBUDDY_FEATURE_FLAGS = Object.freeze({
   organizationEvolutionCollectV1: 'ubuddy.organization_evolution_collect_v1',
   organizationEvolutionApplyV1: 'ubuddy.organization_evolution_apply_v1',
   organizationEvolutionDecompositionV1: 'ubuddy.organization_evolution_decomposition_v1',
+  // plan/exec 漂移诊断（反向侦探模型的接线点）。
+  //
+  // 默认**开**：它只落一行诊断事件（`rdmd_plan_exec_drift`），既不改图也不改调度，
+  // 与 `agentWorkDetailProjection` 同类 —— 是投影不是行为。
+  //
+  // 之所以要给它一个开关，是因为关掉它的成本极低，而它读的图是本轮才扩到四层的
+  // （`agent_step` / `sequence_of`）。出问题时需要能一键止血。
+  //
+  // 注意：开关**不控制模型能不能跑**。模型还要 `RDMD_ADAPTER` / `RDMD_BASE_MODEL`
+  // 存在才会被调用；默认不存在，所以默认路径是「读图 + 算度量 + record_only」。
+  planExecDrift: 'ubuddy_plan_exec_drift',
+  // plan/exec 漂移的**动作侧**能力位。默认**关**（见 SAFE_DEFAULT_OFF）。
+  //
+  // 打开它**不会**让任何东西去改图。它只解锁动作阶梯的第一级 `phase='shadow'`：
+  // 把模型给的最小改动记下来、**不执行**，并记录执行图后来真实发生了什么，
+  // 用两者的一致性做累计度量（见 planExecDriftService 的 observeShadowFollowUp）。
+  // 真动作（改规划）的前提是那个度量，而不是"模型验收过了" —— 见
+  // experiments/rdmd_detective_dataset/ubuddy_recon/PLAN_EXEC_TRUTH.zh-CN.md 里
+  // "动作侧只做影子"那一节的理由（提案在执行完成时已不可回改）。
+  //
+  // 所以 flag 的名字（apply）指的是**它守的是哪一侧**（动作侧），
+  // 而不是"打开就开始改图"。这条区分很重要：读代码的人如果以为打开它就会改图，
+  // 会去审查一个不存在的风险；而真正该审查的是影子度量有没有被绕过。
+  planExecDriftApply: 'ubuddy_plan_exec_drift_apply',
 });
 
 const ENV_KEYS = Object.freeze({
@@ -49,6 +73,8 @@ const ENV_KEYS = Object.freeze({
   [UBUDDY_FEATURE_FLAGS.organizationEvolutionCollectV1]: 'JANUS_UBUDDY_ORGANIZATION_EVOLUTION_COLLECT_V1',
   [UBUDDY_FEATURE_FLAGS.organizationEvolutionApplyV1]: 'JANUS_UBUDDY_ORGANIZATION_EVOLUTION_APPLY_V1',
   [UBUDDY_FEATURE_FLAGS.organizationEvolutionDecompositionV1]: 'JANUS_UBUDDY_ORGANIZATION_EVOLUTION_DECOMPOSITION_V1',
+  [UBUDDY_FEATURE_FLAGS.planExecDrift]: 'JANUS_UBUDDY_PLAN_EXEC_DRIFT',
+  [UBUDDY_FEATURE_FLAGS.planExecDriftApply]: 'JANUS_UBUDDY_PLAN_EXEC_DRIFT_APPLY',
 });
 
 const LEGACY_ENV_KEYS = Object.freeze({
@@ -72,6 +98,14 @@ const SAFE_DEFAULT_OFF = new Set([
   UBUDDY_FEATURE_FLAGS.organizationEvolutionCollectV1,
   UBUDDY_FEATURE_FLAGS.organizationEvolutionApplyV1,
   UBUDDY_FEATURE_FLAGS.organizationEvolutionDecompositionV1,
+  // 动作侧：默认关。它与上面的 organizationEvolutionApplyV1 同类 ——
+  // 都是"会改变别的任务/规划怎么走"的能力，所以默认值必须是关，
+  // 而且要在代码里就能看出"打开它之后最坏会发生什么"。
+  //
+  // 注意它比 organizationEvolutionApplyV1 更早一级：打开它今天**只会**进入影子，
+  // 不会改任何东西。默认关的严格程度与它守的东西无关，而与"这个开关的语义将来会不会变强"
+  // 有关 —— 将来接上真动作时，这个默认值就是唯一的安全边界，所以现在就设成关。
+  UBUDDY_FEATURE_FLAGS.planExecDriftApply,
 ]);
 const OPTIONAL_DEFAULT_OFF_FLAGS = new Set([
   UBUDDY_FEATURE_FLAGS.organizationEvolutionCollectV1,
@@ -142,6 +176,8 @@ export function createUBuddyFeatureFlagService({ store, env = process.env, isDev
     const organizationEvolutionCollectV1 = resolve(UBUDDY_FEATURE_FLAGS.organizationEvolutionCollectV1, context);
     const organizationEvolutionApplyV1 = resolve(UBUDDY_FEATURE_FLAGS.organizationEvolutionApplyV1, context);
     const organizationEvolutionDecompositionV1 = resolve(UBUDDY_FEATURE_FLAGS.organizationEvolutionDecompositionV1, context);
+    const planExecDrift = resolve(UBUDDY_FEATURE_FLAGS.planExecDrift, context);
+    const planExecDriftApply = resolve(UBUDDY_FEATURE_FLAGS.planExecDriftApply, context);
     const organizationEvolutionConfigured = [
       organizationEvolutionCollectV1,
       organizationEvolutionApplyV1,
@@ -170,6 +206,8 @@ export function createUBuddyFeatureFlagService({ store, env = process.env, isDev
       messageModeV1: messageModeV1.enabled,
       continuousPlanningV1: continuousPlanningV1.enabled,
       recentWorkReportingV1: recentWorkReportingV1.enabled,
+      planExecDrift: planExecDrift.enabled,
+      planExecDriftApply: planExecDriftApply.enabled,
       ...(organizationEvolutionConfigured ? {
         organizationEvolutionCollectV1: organizationEvolutionCollectV1.enabled,
         organizationEvolutionApplyV1: organizationEvolutionApplyV1.enabled,
@@ -199,6 +237,8 @@ export function createUBuddyFeatureFlagService({ store, env = process.env, isDev
         messageModeV1,
         continuousPlanningV1,
         recentWorkReportingV1,
+        planExecDrift,
+        planExecDriftApply,
         ...(organizationEvolutionConfigured ? {
           organizationEvolutionCollectV1,
           organizationEvolutionApplyV1,

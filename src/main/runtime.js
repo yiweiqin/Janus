@@ -221,6 +221,7 @@ import {
   validateStandaloneDeliverable,
   validateUBuddyTurnDecision,
 } from './modules/orchestration/index.js';
+import { createPlanExecDriftService } from './modules/collaboration/application/planExecDriftService.js';
 import { UBuddyOrganizationEvolutionService } from './modules/orchestration/application/uBuddyOrganizationEvolutionService.js';
 import {
   assertProjectWorkspaceDirectory,
@@ -1183,6 +1184,28 @@ export async function createRuntime({ root = '', workspaceRoot = '', isDev = fal
     collaborationGraphCloudChains.set(graphId, next);
     next.catch((error) => runtimeLogger.warn('collaboration-graph-cloud-publish-failed', { error, data: { taskRunId: task?.id || '' } }));
   };
+  // plan/exec 漂移诊断（反向侦探模型的接线点）。
+  //
+  // 挂在**任务终态**上，不是每次图变更上：
+  //   - G_plan vs G_exec 的对比只有等执行停下来才有意义 —— agent 的 plan step 还会被
+  //     后续 `turn/plan/updated` 改写，中途比出来的「漂移」下一秒就自己消失了；
+  //   - 这条路径在模型可用时要起一个 Python 子进程，必须低频（一个 run 至多一次）。
+  //
+  // 默认行为：读图 + 算「相近度」+ 落一行诊断，动作恒定是 `record_only`。
+  // 模型只在 `RDMD_ADAPTER` / `RDMD_BASE_MODEL` 存在且输入通过富文本守卫时才会被调用。
+  const planExecDrift = createPlanExecDriftService({
+    store,
+    root: runtimeRoot,
+    featureFlags: uBuddyFeatureFlags,
+    logger: runtimeLogger,
+    // 云通道。传**函数**而不是对象：serverUrl 会随登录/换服务器变化，而通道选择是
+    // 每次评估时实时解析的。没登录时 `withAuthenticatedCloudIdentity` 会抛
+    // `cloud_auth_required`，落到 record_only —— 这正是期望的 fail-closed 行为。
+    cloud: () => ({
+      serverUrl: cloudSync.status().serverUrl || '',
+      infer: (input) => cloudSync.rdmdInfer(input),
+    }),
+  });
   const scheduler = new TaskScheduler({
     root: runtimeRoot,
     store,
@@ -1217,6 +1240,13 @@ export async function createRuntime({ root = '', workspaceRoot = '', isDev = fal
         queueMicrotask(() => {
           try { uBuddyOrganizationEvolution.recordTerminal(payload.task); } catch {}
           try { finalizeUBuddyTaskRun(payload.task.id); } catch {}
+          // 漂移诊断是异步的（读库 + 可能起子进程）。它自己吞异常，也自己走完，
+          // 不 await 它，免得拖住同一条 microtask 里的账务与收尾。
+          planExecDrift.record({ task: payload.task }).catch((error) => {
+            runtimeLogger.warn('plan-exec-drift-record-failed', {
+              error, data: { taskRunId: String(payload?.task?.id || '') },
+            });
+          });
         });
       }
     },
@@ -3166,7 +3196,7 @@ export async function createRuntime({ root = '', workspaceRoot = '', isDev = fal
             sourceSecretaryMessageId: sourceRequestMessage.id,
             source_conversation_id: session.id,
             source_message_id: sourceRequestMessage.id,
-            source_group_id: '',
+            source_group_id: dispatchSourceGroupId(dispatchCommand),
             dispatchCommandId: dispatchCommand.id,
             expectedDeliverables: dispatchCommand.deliverables,
             taskSummary: dispatchCommand.taskIntake ? {
@@ -3382,7 +3412,7 @@ export async function createRuntime({ root = '', workspaceRoot = '', isDev = fal
               sourceSecretaryMessageId: sourceRequestMessage.id,
               source_conversation_id: session.id,
               source_message_id: sourceRequestMessage.id,
-              source_group_id: '',
+              source_group_id: dispatchSourceGroupId(dispatchCommand),
               dispatchCommandId: dispatchCommand.id,
               expectedDeliverables: dispatchCommand.deliverables,
               taskKind: dispatchCommand.taskIntake?.taskKind || dispatchCommand.taskKind || 'general',
@@ -3507,7 +3537,7 @@ export async function createRuntime({ root = '', workspaceRoot = '', isDev = fal
               sourceSecretaryMessageId: sourceRequestMessage.id,
               source_conversation_id: session.id,
               source_message_id: sourceRequestMessage.id,
-              source_group_id: '',
+              source_group_id: dispatchSourceGroupId(dispatchCommand),
               parentTaskRunId: String(dispatchCommand.parentTaskRunId || ''),
               continuationRequestMessageId: String(dispatchCommand.continuationRequestMessageId || ''),
               collaborationGroupId: group?.group?.id || '',
@@ -3634,7 +3664,7 @@ export async function createRuntime({ root = '', workspaceRoot = '', isDev = fal
         sourceContext: normalizeTaskSourceContext({
           source_conversation_id: session.id,
           source_message_id: sourceRequestMessage.id,
-          source_group_id: '',
+          source_group_id: dispatchSourceGroupId(dispatchCommand),
           ...(delegation.metadata || {}),
           task_workspace_id: delegation.id,
         }),
@@ -3656,7 +3686,7 @@ export async function createRuntime({ root = '', workspaceRoot = '', isDev = fal
           sourceContext: normalizeTaskSourceContext({
             source_conversation_id: session.id,
             source_message_id: sourceRequestMessage.id,
-            source_group_id: '',
+            source_group_id: dispatchSourceGroupId(dispatchCommand),
             task_workspace_id: result.targetSessionId,
           }),
           actions: TASK_CARD_ACTION_VALUES,
@@ -3678,7 +3708,7 @@ export async function createRuntime({ root = '', workspaceRoot = '', isDev = fal
           sourceContext: normalizeTaskSourceContext({
             source_conversation_id: session.id,
             source_message_id: sourceRequestMessage.id,
-            source_group_id: '',
+            source_group_id: dispatchSourceGroupId(dispatchCommand),
             task_workspace_id: result.task.id,
           }),
           actions: TASK_CARD_ACTION_VALUES,
@@ -12445,6 +12475,29 @@ function dispatchSelectionMetadata(command = {}) {
     profileRevisionSnapshots: command.profileRevisionSnapshots || [],
     selectionDecision: command.selectionDecision || null,
   };
+}
+
+/**
+ * 派发的「来源群」。**唯一**的解析处，六个调用点都走它。
+ *
+ * 只有真正来自群聊（`natural_chat_group`）的派发才有来源群；私聊与秘书会话一律为空。
+ * 这个字段是**私有路由字段**（socialRelay 的 privateKeys 里，不随公开元数据外发），
+ * 语义是「任务全部终态后把总结发回哪个群」，所以写错会把总结投到错误的群 ——
+ * 空串虽然不投错，但会让功能永远静默失效。
+ *
+ * 之前它在 runtime.js 里被硬编码成空串（六处），于是两件事永远不会发生：
+ *   1. 协作全部终态时把总结发回来源群（createDelegationRuntimeApi.js 的 `allTerminal` 分支，
+ *      条件是 `sourceType === 'natural_chat_group' && sourceGroupId`）；
+ *   2. 任务卡片的「返回来源群」导航（workspaceController 的 `returnSurface === 'group'` 分支）。
+ * 群任务的来源群在 `dispatchCommand.sourceGroupId` 上是已知的，没有理由写成空串。
+ *
+ * 与 `publishNaturalGroupWorkflowStatus` / `publishNaturalGroupTaskStatus` 里的判定逐字一致：
+ * 先看 `sourceType`，再取值。这两处是既有代码，格式统一比各写各的重要。
+ */
+function dispatchSourceGroupId(command = {}) {
+  const dispatch = command && typeof command === 'object' ? command : {};
+  if (String(dispatch.sourceType || '') !== 'natural_chat_group') return '';
+  return String(dispatch.sourceGroupId || '').trim();
 }
 
 function freezeContinuousPlanningDispatch(dispatch = {}, planningSession = null, decision = null) {
