@@ -12,7 +12,7 @@ const MIGRATIONS_DIR = path.join(DATABASE_DIR, 'migrations');
 const PG_MEM_BASELINE_PATH = path.resolve(__dirname, '../test/fixtures/pg-mem-baseline.sql');
 
 export const CLOUD_DATABASE_BASELINE_ID = 'baseline_sync8_081';
-export const CLOUD_DATABASE_MIGRATION_HEAD = '095_ubuddy_orgbench_evolution_head.sql';
+export const CLOUD_DATABASE_MIGRATION_HEAD = '097_rdmd_inference_jobs.sql';
 const CLOUD_REQUIRED_RELATIONS = Object.freeze([
   'accounts',
   'account_memberships_v8',
@@ -80,7 +80,11 @@ export async function applyMigrationFiles(pool, migrationsDir, { pgMem = pool?.c
   for (const file of files) {
     const existing = await pool.query('SELECT filename FROM public.schema_migrations WHERE filename = $1', [file]);
     if (existing.rowCount > 0) continue;
-    let sql = await fs.readFile(path.join(migrationsDir, file), 'utf8');
+    // **去掉 BOM 再执行**。Postgres 对 `\uFEFF` 不是当空白，而是直接报
+    // `syntax error at or near ""` —— 也就是一个纯编码细节能让一条迁移装不上，
+    // 而错误信息指向 SQL 内容，看不出真正原因。这个仓库里确实有带 BOM 的 .sql
+    // （编辑器/工具写的），所以这里必须容错，不能假设迁移文件一定没有 BOM。
+    let sql = (await fs.readFile(path.join(migrationsDir, file), 'utf8')).replace(/^\uFEFF/, '');
     if (pgMem && sql.includes('requires-real-postgres:')) {
       console.info(`[janus-cloud] skipped real-PostgreSQL migration ${file} under pg-mem`);
       continue;

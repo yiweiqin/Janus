@@ -15,7 +15,17 @@ import {
 import { createExpressNetworkMiddleware, route } from '../../network/server/express.js';
 import { profileAvatarUrlValidation } from '../../src/shared/profileAvatar.js';
 
-const BUILD_PACKAGE = JSON.parse(fs.readFileSync(new URL('../../package.json', import.meta.url), 'utf8'));
+// 读 package.json 时**必须先去掉 BOM**。
+//
+// `JSON.parse` 对 U+FEFF 是硬失败（`Unexpected token`），而 JSON 文件带不带 BOM 取决于
+// 是哪个编辑器/工具最后写的 —— Windows 上不少工具默认加。少了这行，一个纯属编码细节的
+// BOM 会让**整个云 API 起不来**（这个文件的顶层就在解析，抛在启动路径上），
+// 而错误信息指向 package.json 的"语法错误"，看不出真正原因。
+// 实测踩到过：工作区的 package.json 被某个工具加了 BOM → `node cloud/src/test/...` 全线
+// `SyntaxError: Unexpected token ''`。
+const BUILD_PACKAGE = JSON.parse(
+  fs.readFileSync(new URL('../../package.json', import.meta.url), 'utf8').replace(/^\uFEFF/, ''),
+);
 const BUILD_VERSION = String(BUILD_PACKAGE.version || '').trim();
 import {
   delegationTransitionAllowed,
@@ -28,6 +38,7 @@ import {
   publicDelegationMetadata,
   publicDelegationSubmissionText,
 } from './modules/collaboration/index.mjs';
+import { evaluateEvolutionEvidenceGate } from './modules/collaboration/evolutionEvidenceGate.mjs';
 import {
   hashEmailCode,
   hashPassword,
@@ -118,6 +129,7 @@ import { registerOrganizationEvolutionRoutes } from './modules/organizationEvolu
 import { createPostgresAuthoritativeEvidence } from './modules/evolution/authoritativeEvidence.mjs';
 import { registerEmployeeRoutes } from './modules/employees/index.mjs';
 import { registerWorkMemoryRoutes } from './modules/work-memory/index.mjs';
+import { registerRdmdRoutes } from './modules/rdmd/index.mjs';
 import { registerSyncRoutes } from './modules/sync/index.mjs';
 import { releaseArtifactFile } from '../../src/shared/releaseLayout.js';
 import { normalizeMentionEntities } from '../../src/shared/contracts/mentions.js';
@@ -135,6 +147,11 @@ import {
   queryCollaborationCandidates,
   verifyCapabilitySelectionToken,
 } from './modules/collaboration/capabilitySelection.mjs';
+import {
+  normalizeUBuddyCandidateAudit,
+  validateUBuddyCandidateAudit,
+  UBUDDY_CANDIDATE_AUDIT_VERSION,
+} from '../../src/shared/contracts/uBuddyCandidateAudit.js';
 
 export { permissionsForRole } from './modules/platform/index.mjs';
 
@@ -340,6 +357,7 @@ export function createApp({ pool, config, mailer, objectStore = null }) {
   registerOrganizationEvolutionRoutes({ app, pool, auth, route, apiError });
   registerEmployeeRoutes({ app, pool, apiError });
   registerWorkMemoryRoutes({ app, pool, auth, route, apiError, env });
+  registerRdmdRoutes({ app, pool, auth, route, apiError, deviceGrants, env });
 
   app.post('/api/auth/email-code', route(async (req, res) => {
     const email = normalizeEmail(req.body?.email);
@@ -3971,7 +3989,7 @@ async function recordPostgresCollaborationEvidence(client,{env=process.env,owner
     confidence:0.8,metadata});
 }
 
-async function routeCollaborationAttributionToEvolution(pool, {
+export async function routeCollaborationAttributionToEvolution(pool, {
   attribution = {}, actorUserId = '', minConfidence = 0.6, env = process.env,
 } = {}) {
   const threshold = Math.max(0, Math.min(1, Number(minConfidence || 0.6)));
@@ -3982,8 +4000,106 @@ async function routeCollaborationAttributionToEvolution(pool, {
   const eligibleOrganizationSignals = (attribution.organizationSignals || [])
     .filter((item) => Number(item.confidence || 0) >= threshold);
   const organizationSignals = actorUserId === requesterUserId ? eligibleOrganizationSignals : [];
-  const blockedReasons = [...(attribution.evolutionRouting?.blockedReasons || [])]
-    .filter((item) => item.code !== 'evolution_evidence_missing');
+  // Evidence is a hard prerequisite for evolution routing.  Do not silently
+  // drop the missing-evidence blocker: doing so turns heuristic attribution
+  // into an actionable evolution update without an auditable evidence chain.
+  const blockedReasons = [...(attribution.evolutionRouting?.blockedReasons || [])];
+  const expectedEvidenceRefs = attribution.evolutionEvidenceRefs || [];
+  // Causal attribution is opt-in: observational signals (including a
+  // heuristic `probeSupport` flag) can never reach the evolution worker.
+  // Only an explicitly assessed Probe effect with complete delegation/TDB
+  // bindings is eligible.  Missing or mismatched bindings stay blocked.
+  const probeEffect = attribution.probeEffect && typeof attribution.probeEffect === 'object'
+    ? attribution.probeEffect : null;
+  const delegationId = String(attribution.scope?.delegationId || '');
+  const expectedTdbHash = String(attribution.tdbHash || attribution.tdb?.hash || '');
+  const probeEvidenceIds = new Set(Array.isArray(probeEffect?.evidenceRefs)
+    ? probeEffect.evidenceRefs.map((value) => String(value || '')).filter(Boolean) : []);
+  const expectedEvidenceIdSet = new Set(expectedEvidenceRefs.map((ref) => String(ref.evidenceId || '')).filter(Boolean));
+  const probeBindingsMatch = Boolean(probeEffect
+    && ['CERTIFIED', 'PROBE_SUPPORTED'].includes(String(probeEffect.status || ''))
+    && String(probeEffect.attribution || '') === 'PROBE_SUPPORTED'
+    && delegationId
+    && String(probeEffect.delegationId || '') === delegationId
+    && (!attribution.attributionVersion || !probeEffect.sourceVersion || String(probeEffect.sourceVersion) === String(attribution.attributionVersion))
+    && (!expectedTdbHash || String(probeEffect.tdbHash || '') === expectedTdbHash)
+    && [...probeEvidenceIds].every((id) => expectedEvidenceIdSet.has(id))
+    && probeEvidenceIds.size > 0);
+  if (!probeBindingsMatch) blockedReasons.push({
+    code: probeEffect ? 'probe_effect_binding_mismatch' : 'probe_effect_missing',
+    delegationId,
+  });
+  const evidenceIds = expectedEvidenceRefs.map((ref) => ref.evidenceId).filter(Boolean);
+  const verifiedEvidence = evidenceIds.length ? await many(pool, `SELECT evidence_id,source_version_id,owner_user_id,user_agent_instance_id,
+    delegation_id,validation_status,quarantine_reason,historical_inactive,metadata_json FROM cloud_evolution_evidence WHERE evidence_id=ANY($1::text[])`, [evidenceIds]) : [];
+  const evidenceGate = evaluateEvolutionEvidenceGate(verifiedEvidence, {
+    delegationId, expectedRefs: expectedEvidenceRefs,
+  });
+  blockedReasons.push(...evidenceGate.reasons);
+  // Cross-task transferability is an independent hard gate.  Attribution
+  // signals may be observationally strong, but they cannot become an
+  // evolution candidate unless the source TDB is explicitly bound to the
+  // target task/scope and certified as fresh.  Missing bindings stay UNKNOWN;
+  // conflicts are surfaced separately for auditability.
+  const crossTaskApplicability = attribution.crossTaskApplicability
+    || attribution.evolutionRouting?.crossTaskApplicability
+    || null;
+  const crossStatus = String(crossTaskApplicability?.status || '').toUpperCase();
+  if (crossStatus !== 'CERTIFIED' || crossTaskApplicability?.applicability !== 'APPLICABLE') {
+    blockedReasons.push({
+      code: crossStatus === 'CONFLICT' ? 'cross_task_applicability_conflict' : 'cross_task_applicability_unknown',
+      status: crossStatus || 'UNKNOWN',
+      reason: crossTaskApplicability?.reason || 'cross_task_binding_missing',
+    });
+  }
+  // Carry the immutable context used to authorize a candidate into the route
+  // result.  This is deliberately a summary: candidate payloads must remain
+  // free of private graph fields, while an auditor still needs to reproduce
+  // the replay/target/applicability binding that was evaluated above.
+  const replaySnapshot = attribution.tdbReplaySnapshot && typeof attribution.tdbReplaySnapshot === 'object'
+    ? attribution.tdbReplaySnapshot : null;
+  const replayBinding = replaySnapshot ? {
+    version: String(replaySnapshot.version || ''),
+    replayToken: String(replaySnapshot.replayToken || ''),
+    traceHash: String(replaySnapshot.traceHash || ''),
+    finalHash: String(replaySnapshot.finalHash || ''),
+    initialHash: String(replaySnapshot.initialHash || ''),
+  } : null;
+  const targetBinding = attribution.targetBinding && typeof attribution.targetBinding === 'object'
+    ? {
+      version: String(attribution.targetBinding.version || ''),
+      status: String(attribution.targetBinding.status || 'UNKNOWN'),
+      targetTaskId: attribution.targetBinding.targetTaskId || null,
+      receiverUserId: attribution.targetBinding.receiverUserId || null,
+      query: String(attribution.targetBinding.query || ''),
+      tdbHash: String(attribution.targetBinding.tdbHash || attribution.tdbHash || ''),
+    } : null;
+  // Candidate-audit summaries are persisted/forwarded across route calls.  A
+  // legacy summary without an explicit version must never be interpreted as
+  // a current, binding-bearing audit.  Keep accepting the surrounding
+  // attribution shape, but surface the uncertainty and hard-block routing.
+  const suppliedCandidateAudit = attribution.candidateAudit && typeof attribution.candidateAudit === 'object'
+    ? attribution.candidateAudit : null;
+  const auditValidation = validateUBuddyCandidateAudit(suppliedCandidateAudit, {
+    requireVersion: Boolean(suppliedCandidateAudit),
+    requireTemporalBinding: Boolean(suppliedCandidateAudit),
+  });
+  if (!auditValidation.valid) blockedReasons.push({ code: auditValidation.reason, expected: UBUDDY_CANDIDATE_AUDIT_VERSION });
+  const candidateAudit = normalizeUBuddyCandidateAudit(suppliedCandidateAudit || {}, {
+    correlationId: attribution.correlationId || attribution.metadata?.correlationId || attribution.scope?.delegationId,
+    issuedAt: attribution.issuedAt || attribution.metadata?.issuedAt,
+    expiresAt: attribution.expiresAt || attribution.metadata?.expiresAt,
+    replay: replayBinding,
+    targetBinding,
+    crossTaskApplicability,
+    evidenceAudit: attribution.evidenceAudit || attribution.metadata?.evidenceAudit || {
+      version: 'ubuddy_evidence_audit_v1',
+      status: evidenceGate.ok ? 'VALIDATED' : 'UNKNOWN',
+      evidenceRefs: expectedEvidenceRefs,
+      validatedCount: evidenceGate.ok ? expectedEvidenceRefs.length : verifiedEvidence.filter((item) => String(item.validation_status || '').toLowerCase() === 'validated').length,
+      totalCount: expectedEvidenceRefs.length,
+    },
+  });
   const ownerConfirmationReasons = eligiblePersonalSignals.filter((item) => item.userId !== actorUserId).map((signal) => ({
       code: 'personal_evolution_owner_confirmation_required',
       userId: signal.userId,
@@ -4001,8 +4117,11 @@ async function routeCollaborationAttributionToEvolution(pool, {
       delegationId: attribution.scope?.delegationId || '',
       threshold,
       routedEvidence: [],
+      personalCandidates: eligiblePersonalSignals.map((signal) => ({ userId: signal.userId, signalKind: signal.kind, audit: candidateAudit })),
+      organizationCandidates: eligibleOrganizationSignals.map((signal) => ({ signalKind: signal.kind, audit: candidateAudit })),
       personalRuns: [],
       organizationRoute: { status: 'blocked' },
+      candidateAudit,
       blockedReasons: [...blockedReasons, ...ownerConfirmationReasons, ...organizationConfirmationReasons],
     };
   }
@@ -4054,8 +4173,11 @@ async function routeCollaborationAttributionToEvolution(pool, {
       delegationId: attribution.scope?.delegationId || '',
       threshold,
       routedEvidence,
+      personalCandidates: eligiblePersonalSignals.map((signal) => ({ userId: signal.userId, signalKind: signal.kind, audit: candidateAudit })),
+      organizationCandidates: eligibleOrganizationSignals.map((signal) => ({ signalKind: signal.kind, audit: candidateAudit })),
       personalRuns: [],
       organizationRoute: { status: 'blocked' },
+      candidateAudit,
       blockedReasons: [...blockedReasons, { code: error.code || 'evolution_evidence_route_failed', message: error.message }],
     };
   }
@@ -4098,11 +4220,14 @@ async function routeCollaborationAttributionToEvolution(pool, {
     delegationId: attribution.scope?.delegationId || '',
     threshold,
     routedEvidence,
+    personalCandidates: personalSignals.map((signal) => ({ userId: signal.userId, signalKind: signal.kind, audit: candidateAudit })),
+    organizationCandidates: organizationSignals.map((signal) => ({ signalKind: signal.kind, audit: candidateAudit })),
     personalRuns,
     organizationRoute: {
       status: organizationSignals.length ? 'evidence_routed_scheduler_owned' : 'not_requested',
       signalKinds: organizationSignals.map((item) => item.kind),
     },
+    candidateAudit,
     modelProvider: {
       available: modelProvider.available,
       source: modelProvider.source,

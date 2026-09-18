@@ -5,6 +5,11 @@ const VALID_SCOPES = new Set([
   'sync:read', 'sync:write', 'sync:files', 'sync:keys', 'sync:*',
   'devices:approve', 'evolution:read', 'evolution:write', 'evolution:*',
   'employees:read', 'employees:write', 'employees:*',
+  // RDMD 云侧推理（P4）。授予它的 device 是 GPU 盒上的 worker：它只做两件事 ——
+  // 领活（claim）与回传判定（verdict）—— 所以这个 scope 不附带任何读取用户数据的权力，
+  // 拿到它的进程也只能看见**已经过隐私白名单**的 case 载荷。
+  // 命名沿用 `<namespace>:<verb>`，所以 `rdmd:*` 的通配行为与其余 scope 一致。
+  'rdmd:infer',
 ]);
 
 export function createDeviceGrantService({ pool, apiError, approvalMode = 'automatic' }) {
