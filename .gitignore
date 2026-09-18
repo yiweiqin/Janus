@@ -10,9 +10,17 @@ outputs/
 scripts/__pycache__/
 **/__pycache__/
 *.pyc
+experiments/rdmd_runs/
+experiments/rdmd_detective_dataset/sft/*.jsonl
+experiments/rdmd_detective_dataset/sft/smoke/
+# data/ 下的语料与 sft/ 同性质：由 generate.mjs / prepare_sft.mjs 派生，动辄 200MB+。
+# 只提交 manifest/labels/summary 这类小文件作为出处锚点，不提交语料本体。
+experiments/rdmd_detective_dataset/data/*.jsonl
 *.orig
 *.bak
 *.bak-*
+# 本机 SSH 端点（含明文密码），换盒子时只改这一个文件。
+scripts/_rdmd_env.ps1
 .env
 .env.local
 .env.*.local
