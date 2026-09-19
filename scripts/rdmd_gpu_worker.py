@@ -61,6 +61,25 @@ HTTP_TIMEOUT_SECONDS = 30
 PREDICT_TIMEOUT_SECONDS = 600
 
 
+def worker_source_sha256() -> str:
+    """本进程**实际加载的那份源码**的 sha256。
+
+    为什么 worker 要自报这个：worker 与云是两份部署，而"文件已经更新"和
+    "进程在跑的是新代码"是两件事 —— 常驻进程把源码读进内存之后，磁盘上再新也不会生效，
+    而 `_rdmd_worker_daemon.sh start` 见到 pidfile 活着就返回"已在运行"。
+    于是"重推了 worker、忘了重启"会表现成：源码检查全过、进程照旧用旧协议回传，
+    然后每一条作业被云侧 400 拒收、重试到 attempts exhausted。实测栽过一次。
+
+    自报身份比"比对外部文件的 mtime"可靠：它**出自运行中的那个进程**，
+    而不是出自任何人的记忆。daemon 的 `status` 从启动行里取它，run_remote.sh 拿它
+    与将要跑的那份源码比对 —— 不一致就说明该重启了。
+    """
+    try:
+        return hashlib.sha256(Path(__file__).resolve().read_bytes()).hexdigest()
+    except OSError:
+        return ""
+
+
 def env(name: str, default: str = "") -> str:
     return str(os.environ.get(name, default) or "").strip()
 
@@ -234,6 +253,10 @@ def process_job(*, job: dict, config: dict, predict_py: Path, adapter_sha: str) 
             return
         verdict = verdict_from_record(records[0])
         api(config["cloud_api"], config["token"], f"/api/rdmd/jobs/{job_id}/verdict", {
+            # 回传必须自报**领这条活时用的同一个 workerId**：云侧据此校验租约归属，
+            # 否则任何一个持 rdmd:infer 的 grant 都能终结队列里任何一条在飞作业
+            # （包括别的用户的）。领活用 workerId，回传也必须用同一个。
+            "workerId": config["worker_id"],
             "verdict": verdict,
             "provenance": {
                 "adapterSha256": adapter_sha,
@@ -247,7 +270,8 @@ def process_job(*, job: dict, config: dict, predict_py: Path, adapter_sha: str) 
             f"{' ' + verdict['nodeId'] if verdict['nodeId'] else ''}"
             f"{' (' + verdict['reason'] + ')' if verdict['reason'] else ''}")
     except CloudError as error:
-        # 409 = 出处被拒或作业状态不对；401 = grant 失效。两种都要人来看。
+        # 409 = 出处被拒 / 作业状态不对 / 租约不属于我们这个 worker（三种都可能是"这条活
+        # 已经被别人接走重跑"）；400 = 形状非法或没带 workerId；401 = grant 失效。都要人来看。
         log(f"[error] job {job_id} verdict rejected: {error}")
     except subprocess.TimeoutExpired:
         log(f"[error] job {job_id} predict.py exceeded {PREDICT_TIMEOUT_SECONDS}s")
@@ -294,7 +318,10 @@ def main() -> int:
     }
     adapter_sha = adapter_sha256(adapter)
     local_contract = resolve_contract_version(deploy_dir)
-    log(f"worker={config['worker_id']} api={config['cloud_api']} adapter_sha256={adapter_sha[:16]}…")
+    # 启动行里带上**本进程加载的那份源码**的 sha：`_rdmd_worker_daemon.sh status`
+    # 与 run_remote.sh 都靠它判断"在跑的到底是不是新代码"（见 worker_source_sha256）。
+    log(f"worker={config['worker_id']} api={config['cloud_api']} "
+        f"adapter_sha256={adapter_sha[:16]}… worker_source_sha256={worker_source_sha256()[:16]}…")
     log(f"contract(deploy)={local_contract} base_model={config['base_model_id']}")
 
     while True:

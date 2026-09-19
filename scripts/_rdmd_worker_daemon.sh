@@ -147,6 +147,18 @@ case "${1:-status}" in
       echo "adapter(last start)=${STARTED_SHORT}…"
       [ "$RUNNING_SHORT" = "$STARTED_SHORT" ] || echo "  注意：两者不一致 —— 日志里有别的 adapter 的痕迹"
     fi
+    # 同一套纪律用在**源码**上：进程加载的那份 worker 源码，与磁盘上现在这份是不是同一份。
+    # 「重推了 worker、忘了重启」时，adapter 的 sha 完全一致（权重没换），只有这里会说话。
+    RUNNING_SRC=$(grep -o 'worker_source_sha256=[0-9a-f]*' "$LOG" 2>/dev/null | tail -1 | cut -d= -f2)
+    if [ -n "$RUNNING_SRC" ]; then
+      if [ "$ALIVE" = yes ]; then
+        echo "worker_src(running)=${RUNNING_SRC}…"
+      else
+        echo "worker_src(日志里最后一份，进程已停)=${RUNNING_SRC}…"
+      fi
+    else
+      echo "worker_src=未知（这个 worker 起得比这行日志还早，重启一次即可上报）"
+    fi
     psql "$DATABASE_URL" -tAc "SELECT 'queue: '||count(*) FILTER (WHERE status='queued')||' queued, '
       ||count(*) FILTER (WHERE status='claimed')||' claimed, '
       ||count(*) FILTER (WHERE status='completed')||' completed'

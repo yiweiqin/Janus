@@ -12,23 +12,13 @@ from pathlib import Path
 
 import paramiko
 
+from _rdmd_ssh_target import connect as _connect_ssh  # noqa: E402
+
 
 def connect() -> paramiko.SSHClient:
-    password = os.environ.get("RDMD_SSH_PASSWORD") or os.environ.get("SSH_PASSWORD")
-    if not password:
-        raise SystemExit("RDMD_SSH_PASSWORD is required")
-    client = paramiko.SSHClient()
-    client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-    client.connect(
-        hostname=os.environ.get("RDMD_SSH_HOST", "connect.bjb1.seetacloud.com"),
-        port=int(os.environ.get("RDMD_SSH_PORT", "53957")),
-        username=os.environ.get("RDMD_SSH_USER", "root"),
-        password=password,
-        timeout=30,
-        allow_agent=False,
-        look_for_keys=False,
-    )
-    return client
+    # 端点解析只有一处实现（scripts/_rdmd_ssh_target.py）：缺 RDMD_SSH_HOST/PORT
+    # 就 fail closed，不再静默回落到另一个实例的端口。
+    return _connect_ssh()
 
 
 def main() -> int:

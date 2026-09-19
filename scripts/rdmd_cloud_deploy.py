@@ -24,6 +24,8 @@ from pathlib import Path
 
 import paramiko
 
+from _rdmd_ssh_target import connect as _connect_ssh  # noqa: E402
+
 ROOT = Path(__file__).resolve().parents[1]
 BUNDLE = ROOT / "experiments" / "rdmd_runs" / "rdmd_cloud_bundle.tar.gz"
 
@@ -61,21 +63,9 @@ def include_paths() -> list[str]:
 
 
 def connect() -> paramiko.SSHClient:
-    password = os.environ.get("RDMD_SSH_PASSWORD")
-    if not password:
-        raise SystemExit("RDMD_SSH_PASSWORD is required")
-    client = paramiko.SSHClient()
-    client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-    client.connect(
-        hostname=os.environ.get("RDMD_SSH_HOST", "connect.bjb1.seetacloud.com"),
-        port=int(os.environ.get("RDMD_SSH_PORT", "53957")),
-        username=os.environ.get("RDMD_SSH_USER", "root"),
-        password=password,
-        timeout=30,
-        allow_agent=False,
-        look_for_keys=False,
-    )
-    return client
+    # 端点解析只有一处实现（scripts/_rdmd_ssh_target.py）：缺 RDMD_SSH_HOST/PORT
+    # 就 fail closed，不再静默回落到另一个实例的端口。
+    return _connect_ssh()
 
 
 def run(client: paramiko.SSHClient, command: str, timeout: int = 300) -> tuple[int, str, str]:
@@ -147,9 +137,22 @@ def verify_remote(client: paramiko.SSHClient) -> None:
         # rdmd 模块本体。
         (f"{REMOTE_TARGET}/src/modules/rdmd/index.mjs", "rdmd 模块"),
         (f"{REMOTE_TARGET}/src/modules/rdmd/privacy.mjs", "隐私白名单"),
-        # 迁移 096 是四层图的前提（放开 depth<=2），097 是作业表。
+        # 迁移 096 是四层图的前提（放开 depth<=2），097 是作业表，
+        # 098 是**作业表的角色授权**。
+        #
+        # 为什么 098 必须出现在这个清单里：`applyMigrationFiles` 只按文件名记账，
+        # 所以在一个**已经上过 097** 的环境上，事后往 097 里补 GRANT 是完全无效的 ——
+        # 它永远不会再跑。098 就是那份补票。少了它，症状要到第一次真的入队才出现：
+        # 迁移全绿、/readyz 正常，只有 POST /api/rdmd/jobs 抛 permission denied。
         (f"{REMOTE_TARGET}/database/migrations/096_ubuddy_collaboration_graph_agent_step.sql", "迁移 096"),
         (f"{REMOTE_TARGET}/database/migrations/097_rdmd_inference_jobs.sql", "迁移 097"),
+        (f"{REMOTE_TARGET}/database/migrations/098_rdmd_inference_jobs_grants.sql", "迁移 098"),
+        # 099 是 TPM 原始层的申请/授权表。它和 098 是同一类风险的反面：
+        # 098 漏了症状要拖到入队，099 漏了症状要拖到**第一次申请原始层**才出现
+        # （而且是在模拟任务群那条链上）—— 都属于"迁移全绿、/readyz 正常"的静默缺口。
+        (f"{REMOTE_TARGET}/database/migrations/099_ubuddy_task_public_memory.sql", "迁移 099"),
+        # TPM 的 store 接线：迁移建了表，但没有这个模块，表就是死的。
+        (f"{REMOTE_TARGET}/src/modules/tpm/index.mjs", "tpm 模块"),
         (f"{REMOTE_TARGET}/scripts/migrate.mjs", "cloud:migrate 入口"),
         # 跨目录依赖：启动路径上第一个会崩的地方（ERR_MODULE_NOT_FOUND）。
         # 单独列出来，是因为它一旦缺失，报错指向 cloud/ 之外的路径，很难一眼归因。
@@ -163,11 +166,16 @@ def verify_remote(client: paramiko.SSHClient) -> None:
         print(f"  {'OK  ' if ok else 'FAIL'} {label}: {path}")
         if not ok:
             failures.append(label)
-    # 迁移头必须指到 097，否则 readiness 会认为库没就绪。
+    # 迁移头必须指到 099，否则 readiness 会认为库没就绪。
+    #
+    # 098 是纯 GRANT 的迁移，099 是**纯新增表**的迁移 —— 两者 schema 形状的"体量"都很小，
+    # 正因如此最容易被漏掉：漏了以后前一条已经在账上、表也在，什么看起来都是好的，
+    # 直到真的入队（098）、或真的去申请原始层（099）。
+    # 把 readiness 的头推到 099，是让"漏了"在 `/readyz` 上就变红，而不是拖到那条链跑起来。
     code, out, _ = run(client, f"grep -n CLOUD_DATABASE_MIGRATION_HEAD {REMOTE_TARGET}/src/db.mjs | head -1")
     print(f"  migration head on box: {out.strip()}")
-    if "097" not in out:
-        failures.append("db.mjs 的迁移头不是 097")
+    if "099" not in out:
+        failures.append("db.mjs 的迁移头不是 099")
     # server.mjs 必须真的**调用**注册函数，否则路由不存在。
     # 这里刻意不用 `grep -c rdmd`：那一行写的是 `registerRdmdRoutes(...)`，
     # 唯一的 `rdmd` 全小写出现在 import 的路径里，大小写敏感计数会得到 1，

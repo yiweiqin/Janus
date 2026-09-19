@@ -29,7 +29,12 @@ if ((!apiKey || !baseUrl) && (apiKey || baseUrl)) {
 if (distributionMode === 'open-source' && !apiKey && required) {
   throw new Error('Trial Provider credentials are required for this package, but were not supplied.');
 }
-if (distributionMode === 'open-source') {
+// NOTE(local-build): 上游公开快照做过一次全局文本替换，把 'official' 也替换成了
+// 'open-source'，于是 community 模式会误入这个内部凭证校验，并在无凭证时抛
+// 'Internal embedded packages require a gateway Key and Base URL.'。
+// 这里把守卫还原为「只有真要嵌凭证时才校验」，与替换前的 'official' 分支语义一致：
+// 本脚本的 resolveDistributionMode 只可能返回 'open-source'，其余取值一律抛错。
+if (apiKey && baseUrl) {
   const officialCredential = validateInternalGatewayCredential({
     apiKey,
     baseUrl,

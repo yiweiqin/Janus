@@ -8,18 +8,9 @@ import os
 from pathlib import Path
 import paramiko
 
-password = os.environ["RDMD_SSH_PASSWORD"]
-client = paramiko.SSHClient()
-client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-client.connect(
-    hostname=os.environ.get("RDMD_SSH_HOST", "connect.bjb1.seetacloud.com"),
-    port=int(os.environ.get("RDMD_SSH_PORT", "53957")),
-    username=os.environ.get("RDMD_SSH_USER", "root"),
-    password=password,
-    timeout=30,
-    allow_agent=False,
-    look_for_keys=False,
-)
+from _rdmd_ssh_target import connect as _connect_ssh
+
+client = _connect_ssh()
 sftp = client.open_sftp()
 local = Path("scripts/train_qlora_rdmd.py")
 remote = "/root/autodl-tmp/Janus/scripts/train_qlora_rdmd.py"

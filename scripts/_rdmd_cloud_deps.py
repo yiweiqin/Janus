@@ -22,11 +22,20 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 
 # 云 API 启动时会真正 import 到的 RDMD 入口。
+#
+# **为什么 TPM 也在里面**：`cloud/src/modules/tpm/index.mjs` 现在没有 HTTP 路由，
+# 所以云 API 启动路径并不会加载它 —— 按"启动时会不会 import"这个标准它本可以不在。
+# 但它**是部署出去的那棵树的一部分**（`cloud/src` 整目录上传），并且它 import 了
+# `src/shared/contracts/uBuddyTaskPublicMemory.js`（在 cloud/ 之外）。
+# 不把它列进来，闭环就是：文件传上去了、依赖没传 —— 谁哪天给它加一条路由，
+# 症状就是启动即崩的 `ERR_MODULE_NOT_FOUND`，而报错指向 cloud/ 之外的路径。
+# 所以判据不是"启动时用不用"，而是"它是不是我们部署的东西"。
 ENTRY_POINTS = [
     "cloud/src/modules/rdmd/index.mjs",
     "cloud/src/modules/rdmd/contract.mjs",
     "cloud/src/modules/rdmd/privacy.mjs",
     "cloud/src/modules/rdmd/backend.mjs",
+    "cloud/src/modules/tpm/index.mjs",
 ]
 
 # 匹配 `from './x'` / `from "../y"`，含 import 与 export ... from 两种形式。

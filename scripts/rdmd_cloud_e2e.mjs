@@ -27,10 +27,11 @@
 import assert from 'node:assert/strict';
 import crypto from 'node:crypto';
 import fs from 'node:fs';
+import { pathToFileURL } from 'node:url';
 
 import { createPgPool } from '../cloud/src/db.mjs';
 import { signAccessToken } from '../cloud/src/security.mjs';
-import { createDeviceGrantService } from '../cloud/src/modules/sync/deviceGrants.mjs';
+import { createDeviceGrantService, DEFAULT_RDMD_WORKER_USER } from '../cloud/src/modules/sync/deviceGrants.mjs';
 import { RDMD_RULE_VERSION, RDMD_DRIFT_TYPES } from '../cloud/src/modules/rdmd/contract.mjs';
 import { PLAN_EXEC_CONTRACT_VERSION } from '../src/shared/contracts/uBuddyPlanExec.js';
 import { deviceGrantProofMessage } from '../src/shared/taskMemoryCrypto.js';
@@ -112,7 +113,7 @@ const DRIFT_GOLD = {
   removed_step: { nodeId: 'n_step', type: '' }, // type 不可判定，见 realCase 的注释
 };
 
-async function call(method, pathname, { body = null, token = '', grant = '' } = {}) {
+export async function call(method, pathname, { body = null, token = '', grant = '' } = {}) {
   const headers = {};
   if (body) headers['Content-Type'] = 'application/json';
   if (grant) headers.Authorization = `Bearer ${grant}`;
@@ -126,8 +127,8 @@ async function call(method, pathname, { body = null, token = '', grant = '' } = 
   return { status: response.status, body: parsed };
 }
 
-const post = (pathname, body, options) => call('POST', pathname, { ...options, body });
-const get = (pathname, options) => call('GET', pathname, options);
+export const post = (pathname, body, options) => call('POST', pathname, { ...options, body });
+export const get = (pathname, options) => call('GET', pathname, options);
 
 const readState = (statePath) => (fs.existsSync(statePath) ? JSON.parse(fs.readFileSync(statePath, 'utf8')) : {});
 const writeState = (statePath, state) => fs.writeFileSync(statePath, JSON.stringify(state, null, 2));
@@ -138,16 +139,32 @@ const writeState = (statePath, state) => fs.writeFileSync(statePath, JSON.string
  * 用**真 RSA 密钥 + 真签名 proof**，而不是 `allowLegacyNoKey` 抄近路：
  * 后者会让 `verifyDeviceProof` 的指纹比对、时间窗、nonce 入表三条分支全都不执行，
  * device grant 这层安全就等于没测。
+ *
+ * ## 为什么这个函数是 `export` 的
+ *
+ * 模拟任务群（`experiments/sim_task_group/submit.mjs`）要发**同样形状**的请求，
+ * 它需要的就是这一份凭据。计划里写的是"直接抄 provision()"，但抄一份意味着两条
+ * 凭据策略会各自演化 —— 而这里面藏着 RSA 指纹、proof 时间窗、nonce、服务身份
+ * （`rdmd:infer` 只签给在册服务身份）四件容易抄漏的事。少抄一件，模拟那一侧
+ * 会在 403 上花掉一下午，而错的结果看起来像"云侧不认我们的 worker"。
+ * 所以这里导出，让它只有一份。
  */
-async function provision(pool, { userId, deviceId }) {
+export async function provision(pool, { userId, deviceId }) {
   const apiError = (code, message, status = 400) => Object.assign(new Error(message), { code, status });
 
-  await pool.query(
-    `INSERT INTO users (id,email,display_name,password_hash,email_verified,role)
-     VALUES ($1,$2,$3,$4,true,'member')
-     ON CONFLICT (id) DO UPDATE SET email=excluded.email, updated_at=now()`,
-    [userId, `${userId}@e2e.invalid`, 'RDMD E2E', 'not-a-real-hash'],
-  );
+  // worker 凭据属于**服务身份**，不属于 `userId`（任务的属主）。这是生产里的真实形态：
+  // 一个 worker 池替所有用户领活与回传判定，所以 `rdmd:infer` 只签给配置在册的服务身份
+  // （`deviceGrants.mjs#SERVICE_ONLY_SCOPES`，默认与 `_rdmd_worker_provision.mjs` 同源）。
+  // 早先这里图省事把 grant 签给 `userId` —— 那既不是生产形态，收口之后也会被云侧 403 拒掉。
+  const workerUserId = DEFAULT_RDMD_WORKER_USER;
+  for (const [id, label] of [[userId, 'RDMD E2E'], [workerUserId, 'RDMD Inference Worker']]) {
+    await pool.query(
+      `INSERT INTO users (id,email,display_name,password_hash,email_verified,role)
+       VALUES ($1,$2,$3,$4,true,'member')
+       ON CONFLICT (id) DO UPDATE SET email=excluded.email, updated_at=now()`,
+      [id, `${id}@e2e.invalid`, label, 'not-a-real-hash'],
+    );
+  }
 
   const { privateKey, publicKey } = crypto.generateKeyPairSync('rsa', {
     modulusLength: 2048,
@@ -157,7 +174,7 @@ async function provision(pool, { userId, deviceId }) {
 
   const service = createDeviceGrantService({ pool, apiError });
   await service.register({
-    userId,
+    userId: workerUserId,
     input: { deviceId, displayName: 'rdmd-gpu-worker', platform: 'linux', arch: 'x64', publicKey },
   });
 
@@ -166,12 +183,12 @@ async function provision(pool, { userId, deviceId }) {
   const nonce = crypto.randomUUID();
   const signature = crypto.sign(
     'sha256',
-    Buffer.from(deviceGrantProofMessage({ userId, deviceId, scopes, timestamp, nonce }), 'utf8'),
+    Buffer.from(deviceGrantProofMessage({ userId: workerUserId, deviceId, scopes, timestamp, nonce }), 'utf8'),
     privateKey,
   ).toString('base64');
 
   const grant = await service.issueToken({
-    userId, deviceId, requestedScopes: scopes, proof: { timestamp, nonce, signature },
+    userId: workerUserId, deviceId, requestedScopes: scopes, proof: { timestamp, nonce, signature },
   });
   assert.equal(grant.status, 'approved', 'device 未被批准');
   assert.ok(grant.token.startsWith('dgr_'), 'device grant token 形状不对');
@@ -269,6 +286,7 @@ async function stageClaim(statePath, { evidence }) {
 
   // ---- 出处不全的判定必须被拒（"不可审计的判定等于没有判定"）----
   const bad = await post(`/api/rdmd/jobs/${heldJobId}/verdict`, {
+    workerId: 'e2e-worker-A',
     verdict: { status: 'drift', nodeId: 'n_step', type: 'missing_dependency', valid: true, warnings: [], reason: '' },
   }, { grant });
   assert.equal(bad.status, 409, `缺出处的判定应被拒 409，得到 ${bad.status}: ${JSON.stringify(bad.body)}`);
@@ -277,13 +295,30 @@ async function stageClaim(statePath, { evidence }) {
 
   // ---- 形状非法的 status 必须被拒 400（不能把未知状态当合法判定收下）----
   const bogus = await post(`/api/rdmd/jobs/${heldJobId}/verdict`, {
+    workerId: 'e2e-worker-A',
     verdict: { status: 'definitely_not_a_status', nodeId: 'n_step', type: '', valid: true },
     provenance: { adapterSha256: 'a'.repeat(64), baseModelId: 'x', contractVersion: PLAN_EXEC_CONTRACT_VERSION, ruleVersion: RDMD_RULE_VERSION },
   }, { grant });
   assert.equal(bogus.status, 400, `非法 status 应得 400，得到 ${bogus.status}`);
   console.log('[ok] 非法 verdict.status -> 400');
 
-  // 上面两次拒绝都不该消耗作业：它必须仍被我们租着，所以第三轮 claim 拿不到它。
+  // ---- 判定只能由**持租约的那个 worker** 回传 ----
+  //
+  // 这一条是新加的，因为它补的是个真实的口子：在这之前，任何一个持 `rdmd:infer` 的 grant
+  // 都能凭 job id 终结队列里**任何一条在飞作业**（包括别的用户的）—— 而 `owner_user_id`
+  // 挡不住这一侧（worker 是跨用户的服务身份，见 097 迁移注释）。
+  // `e2e-worker-B` 是一个真实存在的、持有合法 grant 的 worker，只是它没领这条活。
+  const stolen = await post(`/api/rdmd/jobs/${heldJobId}/verdict`, {
+    workerId: 'e2e-worker-B',
+    verdict: { status: 'no_drift', valid: true, warnings: [], reason: '' },
+    provenance: { adapterSha256: 'a'.repeat(64), baseModelId: 'x', contractVersion: PLAN_EXEC_CONTRACT_VERSION, ruleVersion: RDMD_RULE_VERSION },
+  }, { grant });
+  assert.equal(stolen.status, 409, `非持租约者的判定应被拒 409，得到 ${stolen.status}: ${JSON.stringify(stolen.body)}`);
+  assert.equal(stolen.body?.error, 'rdmd_job_claimed_by_other_worker', `错误码应指出"租约不属于你"，得到 ${stolen.body?.error}`);
+  evidence.leaseBoundVerdict = { workerId: 'e2e-worker-B', status: stolen.status, code: stolen.body?.error || '' };
+  console.log(`[ok] 非持租约者的判定被拒 -> ${stolen.status} ${stolen.body?.error}`);
+
+  // 上面三次拒绝都不该消耗作业：它必须仍被我们租着，所以第三轮 claim 拿不到它。
   //
   // 这里不能用「读自己的作业」来验证：worker 的 claim 是**跨用户**的（一个 worker 池服务
   // 所有用户），所以 idsA[0] 未必属于 state 里那个用户，用 owner 作用域的 read 会 404。
@@ -293,7 +328,7 @@ async function stageClaim(statePath, { evidence }) {
   assert.ok(!idsC.includes(heldJobId),
     `被拒的回传消耗了租约：作业 ${heldJobId} 在第三轮里又被领走了`);
   evidence.stillLeasedAfterRejections = { heldJobId, reClaimed: false };
-  console.log('[ok] 两次被拒后该作业仍被租用（拒绝不消耗作业）');
+  console.log('[ok] 三次被拒后该作业仍被租用（拒绝不消耗作业）');
 }
 
 async function stageVerify(pool, { backend, statePath, evidence }) {
@@ -439,7 +474,14 @@ async function main() {
   }
 }
 
-main().catch((error) => {
-  console.error(`E2E_FAILED ${error?.stack || error}`);
-  process.exit(1);
-});
+// 只有在**直接跑这个文件**时才进 main。
+// 早先这里是裸的 `main().catch(...)`，于是任何 `import` 都会连带跑一遍全链路 E2E
+// （会去连库、发 HTTP）。`experiments/sim_task_group/submit.mjs` 现在要 import `provision`，
+// 所以这条守卫是必需的，不是整洁问题。
+const isMain = process.argv[1] && pathToFileURL(process.argv[1]).href === import.meta.url;
+if (isMain) {
+  main().catch((error) => {
+    console.error(`E2E_FAILED ${error?.stack || error}`);
+    process.exit(1);
+  });
+}

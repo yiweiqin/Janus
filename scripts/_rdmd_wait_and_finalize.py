@@ -16,7 +16,8 @@ import time
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-from rdmd_ssh import connect, run  # noqa: E402
+from rdmd_ssh import run  # noqa: E402
+from _rdmd_ssh_target import connect as _connect_ssh  # noqa: E402
 
 
 def main() -> None:
@@ -27,16 +28,8 @@ def main() -> None:
     parser.add_argument("--interval", type=int, default=30)
     args = parser.parse_args()
 
-    password = os.environ.get("RDMD_SSH_PASSWORD") or os.environ.get("SSH_PASSWORD")
-    if not password:
-        raise SystemExit("RDMD_SSH_PASSWORD is required")
-
-    client = connect(
-        os.environ.get("RDMD_SSH_HOST", "connect.bjb1.seetacloud.com"),
-        int(os.environ.get("RDMD_SSH_PORT", "53957")),
-        os.environ.get("RDMD_SSH_USER", "root"),
-        password,
-    )
+    # 端点解析只有一处实现（scripts/_rdmd_ssh_target.py）。
+    client = _connect_ssh()
     try:
         deadline = time.time() + args.max_minutes * 60
         check = (

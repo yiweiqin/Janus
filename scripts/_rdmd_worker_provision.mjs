@@ -123,7 +123,20 @@ async function main() {
     const issued = await postJson(`/api/device-grants/${encodeURIComponent(DEVICE_ID)}/token`, {
       scopes: SCOPES, ttlDays: TTL_DAYS, proof: { timestamp, nonce, signature },
     }, { token });
-    if (issued.status !== 201) fail(`签发 device grant 失败 HTTP ${issued.status}: ${JSON.stringify(issued.body)}`);
+    if (issued.status !== 201) {
+      // `rdmd:infer` 是**服务级** scope：云侧只把它签给配置在册的服务身份
+      // （`deviceGrants.mjs#SERVICE_ONLY_SCOPES`）。这条 403 只有一个原因 ——
+      // 盒子上这个 `RDMD_WORKER_USER` 与云进程的 `RDMD_WORKER_USER` 不是同一个身份。
+      // 单独把它拎出来，是因为默认值一致时一切正常，不一致时若只打 HTTP 403，
+      // 排查的人会去怀疑网络、密钥和 proof，而真正要改的是一份 env。
+      const code = String(issued.body?.error || issued.body?.code || '');
+      if (code === 'device_grant_scope_reserved') {
+        fail(`云侧拒绝把 rdmd:infer 签给 ${USER_ID}：该身份不在服务级 scope 的授权名单里。`
+          + '请让云进程的 RDMD_WORKER_USER 与本脚本的 RDMD_WORKER_USER 取值一致'
+          + '（两边默认都是 svc_rdmd_inference_worker）。');
+      }
+      fail(`签发 device grant 失败 HTTP ${issued.status}: ${JSON.stringify(issued.body)}`);
+    }
     const grantToken = String(issued.body?.token || '');
     if (!grantToken.startsWith('dgr_')) fail('返回的 token 形状不对（应形如 dgr_…）');
     const scopes = Array.isArray(issued.body?.scopes) ? issued.body.scopes : [];

@@ -16,6 +16,9 @@ const databaseUrl = process.env.DATABASE_MIGRATOR_URL || process.env.DATABASE_UR
 const jwtSecret = process.env.JWT_SECRET || process.env.JANUS_LOCAL_JWT_SECRET || '';
 const outputDir = path.resolve(repoRoot, String(process.env.UBUDDY_POSTGRES_SMOKE_RUN_DIR || path.join('experiments', 'runs', `postgres-smoke-${timestamp()}`)));
 const capabilityHeader = 'ubuddy-capability-profile-v1,agent-work-detail-projection-v1';
+const taskFamily = String(process.env.UBUDDY_SMOKE_TASK_FAMILY || 'research_report');
+const relationType = String(process.env.UBUDDY_SMOKE_RELATION_TYPE || 'delegates_to');
+const scenarioName = String(process.env.UBUDDY_SMOKE_SCENARIO || 'failure_retry_requirement_revision_private_filter');
 
 if (!databaseUrl) throw new Error('DATABASE_MIGRATOR_URL or DATABASE_URL is required.');
 if (!jwtSecret || jwtSecret.length < 32) throw new Error('JWT_SECRET is required and must be at least 32 characters.');
@@ -33,7 +36,7 @@ const ids = {
 
 try {
   await fs.mkdir(outputDir, { recursive: true });
-  await writeJson('config.json', { experiment: 'ubuddy_postgres_smoke_v1', runId, baseUrl, database: 'postgresql',
+  await writeJson('config.json', { experiment: 'ubuddy_postgres_smoke_v1', runId, baseUrl, database: 'postgresql', taskFamily, relationType, scenarioName,
     scenarios: ['normal_match', 'profile_upgrade_snapshot', 'failure_retry', 'requirement_revision', 'private_filter'], modelCalls: 0, createdAt: new Date().toISOString() });
   await seedBaseData();
   const requesterToken = signAccessToken({ userId: ids.requester, secret: jwtSecret, expiresInSeconds: 3600 });
@@ -103,7 +106,7 @@ async function upgradeRecipientProfile() {
 }
 
 async function seedCollaborationData(selectionSnapshot) {
-  const now = new Date(); const metadata = { dependencyOf: `${runId}_root`, capabilitySelectionSnapshot: selectionSnapshot, scenario: 'failure_retry_requirement_revision_private_filter' };
+  const now = new Date(); const metadata = { dependencyOf: `${runId}_root`, capabilitySelectionSnapshot: selectionSnapshot, scenario: scenarioName, taskFamilyId: taskFamily, relationType };
   await pool.query('BEGIN');
   try {
     for (const [userId, displayName] of [[ids.recipient, 'Smoke Recipient uBuddy'], [ids.requester, 'Smoke Requester uBuddy']]) {

@@ -25,7 +25,8 @@ from pathlib import Path
 
 SCRIPTS = Path(__file__).resolve().parent
 sys.path.insert(0, str(SCRIPTS))
-from rdmd_ssh import connect, run  # noqa: E402
+from _rdmd_ssh_target import connect as _connect_ssh  # noqa: E402
+from rdmd_ssh import run  # noqa: E402
 
 ROOT = SCRIPTS.parent
 
@@ -38,20 +39,13 @@ class Remote:
         self.connect()
 
     def connect(self) -> None:
-        password = os.environ.get("RDMD_SSH_PASSWORD") or os.environ.get("SSH_PASSWORD")
-        if not password:
-            raise SystemExit("RDMD_SSH_PASSWORD is required")
         try:
             if self.client is not None:
                 self.client.close()
         except Exception:
             pass
-        self.client = connect(
-            os.environ.get("RDMD_SSH_HOST", "connect.bjb1.seetacloud.com"),
-            int(os.environ.get("RDMD_SSH_PORT", "53957")),
-            os.environ.get("RDMD_SSH_USER", "root"),
-            password,
-        )
+        # 端点解析只有一处实现，缺 host/port 就 fail closed。
+        self.client = _connect_ssh()
 
     def run(self, command: str, timeout: int = 60, retries: int = 3) -> tuple[int, str, str]:
         last: Exception | None = None

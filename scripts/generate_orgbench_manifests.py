@@ -5,6 +5,7 @@ from __future__ import annotations
 import argparse
 import hashlib
 import json
+import os
 from pathlib import Path
 
 
@@ -94,13 +95,15 @@ def write_manifest(payload: dict, output: Path) -> None:
 
 
 def main() -> None:
+    janus_root = Path(os.environ.get("JANUS_ROOT", Path(__file__).resolve().parents[1]))
+    benchmark_root = Path(os.environ.get("BENCHMARK_ROOT", janus_root / "benchmarks"))
     parser = argparse.ArgumentParser()
-    parser.add_argument("--appworld-root", default="D:/Cli-anything/benchmarks/appworld-runtime")
-    parser.add_argument("--output-dir", default="D:/Cli-anything/Janus/experiments/ubuddy_orgbench")
+    parser.add_argument("--appworld-root", default=os.environ.get("APPWORLD_ROOT", benchmark_root / "appworld-runtime"))
+    parser.add_argument("--output-dir", default=os.environ.get("ORGBENCH_ROOT", janus_root / "experiments" / "ubuddy_orgbench"))
     args = parser.parse_args()
     output_dir = Path(args.output_dir)
     app_rows, boundary_rows = appworld_rows(Path(args.appworld_root))
-    write_manifest({"benchmark": "uBuddy-OrgBench-AppWorld", "version": "v1", "baseBenchmark": "AppWorld", "officialEvaluatorRequired": True, "approvalRequired": False, "strictTaskCount": len(app_rows), "boundaryTaskCount": len(boundary_rows), "taskCount": len(app_rows) + len(boundary_rows), "tasks": app_rows, "boundarySupplement": boundary_rows, "selectionRule": {"split": "test_normal", "difficultyMin": 3, "numAppsMin": 2, "numApiCallsMin": 30, "numApisMin": 8, "modelResultBasedFiltering": False, "boundaryTasksExcludedFromStrictMainTable": True}}, output_dir / "appworld_orgbench_tasks.manifest.json")
+    write_manifest({"benchmark": "ubuddy_orgbench_v2", "name": "uBuddy-AppWorld Hybrid Benchmark", "version": "v2", "baseBenchmark": "AppWorld", "officialEvaluatorRequired": True, "approvalRequired": False, "strictTaskCount": len(app_rows), "boundaryTaskCount": len(boundary_rows), "taskCount": len(app_rows) + len(boundary_rows), "tasks": app_rows, "boundarySupplement": boundary_rows, "selectionRule": {"split": "test_normal", "difficultyMin": 3, "numAppsMin": 2, "numApiCallsMin": 30, "numApisMin": 8, "modelResultBasedFiltering": False, "boundaryTasksExcludedFromStrictMainTable": True}}, output_dir / "appworld_orgbench_tasks.manifest.json")
     write_manifest(the_agent_company_manifest(), output_dir / "theagentcompany_tasks.manifest.json")
     print(json.dumps({"appworldStrictTaskCount": len(app_rows), "appworldBoundaryTaskCount": len(boundary_rows), "theAgentCompanyTaskCount": 24, "outputDir": str(output_dir)}, ensure_ascii=False))
 

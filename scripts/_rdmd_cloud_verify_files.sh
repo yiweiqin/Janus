@@ -5,7 +5,7 @@ T=/root/Janus/cloud
 echo "--- server.mjs 里含 rdmd 的行 ---"
 grep -n -i rdmd "$T/src/server.mjs" || echo "(没有)"
 echo "--- 关键文件 sha256（与本地比对）---"
-for f in src/server.mjs src/db.mjs src/modules/rdmd/index.mjs src/modules/rdmd/privacy.mjs src/modules/rdmd/backend.mjs src/modules/sync/deviceGrants.mjs src/modules/collaboration/collaborationGraph.mjs database/migrations/097_rdmd_inference_jobs.sql; do
+for f in src/server.mjs src/db.mjs src/modules/rdmd/index.mjs src/modules/rdmd/privacy.mjs src/modules/rdmd/backend.mjs src/modules/sync/deviceGrants.mjs src/modules/collaboration/collaborationGraph.mjs database/migrations/097_rdmd_inference_jobs.sql database/migrations/098_rdmd_inference_jobs_grants.sql; do
   if [ -f "$T/$f" ]; then printf "%s  " "$(sha256sum "$T/$f" | cut -c1-16)"; echo "$f"; else echo "MISSING                 $f"; fi
 done
 echo "--- 目录时间戳 ---"
