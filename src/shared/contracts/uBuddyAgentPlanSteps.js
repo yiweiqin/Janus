@@ -13,9 +13,32 @@
 //
 // ## step 的字段形状
 //
-// 实测（_probe_task_events_plan.mjs）：本地真实库里 `activityType='plan'` 有 **0** 条，
-// 也就是说真实数据上还没有观测到过一个 plan step。因此这里的形状取自产品自己的
-// 四个消费点（口径一致），并且**不假设**字段一定存在 —— 一律防御性归一：
+// 更正（2026-09-19）：这里原来写的是「实测（_probe_task_events_plan.mjs）：本地真实库里
+// `activityType='plan'` 有 **0** 条，也就是说真实数据上还没有观测到过一个 plan step」。
+// **那句话是错的**，而且它的来源正是本文件上面那条通路的**最后一个环节已经跑通**却没被看见。
+//
+// 错在哪：`_probe_task_events_plan.mjs` 在 WHERE 里用了 SELECT 别名
+// （`WHERE activityType = 'plan'`）。SQLite 只在 `GROUP BY` 那种形式上容忍别名，
+// 这种比较会抛 `no such column: activityType`；而探针的 `q()` 是 `catch { return [] }`，
+// 于是「SQL 写错了」被读成了「真实数据里没有」。已修（探针现在查询失败就打印并非零退出）。
+//
+// 实测（同一个探针，修好之后，只读 `C:\Users\zhang\.janus-test\data\janus.db`）：
+// `payload.activityType='plan'` 的事件有 **6 条 / 25 个 step**，落在 3 个 task run 上；
+// 生产者 `eventOrigin='codex'` / `nativeSource='codex_app_server'` / `event_type='node_activity'`；
+// step 形状**恰好就是** `{step, status}`，status 实测取值 completed(16) / pending(7) / inProgress(2)。
+//
+// 也就是说上面那条 `codex.js -> scheduler.js -> task_events.payload_json.plan` 通路
+// **在真实数据上是被验证过通的**（这是本轮少有的好消息：采集侧不需要修）。
+// 而且形状与下面的归一化代码完全对齐：`step` 命中 `source.step`，
+// `inProgress`/`pending` 分别落进 `running`/`queued`。
+//
+// 尚未观测到的是**下一个环节**：`collaboration_graph_*` 表在活库里不存在，
+// 因为已安装构建的 `app.asar` 里没有 `ensureUBuddyCollaborationGraphSchema`
+// —— 所以 `projectAgentPlanSteps` 一次都没跑过。那是发布缺口，见
+// `experiments/rdmd_detective_dataset/ubuddy_recon/PLAN_EXEC_TRUTH.zh-CN.md` §11。
+//
+// 因此这里的形状断言仍然取自产品自己的消费点（口径一致），并且**不假设**字段一定存在 ——
+// 一律防御性归一（现在这条已经不只是防御：真实形状与假设一致，且已实测）：
 //
 //   src/renderer/app/views/chatView.js      normalizeChatPlan        -> label | step, detail | description, status
 //   src/renderer/app/core/rendererApp.js    normalizedPlanSteps      -> label | step, status
