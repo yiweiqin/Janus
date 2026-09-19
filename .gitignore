@@ -79,6 +79,33 @@ experiments/cpdb_org_world/data/*/pairs.jsonl
 experiments/cpdb_org_world/export/
 # 3. `human_labels.jsonl` **不在此列、要进库**：它是人工标注，不是派生量，
 #    丢了不可重建。同理 world/ 下的 orgs/people/agents/profiles 是世界的定义。
+#
+# 上面第 3 条类推到打分器这一层，就是下面这四类。判据只有一条：
+# **这份东西是不是「跑一遍 `npm run` 就能原样回来」**。
+# 4. `train_out*/` 里的 X.f32 / *.i8 / rows.jsonl / labels.jsonl / baselines.jsonl
+#    全部由 `export_training_matrix.mjs` 从「世界数据 + 标签文件 + features.mjs」派生，
+#    重跑即得；而 X.f32 是 3MB 二进制，diff 里什么都看不见。
+#    **但 `matrix.json` 必须进库**：它是一页锚点（featureSpec、维度、特征名、词表、
+#    划分计数、以及 inputs/outputs 的逐文件 sha256）。报告里的每个数都对得上它，
+#    而它只有 5KB。这与第 2 条里 BUNDLE.json 的角色是同一个。
+experiments/cpdb_org_world/train_out/*
+!experiments/cpdb_org_world/train_out/matrix.json
+experiments/cpdb_org_world/train_out_ai/*
+!experiments/cpdb_org_world/train_out_ai/matrix.json
+# 5. `data/full/ai_labels_qwen3_8b_v1.jsonl` **要进库**，尽管它带"AI"两个字。
+#    它不是 `generate.mjs` 那种「seed 一给就能重放」的派生量：它是一次 GPU 判决的产物，
+#    取决于模型、问法与采样种子。而 `artifacts/*/metrics.json` 的 `inputs` 里
+#    逐字记着它的 sha256 —— 不把它放进来，那个哈希就指向空气，
+#    随产物一起发出去的「这个模型是在哪批标签上训的」就无从核对。
+#    体量（2.3MB）与同一目录下受追踪的 `human_labels.jsonl`（2.4MB）同级，不构成新问题。
+# 6. `artifacts/cpdb-scorer-*/` **要进库**：`weights.json` 就是交付物本身；
+#    `metrics.json` 是它的证据；`predictions.jsonl` 是 JS/Python 对账测试的基准
+#    （`scorer.test.mjs` 逐条对齐它），缺了干净克隆上这条测试直接跑不起来。
+#    三者合计约 5MB，且都是"当时那一次"的结果，不是中间量。
+#    例外：`artifacts/_*` 是冒烟跑出来的草稿（`_smoke`），不是交付物，不进库。
+experiments/cpdb_org_world/artifacts/_*/
+#
+# 注：`.gitignore` 不允许「父目录被忽略、子文件再放行」，所以上面用的是逐个放行的写法。
 
 # ---------------------------------------------------------------------------
 # 本机/派生，不进库
