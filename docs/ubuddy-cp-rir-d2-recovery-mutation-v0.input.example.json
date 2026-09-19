@@ -1,0 +1,17 @@
+{
+  "$schema":"ubuddy-cp-rir-d2-recovery-mutation-v0.schema.json",
+  "schemaVersion":"cp-rir/d2-recovery-mutation-input/v0",
+  "status":"illustrative_v0_draft",
+  "purpose":"answer_free_recovery_mutation_input_only",
+  "runnerRole":"AUDIT_ONLY_REDUCER",
+  "observerContract":{"solverVisible":["caseAlias","coarsePublicDisposition"],"auditOnly":["eventTrace","signedReceipt","negativeWitness","sinkPrivateState"]},
+  "cases":[
+    {"caseAlias":"A1B2C3D4E5F60718293A4B5C6D7E8F90","mutation":"PRE_EFFECT_CRASH","events":["PREPARE","CRASH_BEFORE_LINEARIZATION"],"sinks":[{"sinkId":"sink-r","effectReality":"NOT_APPLIED","effectKnowledge":"NO_EFFECT_CONFIRMED","receiptState":"ABSENT","dedupState":"NONE","version":2}],"evidence":{"negativeWitness":"PRESENT","receiptCrypto":"ABSENT","sinkAtomicity":"VERIFIED","recoveryToken":"FRESH"}},
+    {"caseAlias":"B1C2D3E4F5A60718293B4C5D6E7F8091","mutation":"POST_EFFECT_RECEIPT_LOSS","events":["PREPARE","COMMIT_LINEARIZED","CRASH","RECEIPT_LOST","QUERY_UNAVAILABLE"],"sinks":[{"sinkId":"sink-r","effectReality":"CONFIRMED_APPLIED","effectKnowledge":"IN_DOUBT","receiptState":"LOST","dedupState":"UNIQUE","version":3}],"evidence":{"negativeWitness":"ABSENT","receiptCrypto":"ABSENT","sinkAtomicity":"UNVERIFIED","recoveryToken":"FRESH"}},
+    {"caseAlias":"C1D2E3F4A5B60718293C4D5E6F708192","mutation":"LATE_VALID_RECEIPT","events":["PREPARE","CRASH","RECEIPT_QUERY","VALID_RECEIPT_FOUND"],"sinks":[{"sinkId":"sink-r","effectReality":"CONFIRMED_APPLIED","effectKnowledge":"EFFECT_CONFIRMED","receiptState":"PRESENT_VERIFIED","dedupState":"UNIQUE","version":3}],"evidence":{"negativeWitness":"ABSENT","receiptCrypto":"VERIFIED","sinkAtomicity":"VERIFIED","recoveryToken":"FRESH"}},
+    {"caseAlias":"D1E2F3A4B5C60718293D4E5F60718293","mutation":"HALF_COMMIT","events":["PREPARE","SINK_R_COMMIT","SINK_LEDGER_CRASH","RECOVER"],"sinks":[{"sinkId":"sink-r","effectReality":"CONFIRMED_APPLIED","effectKnowledge":"EFFECT_CONFIRMED","receiptState":"PRESENT_VERIFIED","dedupState":"UNIQUE","version":3},{"sinkId":"sink-ledger","effectReality":"POSSIBLE_APPLIED","effectKnowledge":"IN_DOUBT","receiptState":"LOST","dedupState":"UNKNOWN","version":10}],"evidence":{"negativeWitness":"ABSENT","receiptCrypto":"UNVERIFIED","sinkAtomicity":"VIOLATED","recoveryToken":"FRESH"}},
+    {"caseAlias":"E1F2A3B4C5D60718293E4F5061728394","mutation":"DUPLICATE_RECEIPT","events":["COMMIT_LINEARIZED","RECEIPT_RECEIVED","RECEIPT_DUPLICATE"],"sinks":[{"sinkId":"sink-r","effectReality":"CONFIRMED_APPLIED","effectKnowledge":"EFFECT_POSSIBLE","receiptState":"DUPLICATE","dedupState":"DUPLICATE","version":3}],"evidence":{"negativeWitness":"ABSENT","receiptCrypto":"UNVERIFIED","sinkAtomicity":"UNVERIFIED","recoveryToken":"FRESH"}},
+    {"caseAlias":"F1A2B3C4D5E60718293F405162738495","mutation":"COMPENSATION_FAILURE","events":["COMMIT_LINEARIZED","COMPENSATION_ATTEMPT","COMPENSATION_FAILED"],"sinks":[{"sinkId":"sink-r","effectReality":"CONFIRMED_APPLIED","effectKnowledge":"EFFECT_CONFIRMED","receiptState":"PRESENT_VERIFIED","dedupState":"UNIQUE","version":3}],"evidence":{"negativeWitness":"ABSENT","receiptCrypto":"VERIFIED","sinkAtomicity":"VERIFIED","recoveryToken":"STALE"}}
+  ],
+  "implementationStatus":"prototype/unverified"
+}

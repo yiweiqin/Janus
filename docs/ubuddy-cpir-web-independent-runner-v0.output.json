@@ -1,0 +1,4145 @@
+{
+  "schemaVersion": "cpir-web/independent-runner/v0",
+  "implementationStatus": "simulator/prototype",
+  "modelScope": "DECLARED_WORLD_CATALOG_PLUS_SEPARATE_POLICY_AND_CONTRACT_MODULES",
+  "scenarioCount": 6,
+  "rowCount": 72,
+  "policyNames": [
+    "cpir",
+    "safePOMDP",
+    "activeDiagnosis",
+    "oneStepDiagnosis"
+  ],
+  "summary": {
+    "S1_CHECKOUT": {
+      "cpir": {
+        "traces": 3,
+        "satisfied": 3,
+        "violated": 0,
+        "unknown": 0,
+        "unresolvedEdges": []
+      },
+      "safePOMDP": {
+        "traces": 3,
+        "satisfied": 3,
+        "violated": 0,
+        "unknown": 0,
+        "unresolvedEdges": []
+      },
+      "activeDiagnosis": {
+        "traces": 3,
+        "satisfied": 3,
+        "violated": 0,
+        "unknown": 0,
+        "unresolvedEdges": []
+      },
+      "oneStepDiagnosis": {
+        "traces": 3,
+        "satisfied": 2,
+        "violated": 1,
+        "unknown": 0,
+        "unresolvedEdges": []
+      }
+    },
+    "S2_PAYMENT": {
+      "cpir": {
+        "traces": 3,
+        "satisfied": 2,
+        "violated": 0,
+        "unknown": 1,
+        "unresolvedEdges": []
+      },
+      "safePOMDP": {
+        "traces": 3,
+        "satisfied": 2,
+        "violated": 0,
+        "unknown": 1,
+        "unresolvedEdges": []
+      },
+      "activeDiagnosis": {
+        "traces": 3,
+        "satisfied": 2,
+        "violated": 0,
+        "unknown": 1,
+        "unresolvedEdges": []
+      },
+      "oneStepDiagnosis": {
+        "traces": 3,
+        "satisfied": 2,
+        "violated": 0,
+        "unknown": 1,
+        "unresolvedEdges": []
+      }
+    },
+    "S3_CRM": {
+      "cpir": {
+        "traces": 3,
+        "satisfied": 3,
+        "violated": 0,
+        "unknown": 0,
+        "unresolvedEdges": []
+      },
+      "safePOMDP": {
+        "traces": 3,
+        "satisfied": 3,
+        "violated": 0,
+        "unknown": 0,
+        "unresolvedEdges": []
+      },
+      "activeDiagnosis": {
+        "traces": 3,
+        "satisfied": 3,
+        "violated": 0,
+        "unknown": 0,
+        "unresolvedEdges": []
+      },
+      "oneStepDiagnosis": {
+        "traces": 3,
+        "satisfied": 3,
+        "violated": 0,
+        "unknown": 0,
+        "unresolvedEdges": []
+      }
+    },
+    "S4_TICKET_CLOSE": {
+      "cpir": {
+        "traces": 3,
+        "satisfied": 2,
+        "violated": 0,
+        "unknown": 1,
+        "unresolvedEdges": []
+      },
+      "safePOMDP": {
+        "traces": 3,
+        "satisfied": 2,
+        "violated": 0,
+        "unknown": 1,
+        "unresolvedEdges": []
+      },
+      "activeDiagnosis": {
+        "traces": 3,
+        "satisfied": 2,
+        "violated": 0,
+        "unknown": 1,
+        "unresolvedEdges": []
+      },
+      "oneStepDiagnosis": {
+        "traces": 3,
+        "satisfied": 2,
+        "violated": 0,
+        "unknown": 1,
+        "unresolvedEdges": []
+      }
+    },
+    "S5_HR_PERMISSION": {
+      "cpir": {
+        "traces": 3,
+        "satisfied": 3,
+        "violated": 0,
+        "unknown": 0,
+        "unresolvedEdges": []
+      },
+      "safePOMDP": {
+        "traces": 3,
+        "satisfied": 3,
+        "violated": 0,
+        "unknown": 0,
+        "unresolvedEdges": []
+      },
+      "activeDiagnosis": {
+        "traces": 3,
+        "satisfied": 3,
+        "violated": 0,
+        "unknown": 0,
+        "unresolvedEdges": []
+      },
+      "oneStepDiagnosis": {
+        "traces": 3,
+        "satisfied": 2,
+        "violated": 1,
+        "unknown": 0,
+        "unresolvedEdges": []
+      }
+    },
+    "S6_REFUND": {
+      "cpir": {
+        "traces": 3,
+        "satisfied": 2,
+        "violated": 0,
+        "unknown": 1,
+        "unresolvedEdges": []
+      },
+      "safePOMDP": {
+        "traces": 3,
+        "satisfied": 2,
+        "violated": 0,
+        "unknown": 1,
+        "unresolvedEdges": []
+      },
+      "activeDiagnosis": {
+        "traces": 3,
+        "satisfied": 2,
+        "violated": 0,
+        "unknown": 1,
+        "unresolvedEdges": []
+      },
+      "oneStepDiagnosis": {
+        "traces": 3,
+        "satisfied": 2,
+        "violated": 0,
+        "unknown": 1,
+        "unresolvedEdges": []
+      }
+    }
+  },
+  "rows": [
+    {
+      "scenarioId": "S1_CHECKOUT",
+      "worldId": "S1_VERSION_DRIFT",
+      "publicCut": "TIMEOUT_ORDER_UNKNOWN",
+      "policy": "cpir",
+      "observations": [
+        {
+          "probeId": "version",
+          "observation": "VERSION_STALE"
+        }
+      ],
+      "certificate": {
+        "initialConflictEdges": [
+          {
+            "worldIds": [
+              "S1_VERSION_DRIFT",
+              "S1_COMMITTED_RECEIPT_LOST"
+            ],
+            "witnessRepairs": [
+              {
+                "repairId": "SUBMIT_CURRENT",
+                "worldA": "VIOLATED",
+                "worldB": "VIOLATED"
+              },
+              {
+                "repairId": "UPGRADE_AND_SUBMIT",
+                "worldA": "SATISFIED",
+                "worldB": "VIOLATED"
+              },
+              {
+                "repairId": "REAUTHORIZE_AND_SUBMIT",
+                "worldA": "VIOLATED",
+                "worldB": "VIOLATED"
+              },
+              {
+                "repairId": "RECONCILE",
+                "worldA": "VIOLATED",
+                "worldB": "SATISFIED"
+              }
+            ],
+            "obligationLevel": "DECLARED_CONTRACT_CONFLICT"
+          },
+          {
+            "worldIds": [
+              "S1_VERSION_DRIFT",
+              "S1_TOKEN_EXPIRED"
+            ],
+            "witnessRepairs": [
+              {
+                "repairId": "SUBMIT_CURRENT",
+                "worldA": "VIOLATED",
+                "worldB": "VIOLATED"
+              },
+              {
+                "repairId": "UPGRADE_AND_SUBMIT",
+                "worldA": "SATISFIED",
+                "worldB": "VIOLATED"
+              },
+              {
+                "repairId": "REAUTHORIZE_AND_SUBMIT",
+                "worldA": "VIOLATED",
+                "worldB": "SATISFIED"
+              },
+              {
+                "repairId": "RECONCILE",
+                "worldA": "VIOLATED",
+                "worldB": "VIOLATED"
+              }
+            ],
+            "obligationLevel": "DECLARED_CONTRACT_CONFLICT"
+          },
+          {
+            "worldIds": [
+              "S1_COMMITTED_RECEIPT_LOST",
+              "S1_TOKEN_EXPIRED"
+            ],
+            "witnessRepairs": [
+              {
+                "repairId": "SUBMIT_CURRENT",
+                "worldA": "VIOLATED",
+                "worldB": "VIOLATED"
+              },
+              {
+                "repairId": "UPGRADE_AND_SUBMIT",
+                "worldA": "VIOLATED",
+                "worldB": "VIOLATED"
+              },
+              {
+                "repairId": "REAUTHORIZE_AND_SUBMIT",
+                "worldA": "VIOLATED",
+                "worldB": "SATISFIED"
+              },
+              {
+                "repairId": "RECONCILE",
+                "worldA": "SATISFIED",
+                "worldB": "VIOLATED"
+              }
+            ],
+            "obligationLevel": "DECLARED_CONTRACT_CONFLICT"
+          }
+        ],
+        "probeClosure": [
+          {
+            "probeId": "version",
+            "scope": "version.read",
+            "risk": 0.1,
+            "observationAlphabet": [
+              "UNSUPPORTED",
+              "VERSION_STALE"
+            ],
+            "worldCoverage": [
+              "S1_COMMITTED_RECEIPT_LOST",
+              "S1_TOKEN_EXPIRED",
+              "S1_VERSION_DRIFT"
+            ]
+          },
+          {
+            "probeId": "receipt",
+            "scope": "receipt.read",
+            "risk": 0.2,
+            "observationAlphabet": [
+              "SINK_COMMIT_FOUND",
+              "UNSUPPORTED"
+            ],
+            "worldCoverage": [
+              "S1_COMMITTED_RECEIPT_LOST",
+              "S1_TOKEN_EXPIRED",
+              "S1_VERSION_DRIFT"
+            ]
+          },
+          {
+            "probeId": "auth",
+            "scope": "auth.read",
+            "risk": 0.1,
+            "observationAlphabet": [
+              "AUTH_EXPIRED",
+              "UNSUPPORTED"
+            ],
+            "worldCoverage": [
+              "S1_COMMITTED_RECEIPT_LOST",
+              "S1_TOKEN_EXPIRED",
+              "S1_VERSION_DRIFT"
+            ]
+          }
+        ],
+        "unresolvedEdges": [],
+        "certificateStatus": "COVERED_UNDER_DECLARED_CATALOG"
+      },
+      "effectLedger": {
+        "effectClass": "ORDER",
+        "intendedCardinality": 1,
+        "actualCardinality": 1,
+        "irreversible": true,
+        "contractDisposition": "SATISFIED",
+        "violationReasons": []
+      },
+      "evaluation": {
+        "disposition": "SATISFIED",
+        "reasons": [],
+        "finalCardinality": 1
+      }
+    },
+    {
+      "scenarioId": "S1_CHECKOUT",
+      "worldId": "S1_VERSION_DRIFT",
+      "publicCut": "TIMEOUT_ORDER_UNKNOWN",
+      "policy": "safePOMDP",
+      "observations": [
+        {
+          "probeId": "version",
+          "observation": "VERSION_STALE"
+        }
+      ],
+      "certificate": null,
+      "effectLedger": {
+        "effectClass": "ORDER",
+        "intendedCardinality": 1,
+        "actualCardinality": 1,
+        "irreversible": true,
+        "contractDisposition": "SATISFIED",
+        "violationReasons": []
+      },
+      "evaluation": {
+        "disposition": "SATISFIED",
+        "reasons": [],
+        "finalCardinality": 1
+      }
+    },
+    {
+      "scenarioId": "S1_CHECKOUT",
+      "worldId": "S1_VERSION_DRIFT",
+      "publicCut": "TIMEOUT_ORDER_UNKNOWN",
+      "policy": "activeDiagnosis",
+      "observations": [
+        {
+          "probeId": "version",
+          "observation": "VERSION_STALE"
+        }
+      ],
+      "certificate": null,
+      "effectLedger": {
+        "effectClass": "ORDER",
+        "intendedCardinality": 1,
+        "actualCardinality": 1,
+        "irreversible": true,
+        "contractDisposition": "SATISFIED",
+        "violationReasons": []
+      },
+      "evaluation": {
+        "disposition": "SATISFIED",
+        "reasons": [],
+        "finalCardinality": 1
+      }
+    },
+    {
+      "scenarioId": "S1_CHECKOUT",
+      "worldId": "S1_VERSION_DRIFT",
+      "publicCut": "TIMEOUT_ORDER_UNKNOWN",
+      "policy": "oneStepDiagnosis",
+      "observations": [
+        {
+          "probeId": "version",
+          "observation": "VERSION_STALE"
+        }
+      ],
+      "certificate": null,
+      "effectLedger": {
+        "effectClass": "ORDER",
+        "intendedCardinality": 1,
+        "actualCardinality": 1,
+        "irreversible": true,
+        "contractDisposition": "SATISFIED",
+        "violationReasons": []
+      },
+      "evaluation": {
+        "disposition": "SATISFIED",
+        "reasons": [],
+        "finalCardinality": 1
+      }
+    },
+    {
+      "scenarioId": "S1_CHECKOUT",
+      "worldId": "S1_COMMITTED_RECEIPT_LOST",
+      "publicCut": "TIMEOUT_ORDER_UNKNOWN",
+      "policy": "cpir",
+      "observations": [
+        {
+          "probeId": "version",
+          "observation": "UNSUPPORTED"
+        },
+        {
+          "probeId": "auth",
+          "observation": "UNSUPPORTED"
+        }
+      ],
+      "certificate": {
+        "initialConflictEdges": [
+          {
+            "worldIds": [
+              "S1_VERSION_DRIFT",
+              "S1_COMMITTED_RECEIPT_LOST"
+            ],
+            "witnessRepairs": [
+              {
+                "repairId": "SUBMIT_CURRENT",
+                "worldA": "VIOLATED",
+                "worldB": "VIOLATED"
+              },
+              {
+                "repairId": "UPGRADE_AND_SUBMIT",
+                "worldA": "SATISFIED",
+                "worldB": "VIOLATED"
+              },
+              {
+                "repairId": "REAUTHORIZE_AND_SUBMIT",
+                "worldA": "VIOLATED",
+                "worldB": "VIOLATED"
+              },
+              {
+                "repairId": "RECONCILE",
+                "worldA": "VIOLATED",
+                "worldB": "SATISFIED"
+              }
+            ],
+            "obligationLevel": "DECLARED_CONTRACT_CONFLICT"
+          },
+          {
+            "worldIds": [
+              "S1_VERSION_DRIFT",
+              "S1_TOKEN_EXPIRED"
+            ],
+            "witnessRepairs": [
+              {
+                "repairId": "SUBMIT_CURRENT",
+                "worldA": "VIOLATED",
+                "worldB": "VIOLATED"
+              },
+              {
+                "repairId": "UPGRADE_AND_SUBMIT",
+                "worldA": "SATISFIED",
+                "worldB": "VIOLATED"
+              },
+              {
+                "repairId": "REAUTHORIZE_AND_SUBMIT",
+                "worldA": "VIOLATED",
+                "worldB": "SATISFIED"
+              },
+              {
+                "repairId": "RECONCILE",
+                "worldA": "VIOLATED",
+                "worldB": "VIOLATED"
+              }
+            ],
+            "obligationLevel": "DECLARED_CONTRACT_CONFLICT"
+          },
+          {
+            "worldIds": [
+              "S1_COMMITTED_RECEIPT_LOST",
+              "S1_TOKEN_EXPIRED"
+            ],
+            "witnessRepairs": [
+              {
+                "repairId": "SUBMIT_CURRENT",
+                "worldA": "VIOLATED",
+                "worldB": "VIOLATED"
+              },
+              {
+                "repairId": "UPGRADE_AND_SUBMIT",
+                "worldA": "VIOLATED",
+                "worldB": "VIOLATED"
+              },
+              {
+                "repairId": "REAUTHORIZE_AND_SUBMIT",
+                "worldA": "VIOLATED",
+                "worldB": "SATISFIED"
+              },
+              {
+                "repairId": "RECONCILE",
+                "worldA": "SATISFIED",
+                "worldB": "VIOLATED"
+              }
+            ],
+            "obligationLevel": "DECLARED_CONTRACT_CONFLICT"
+          }
+        ],
+        "probeClosure": [
+          {
+            "probeId": "version",
+            "scope": "version.read",
+            "risk": 0.1,
+            "observationAlphabet": [
+              "UNSUPPORTED",
+              "VERSION_STALE"
+            ],
+            "worldCoverage": [
+              "S1_COMMITTED_RECEIPT_LOST",
+              "S1_TOKEN_EXPIRED",
+              "S1_VERSION_DRIFT"
+            ]
+          },
+          {
+            "probeId": "receipt",
+            "scope": "receipt.read",
+            "risk": 0.2,
+            "observationAlphabet": [
+              "SINK_COMMIT_FOUND",
+              "UNSUPPORTED"
+            ],
+            "worldCoverage": [
+              "S1_COMMITTED_RECEIPT_LOST",
+              "S1_TOKEN_EXPIRED",
+              "S1_VERSION_DRIFT"
+            ]
+          },
+          {
+            "probeId": "auth",
+            "scope": "auth.read",
+            "risk": 0.1,
+            "observationAlphabet": [
+              "AUTH_EXPIRED",
+              "UNSUPPORTED"
+            ],
+            "worldCoverage": [
+              "S1_COMMITTED_RECEIPT_LOST",
+              "S1_TOKEN_EXPIRED",
+              "S1_VERSION_DRIFT"
+            ]
+          }
+        ],
+        "unresolvedEdges": [],
+        "certificateStatus": "COVERED_UNDER_DECLARED_CATALOG"
+      },
+      "effectLedger": {
+        "effectClass": "ORDER",
+        "intendedCardinality": 1,
+        "actualCardinality": 1,
+        "irreversible": false,
+        "contractDisposition": "SATISFIED",
+        "violationReasons": []
+      },
+      "evaluation": {
+        "disposition": "SATISFIED",
+        "reasons": [],
+        "finalCardinality": 1
+      }
+    },
+    {
+      "scenarioId": "S1_CHECKOUT",
+      "worldId": "S1_COMMITTED_RECEIPT_LOST",
+      "publicCut": "TIMEOUT_ORDER_UNKNOWN",
+      "policy": "safePOMDP",
+      "observations": [
+        {
+          "probeId": "version",
+          "observation": "UNSUPPORTED"
+        },
+        {
+          "probeId": "receipt",
+          "observation": "SINK_COMMIT_FOUND"
+        }
+      ],
+      "certificate": null,
+      "effectLedger": {
+        "effectClass": "ORDER",
+        "intendedCardinality": 1,
+        "actualCardinality": 1,
+        "irreversible": false,
+        "contractDisposition": "SATISFIED",
+        "violationReasons": []
+      },
+      "evaluation": {
+        "disposition": "SATISFIED",
+        "reasons": [],
+        "finalCardinality": 1
+      }
+    },
+    {
+      "scenarioId": "S1_CHECKOUT",
+      "worldId": "S1_COMMITTED_RECEIPT_LOST",
+      "publicCut": "TIMEOUT_ORDER_UNKNOWN",
+      "policy": "activeDiagnosis",
+      "observations": [
+        {
+          "probeId": "version",
+          "observation": "UNSUPPORTED"
+        },
+        {
+          "probeId": "auth",
+          "observation": "UNSUPPORTED"
+        }
+      ],
+      "certificate": null,
+      "effectLedger": {
+        "effectClass": "ORDER",
+        "intendedCardinality": 1,
+        "actualCardinality": 1,
+        "irreversible": false,
+        "contractDisposition": "SATISFIED",
+        "violationReasons": []
+      },
+      "evaluation": {
+        "disposition": "SATISFIED",
+        "reasons": [],
+        "finalCardinality": 1
+      }
+    },
+    {
+      "scenarioId": "S1_CHECKOUT",
+      "worldId": "S1_COMMITTED_RECEIPT_LOST",
+      "publicCut": "TIMEOUT_ORDER_UNKNOWN",
+      "policy": "oneStepDiagnosis",
+      "observations": [
+        {
+          "probeId": "version",
+          "observation": "UNSUPPORTED"
+        }
+      ],
+      "certificate": null,
+      "effectLedger": {
+        "effectClass": "ORDER",
+        "intendedCardinality": 1,
+        "actualCardinality": 1,
+        "irreversible": false,
+        "contractDisposition": "SATISFIED",
+        "violationReasons": []
+      },
+      "evaluation": {
+        "disposition": "SATISFIED",
+        "reasons": [],
+        "finalCardinality": 1
+      }
+    },
+    {
+      "scenarioId": "S1_CHECKOUT",
+      "worldId": "S1_TOKEN_EXPIRED",
+      "publicCut": "TIMEOUT_ORDER_UNKNOWN",
+      "policy": "cpir",
+      "observations": [
+        {
+          "probeId": "version",
+          "observation": "UNSUPPORTED"
+        },
+        {
+          "probeId": "auth",
+          "observation": "AUTH_EXPIRED"
+        }
+      ],
+      "certificate": {
+        "initialConflictEdges": [
+          {
+            "worldIds": [
+              "S1_VERSION_DRIFT",
+              "S1_COMMITTED_RECEIPT_LOST"
+            ],
+            "witnessRepairs": [
+              {
+                "repairId": "SUBMIT_CURRENT",
+                "worldA": "VIOLATED",
+                "worldB": "VIOLATED"
+              },
+              {
+                "repairId": "UPGRADE_AND_SUBMIT",
+                "worldA": "SATISFIED",
+                "worldB": "VIOLATED"
+              },
+              {
+                "repairId": "REAUTHORIZE_AND_SUBMIT",
+                "worldA": "VIOLATED",
+                "worldB": "VIOLATED"
+              },
+              {
+                "repairId": "RECONCILE",
+                "worldA": "VIOLATED",
+                "worldB": "SATISFIED"
+              }
+            ],
+            "obligationLevel": "DECLARED_CONTRACT_CONFLICT"
+          },
+          {
+            "worldIds": [
+              "S1_VERSION_DRIFT",
+              "S1_TOKEN_EXPIRED"
+            ],
+            "witnessRepairs": [
+              {
+                "repairId": "SUBMIT_CURRENT",
+                "worldA": "VIOLATED",
+                "worldB": "VIOLATED"
+              },
+              {
+                "repairId": "UPGRADE_AND_SUBMIT",
+                "worldA": "SATISFIED",
+                "worldB": "VIOLATED"
+              },
+              {
+                "repairId": "REAUTHORIZE_AND_SUBMIT",
+                "worldA": "VIOLATED",
+                "worldB": "SATISFIED"
+              },
+              {
+                "repairId": "RECONCILE",
+                "worldA": "VIOLATED",
+                "worldB": "VIOLATED"
+              }
+            ],
+            "obligationLevel": "DECLARED_CONTRACT_CONFLICT"
+          },
+          {
+            "worldIds": [
+              "S1_COMMITTED_RECEIPT_LOST",
+              "S1_TOKEN_EXPIRED"
+            ],
+            "witnessRepairs": [
+              {
+                "repairId": "SUBMIT_CURRENT",
+                "worldA": "VIOLATED",
+                "worldB": "VIOLATED"
+              },
+              {
+                "repairId": "UPGRADE_AND_SUBMIT",
+                "worldA": "VIOLATED",
+                "worldB": "VIOLATED"
+              },
+              {
+                "repairId": "REAUTHORIZE_AND_SUBMIT",
+                "worldA": "VIOLATED",
+                "worldB": "SATISFIED"
+              },
+              {
+                "repairId": "RECONCILE",
+                "worldA": "SATISFIED",
+                "worldB": "VIOLATED"
+              }
+            ],
+            "obligationLevel": "DECLARED_CONTRACT_CONFLICT"
+          }
+        ],
+        "probeClosure": [
+          {
+            "probeId": "version",
+            "scope": "version.read",
+            "risk": 0.1,
+            "observationAlphabet": [
+              "UNSUPPORTED",
+              "VERSION_STALE"
+            ],
+            "worldCoverage": [
+              "S1_COMMITTED_RECEIPT_LOST",
+              "S1_TOKEN_EXPIRED",
+              "S1_VERSION_DRIFT"
+            ]
+          },
+          {
+            "probeId": "receipt",
+            "scope": "receipt.read",
+            "risk": 0.2,
+            "observationAlphabet": [
+              "SINK_COMMIT_FOUND",
+              "UNSUPPORTED"
+            ],
+            "worldCoverage": [
+              "S1_COMMITTED_RECEIPT_LOST",
+              "S1_TOKEN_EXPIRED",
+              "S1_VERSION_DRIFT"
+            ]
+          },
+          {
+            "probeId": "auth",
+            "scope": "auth.read",
+            "risk": 0.1,
+            "observationAlphabet": [
+              "AUTH_EXPIRED",
+              "UNSUPPORTED"
+            ],
+            "worldCoverage": [
+              "S1_COMMITTED_RECEIPT_LOST",
+              "S1_TOKEN_EXPIRED",
+              "S1_VERSION_DRIFT"
+            ]
+          }
+        ],
+        "unresolvedEdges": [],
+        "certificateStatus": "COVERED_UNDER_DECLARED_CATALOG"
+      },
+      "effectLedger": {
+        "effectClass": "ORDER",
+        "intendedCardinality": 1,
+        "actualCardinality": 1,
+        "irreversible": true,
+        "contractDisposition": "SATISFIED",
+        "violationReasons": []
+      },
+      "evaluation": {
+        "disposition": "SATISFIED",
+        "reasons": [],
+        "finalCardinality": 1
+      }
+    },
+    {
+      "scenarioId": "S1_CHECKOUT",
+      "worldId": "S1_TOKEN_EXPIRED",
+      "publicCut": "TIMEOUT_ORDER_UNKNOWN",
+      "policy": "safePOMDP",
+      "observations": [
+        {
+          "probeId": "version",
+          "observation": "UNSUPPORTED"
+        },
+        {
+          "probeId": "receipt",
+          "observation": "UNSUPPORTED"
+        }
+      ],
+      "certificate": null,
+      "effectLedger": {
+        "effectClass": "ORDER",
+        "intendedCardinality": 1,
+        "actualCardinality": 1,
+        "irreversible": true,
+        "contractDisposition": "SATISFIED",
+        "violationReasons": []
+      },
+      "evaluation": {
+        "disposition": "SATISFIED",
+        "reasons": [],
+        "finalCardinality": 1
+      }
+    },
+    {
+      "scenarioId": "S1_CHECKOUT",
+      "worldId": "S1_TOKEN_EXPIRED",
+      "publicCut": "TIMEOUT_ORDER_UNKNOWN",
+      "policy": "activeDiagnosis",
+      "observations": [
+        {
+          "probeId": "version",
+          "observation": "UNSUPPORTED"
+        },
+        {
+          "probeId": "auth",
+          "observation": "AUTH_EXPIRED"
+        }
+      ],
+      "certificate": null,
+      "effectLedger": {
+        "effectClass": "ORDER",
+        "intendedCardinality": 1,
+        "actualCardinality": 1,
+        "irreversible": true,
+        "contractDisposition": "SATISFIED",
+        "violationReasons": []
+      },
+      "evaluation": {
+        "disposition": "SATISFIED",
+        "reasons": [],
+        "finalCardinality": 1
+      }
+    },
+    {
+      "scenarioId": "S1_CHECKOUT",
+      "worldId": "S1_TOKEN_EXPIRED",
+      "publicCut": "TIMEOUT_ORDER_UNKNOWN",
+      "policy": "oneStepDiagnosis",
+      "observations": [
+        {
+          "probeId": "version",
+          "observation": "UNSUPPORTED"
+        }
+      ],
+      "certificate": null,
+      "effectLedger": {
+        "effectClass": "ORDER",
+        "intendedCardinality": 1,
+        "actualCardinality": 0,
+        "irreversible": false,
+        "contractDisposition": "VIOLATED",
+        "violationReasons": [
+          "SUCCESS_WITHOUT_PROVEN_EFFECT",
+          "REQUIRED_EFFECT_MISSING"
+        ]
+      },
+      "evaluation": {
+        "disposition": "VIOLATED",
+        "reasons": [
+          "SUCCESS_WITHOUT_PROVEN_EFFECT",
+          "REQUIRED_EFFECT_MISSING"
+        ],
+        "finalCardinality": 0
+      }
+    },
+    {
+      "scenarioId": "S2_PAYMENT",
+      "worldId": "S2_DROP_PRE_COMMIT",
+      "publicCut": "PAYMENT_TIMEOUT_UNKNOWN",
+      "policy": "cpir",
+      "observations": [
+        {
+          "probeId": "settlement",
+          "observation": "NO_COMMIT"
+        }
+      ],
+      "certificate": {
+        "initialConflictEdges": [
+          {
+            "worldIds": [
+              "S2_DROP_PRE_COMMIT",
+              "S2_COMMIT_STATUS_LAG"
+            ],
+            "witnessRepairs": [
+              {
+                "repairId": "RESUBMIT_ORIGINAL_KEY",
+                "worldA": "SATISFIED",
+                "worldB": "VIOLATED"
+              },
+              {
+                "repairId": "WAIT_AND_RECONCILE",
+                "worldA": "VIOLATED",
+                "worldB": "SATISFIED"
+              }
+            ],
+            "obligationLevel": "DECLARED_CONTRACT_CONFLICT"
+          },
+          {
+            "worldIds": [
+              "S2_DROP_PRE_COMMIT",
+              "S2_SCOPE_MISSING_UNKNOWN"
+            ],
+            "witnessRepairs": [
+              {
+                "repairId": "RESUBMIT_ORIGINAL_KEY",
+                "worldA": "SATISFIED",
+                "worldB": "UNKNOWN"
+              },
+              {
+                "repairId": "WAIT_AND_RECONCILE",
+                "worldA": "VIOLATED",
+                "worldB": "UNKNOWN"
+              }
+            ],
+            "obligationLevel": "DECLARED_CONTRACT_CONFLICT"
+          },
+          {
+            "worldIds": [
+              "S2_COMMIT_STATUS_LAG",
+              "S2_SCOPE_MISSING_UNKNOWN"
+            ],
+            "witnessRepairs": [
+              {
+                "repairId": "RESUBMIT_ORIGINAL_KEY",
+                "worldA": "VIOLATED",
+                "worldB": "UNKNOWN"
+              },
+              {
+                "repairId": "WAIT_AND_RECONCILE",
+                "worldA": "SATISFIED",
+                "worldB": "UNKNOWN"
+              }
+            ],
+            "obligationLevel": "DECLARED_CONTRACT_CONFLICT"
+          }
+        ],
+        "probeClosure": [
+          {
+            "probeId": "settlement",
+            "scope": "payment.status.read",
+            "risk": 0.2,
+            "observationAlphabet": [
+              "COMMIT_FOUND",
+              "NO_COMMIT",
+              "UNSUPPORTED"
+            ],
+            "worldCoverage": [
+              "S2_COMMIT_STATUS_LAG",
+              "S2_DROP_PRE_COMMIT",
+              "S2_SCOPE_MISSING_UNKNOWN"
+            ]
+          }
+        ],
+        "unresolvedEdges": [],
+        "certificateStatus": "COVERED_UNDER_DECLARED_CATALOG"
+      },
+      "effectLedger": {
+        "effectClass": "CHARGE",
+        "intendedCardinality": 1,
+        "actualCardinality": 1,
+        "irreversible": true,
+        "contractDisposition": "SATISFIED",
+        "violationReasons": []
+      },
+      "evaluation": {
+        "disposition": "SATISFIED",
+        "reasons": [],
+        "finalCardinality": 1
+      }
+    },
+    {
+      "scenarioId": "S2_PAYMENT",
+      "worldId": "S2_DROP_PRE_COMMIT",
+      "publicCut": "PAYMENT_TIMEOUT_UNKNOWN",
+      "policy": "safePOMDP",
+      "observations": [
+        {
+          "probeId": "settlement",
+          "observation": "NO_COMMIT"
+        }
+      ],
+      "certificate": null,
+      "effectLedger": {
+        "effectClass": "CHARGE",
+        "intendedCardinality": 1,
+        "actualCardinality": 1,
+        "irreversible": true,
+        "contractDisposition": "SATISFIED",
+        "violationReasons": []
+      },
+      "evaluation": {
+        "disposition": "SATISFIED",
+        "reasons": [],
+        "finalCardinality": 1
+      }
+    },
+    {
+      "scenarioId": "S2_PAYMENT",
+      "worldId": "S2_DROP_PRE_COMMIT",
+      "publicCut": "PAYMENT_TIMEOUT_UNKNOWN",
+      "policy": "activeDiagnosis",
+      "observations": [
+        {
+          "probeId": "settlement",
+          "observation": "NO_COMMIT"
+        }
+      ],
+      "certificate": null,
+      "effectLedger": {
+        "effectClass": "CHARGE",
+        "intendedCardinality": 1,
+        "actualCardinality": 1,
+        "irreversible": true,
+        "contractDisposition": "SATISFIED",
+        "violationReasons": []
+      },
+      "evaluation": {
+        "disposition": "SATISFIED",
+        "reasons": [],
+        "finalCardinality": 1
+      }
+    },
+    {
+      "scenarioId": "S2_PAYMENT",
+      "worldId": "S2_DROP_PRE_COMMIT",
+      "publicCut": "PAYMENT_TIMEOUT_UNKNOWN",
+      "policy": "oneStepDiagnosis",
+      "observations": [
+        {
+          "probeId": "settlement",
+          "observation": "NO_COMMIT"
+        }
+      ],
+      "certificate": null,
+      "effectLedger": {
+        "effectClass": "CHARGE",
+        "intendedCardinality": 1,
+        "actualCardinality": 1,
+        "irreversible": true,
+        "contractDisposition": "SATISFIED",
+        "violationReasons": []
+      },
+      "evaluation": {
+        "disposition": "SATISFIED",
+        "reasons": [],
+        "finalCardinality": 1
+      }
+    },
+    {
+      "scenarioId": "S2_PAYMENT",
+      "worldId": "S2_COMMIT_STATUS_LAG",
+      "publicCut": "PAYMENT_TIMEOUT_UNKNOWN",
+      "policy": "cpir",
+      "observations": [
+        {
+          "probeId": "settlement",
+          "observation": "COMMIT_FOUND"
+        }
+      ],
+      "certificate": {
+        "initialConflictEdges": [
+          {
+            "worldIds": [
+              "S2_DROP_PRE_COMMIT",
+              "S2_COMMIT_STATUS_LAG"
+            ],
+            "witnessRepairs": [
+              {
+                "repairId": "RESUBMIT_ORIGINAL_KEY",
+                "worldA": "SATISFIED",
+                "worldB": "VIOLATED"
+              },
+              {
+                "repairId": "WAIT_AND_RECONCILE",
+                "worldA": "VIOLATED",
+                "worldB": "SATISFIED"
+              }
+            ],
+            "obligationLevel": "DECLARED_CONTRACT_CONFLICT"
+          },
+          {
+            "worldIds": [
+              "S2_DROP_PRE_COMMIT",
+              "S2_SCOPE_MISSING_UNKNOWN"
+            ],
+            "witnessRepairs": [
+              {
+                "repairId": "RESUBMIT_ORIGINAL_KEY",
+                "worldA": "SATISFIED",
+                "worldB": "UNKNOWN"
+              },
+              {
+                "repairId": "WAIT_AND_RECONCILE",
+                "worldA": "VIOLATED",
+                "worldB": "UNKNOWN"
+              }
+            ],
+            "obligationLevel": "DECLARED_CONTRACT_CONFLICT"
+          },
+          {
+            "worldIds": [
+              "S2_COMMIT_STATUS_LAG",
+              "S2_SCOPE_MISSING_UNKNOWN"
+            ],
+            "witnessRepairs": [
+              {
+                "repairId": "RESUBMIT_ORIGINAL_KEY",
+                "worldA": "VIOLATED",
+                "worldB": "UNKNOWN"
+              },
+              {
+                "repairId": "WAIT_AND_RECONCILE",
+                "worldA": "SATISFIED",
+                "worldB": "UNKNOWN"
+              }
+            ],
+            "obligationLevel": "DECLARED_CONTRACT_CONFLICT"
+          }
+        ],
+        "probeClosure": [
+          {
+            "probeId": "settlement",
+            "scope": "payment.status.read",
+            "risk": 0.2,
+            "observationAlphabet": [
+              "COMMIT_FOUND",
+              "NO_COMMIT",
+              "UNSUPPORTED"
+            ],
+            "worldCoverage": [
+              "S2_COMMIT_STATUS_LAG",
+              "S2_DROP_PRE_COMMIT",
+              "S2_SCOPE_MISSING_UNKNOWN"
+            ]
+          }
+        ],
+        "unresolvedEdges": [],
+        "certificateStatus": "COVERED_UNDER_DECLARED_CATALOG"
+      },
+      "effectLedger": {
+        "effectClass": "CHARGE",
+        "intendedCardinality": 1,
+        "actualCardinality": 1,
+        "irreversible": false,
+        "contractDisposition": "SATISFIED",
+        "violationReasons": []
+      },
+      "evaluation": {
+        "disposition": "SATISFIED",
+        "reasons": [],
+        "finalCardinality": 1
+      }
+    },
+    {
+      "scenarioId": "S2_PAYMENT",
+      "worldId": "S2_COMMIT_STATUS_LAG",
+      "publicCut": "PAYMENT_TIMEOUT_UNKNOWN",
+      "policy": "safePOMDP",
+      "observations": [
+        {
+          "probeId": "settlement",
+          "observation": "COMMIT_FOUND"
+        }
+      ],
+      "certificate": null,
+      "effectLedger": {
+        "effectClass": "CHARGE",
+        "intendedCardinality": 1,
+        "actualCardinality": 1,
+        "irreversible": false,
+        "contractDisposition": "SATISFIED",
+        "violationReasons": []
+      },
+      "evaluation": {
+        "disposition": "SATISFIED",
+        "reasons": [],
+        "finalCardinality": 1
+      }
+    },
+    {
+      "scenarioId": "S2_PAYMENT",
+      "worldId": "S2_COMMIT_STATUS_LAG",
+      "publicCut": "PAYMENT_TIMEOUT_UNKNOWN",
+      "policy": "activeDiagnosis",
+      "observations": [
+        {
+          "probeId": "settlement",
+          "observation": "COMMIT_FOUND"
+        }
+      ],
+      "certificate": null,
+      "effectLedger": {
+        "effectClass": "CHARGE",
+        "intendedCardinality": 1,
+        "actualCardinality": 1,
+        "irreversible": false,
+        "contractDisposition": "SATISFIED",
+        "violationReasons": []
+      },
+      "evaluation": {
+        "disposition": "SATISFIED",
+        "reasons": [],
+        "finalCardinality": 1
+      }
+    },
+    {
+      "scenarioId": "S2_PAYMENT",
+      "worldId": "S2_COMMIT_STATUS_LAG",
+      "publicCut": "PAYMENT_TIMEOUT_UNKNOWN",
+      "policy": "oneStepDiagnosis",
+      "observations": [
+        {
+          "probeId": "settlement",
+          "observation": "COMMIT_FOUND"
+        }
+      ],
+      "certificate": null,
+      "effectLedger": {
+        "effectClass": "CHARGE",
+        "intendedCardinality": 1,
+        "actualCardinality": 1,
+        "irreversible": false,
+        "contractDisposition": "SATISFIED",
+        "violationReasons": []
+      },
+      "evaluation": {
+        "disposition": "SATISFIED",
+        "reasons": [],
+        "finalCardinality": 1
+      }
+    },
+    {
+      "scenarioId": "S2_PAYMENT",
+      "worldId": "S2_SCOPE_MISSING_UNKNOWN",
+      "publicCut": "PAYMENT_TIMEOUT_UNKNOWN",
+      "policy": "cpir",
+      "observations": [
+        {
+          "probeId": "settlement",
+          "observation": "UNSUPPORTED"
+        }
+      ],
+      "certificate": {
+        "initialConflictEdges": [
+          {
+            "worldIds": [
+              "S2_DROP_PRE_COMMIT",
+              "S2_COMMIT_STATUS_LAG"
+            ],
+            "witnessRepairs": [
+              {
+                "repairId": "RESUBMIT_ORIGINAL_KEY",
+                "worldA": "SATISFIED",
+                "worldB": "VIOLATED"
+              },
+              {
+                "repairId": "WAIT_AND_RECONCILE",
+                "worldA": "VIOLATED",
+                "worldB": "SATISFIED"
+              }
+            ],
+            "obligationLevel": "DECLARED_CONTRACT_CONFLICT"
+          },
+          {
+            "worldIds": [
+              "S2_DROP_PRE_COMMIT",
+              "S2_SCOPE_MISSING_UNKNOWN"
+            ],
+            "witnessRepairs": [
+              {
+                "repairId": "RESUBMIT_ORIGINAL_KEY",
+                "worldA": "SATISFIED",
+                "worldB": "UNKNOWN"
+              },
+              {
+                "repairId": "WAIT_AND_RECONCILE",
+                "worldA": "VIOLATED",
+                "worldB": "UNKNOWN"
+              }
+            ],
+            "obligationLevel": "DECLARED_CONTRACT_CONFLICT"
+          },
+          {
+            "worldIds": [
+              "S2_COMMIT_STATUS_LAG",
+              "S2_SCOPE_MISSING_UNKNOWN"
+            ],
+            "witnessRepairs": [
+              {
+                "repairId": "RESUBMIT_ORIGINAL_KEY",
+                "worldA": "VIOLATED",
+                "worldB": "UNKNOWN"
+              },
+              {
+                "repairId": "WAIT_AND_RECONCILE",
+                "worldA": "SATISFIED",
+                "worldB": "UNKNOWN"
+              }
+            ],
+            "obligationLevel": "DECLARED_CONTRACT_CONFLICT"
+          }
+        ],
+        "probeClosure": [
+          {
+            "probeId": "settlement",
+            "scope": "payment.status.read",
+            "risk": 0.2,
+            "observationAlphabet": [
+              "COMMIT_FOUND",
+              "NO_COMMIT",
+              "UNSUPPORTED"
+            ],
+            "worldCoverage": [
+              "S2_COMMIT_STATUS_LAG",
+              "S2_DROP_PRE_COMMIT",
+              "S2_SCOPE_MISSING_UNKNOWN"
+            ]
+          }
+        ],
+        "unresolvedEdges": [],
+        "certificateStatus": "COVERED_UNDER_DECLARED_CATALOG"
+      },
+      "effectLedger": {
+        "effectClass": "CHARGE",
+        "intendedCardinality": 1,
+        "actualCardinality": null,
+        "irreversible": false,
+        "contractDisposition": "UNKNOWN",
+        "violationReasons": [
+          "ABSTAIN"
+        ]
+      },
+      "evaluation": {
+        "disposition": "UNKNOWN",
+        "reasons": [
+          "ABSTAIN"
+        ],
+        "finalCardinality": null
+      }
+    },
+    {
+      "scenarioId": "S2_PAYMENT",
+      "worldId": "S2_SCOPE_MISSING_UNKNOWN",
+      "publicCut": "PAYMENT_TIMEOUT_UNKNOWN",
+      "policy": "safePOMDP",
+      "observations": [
+        {
+          "probeId": "settlement",
+          "observation": "UNSUPPORTED"
+        }
+      ],
+      "certificate": null,
+      "effectLedger": {
+        "effectClass": "CHARGE",
+        "intendedCardinality": 1,
+        "actualCardinality": null,
+        "irreversible": false,
+        "contractDisposition": "UNKNOWN",
+        "violationReasons": [
+          "ABSTAIN"
+        ]
+      },
+      "evaluation": {
+        "disposition": "UNKNOWN",
+        "reasons": [
+          "ABSTAIN"
+        ],
+        "finalCardinality": null
+      }
+    },
+    {
+      "scenarioId": "S2_PAYMENT",
+      "worldId": "S2_SCOPE_MISSING_UNKNOWN",
+      "publicCut": "PAYMENT_TIMEOUT_UNKNOWN",
+      "policy": "activeDiagnosis",
+      "observations": [
+        {
+          "probeId": "settlement",
+          "observation": "UNSUPPORTED"
+        }
+      ],
+      "certificate": null,
+      "effectLedger": {
+        "effectClass": "CHARGE",
+        "intendedCardinality": 1,
+        "actualCardinality": null,
+        "irreversible": false,
+        "contractDisposition": "UNKNOWN",
+        "violationReasons": [
+          "ABSTAIN"
+        ]
+      },
+      "evaluation": {
+        "disposition": "UNKNOWN",
+        "reasons": [
+          "ABSTAIN"
+        ],
+        "finalCardinality": null
+      }
+    },
+    {
+      "scenarioId": "S2_PAYMENT",
+      "worldId": "S2_SCOPE_MISSING_UNKNOWN",
+      "publicCut": "PAYMENT_TIMEOUT_UNKNOWN",
+      "policy": "oneStepDiagnosis",
+      "observations": [
+        {
+          "probeId": "settlement",
+          "observation": "UNSUPPORTED"
+        }
+      ],
+      "certificate": null,
+      "effectLedger": {
+        "effectClass": "CHARGE",
+        "intendedCardinality": 1,
+        "actualCardinality": null,
+        "irreversible": false,
+        "contractDisposition": "UNKNOWN",
+        "violationReasons": [
+          "ABSTAIN"
+        ]
+      },
+      "evaluation": {
+        "disposition": "UNKNOWN",
+        "reasons": [
+          "ABSTAIN"
+        ],
+        "finalCardinality": null
+      }
+    },
+    {
+      "scenarioId": "S3_CRM",
+      "worldId": "S3_WRONG_TENANT_SUBJECT",
+      "publicCut": "UI_SUCCESS_API_UNKNOWN",
+      "policy": "cpir",
+      "observations": [
+        {
+          "probeId": "subject",
+          "observation": "SUBJECT_MISMATCH"
+        }
+      ],
+      "certificate": {
+        "initialConflictEdges": [
+          {
+            "worldIds": [
+              "S3_WRONG_TENANT_SUBJECT",
+              "S3_WEBHOOK_DELAY"
+            ],
+            "witnessRepairs": [
+              {
+                "repairId": "SUBMIT_CURRENT",
+                "worldA": "VIOLATED",
+                "worldB": "VIOLATED"
+              },
+              {
+                "repairId": "REAUTHORIZE_AND_SUBMIT",
+                "worldA": "SATISFIED",
+                "worldB": "VIOLATED"
+              },
+              {
+                "repairId": "WAIT_AND_RECONCILE",
+                "worldA": "VIOLATED",
+                "worldB": "SATISFIED"
+              },
+              {
+                "repairId": "RECOVER_RECEIPT",
+                "worldA": "VIOLATED",
+                "worldB": "SATISFIED"
+              }
+            ],
+            "obligationLevel": "DECLARED_CONTRACT_CONFLICT"
+          },
+          {
+            "worldIds": [
+              "S3_WRONG_TENANT_SUBJECT",
+              "S3_RECEIPT_LOST"
+            ],
+            "witnessRepairs": [
+              {
+                "repairId": "SUBMIT_CURRENT",
+                "worldA": "VIOLATED",
+                "worldB": "VIOLATED"
+              },
+              {
+                "repairId": "REAUTHORIZE_AND_SUBMIT",
+                "worldA": "SATISFIED",
+                "worldB": "VIOLATED"
+              },
+              {
+                "repairId": "WAIT_AND_RECONCILE",
+                "worldA": "VIOLATED",
+                "worldB": "SATISFIED"
+              },
+              {
+                "repairId": "RECOVER_RECEIPT",
+                "worldA": "VIOLATED",
+                "worldB": "SATISFIED"
+              }
+            ],
+            "obligationLevel": "DECLARED_CONTRACT_CONFLICT"
+          }
+        ],
+        "probeClosure": [
+          {
+            "probeId": "subject",
+            "scope": "identity.read",
+            "risk": 0.1,
+            "observationAlphabet": [
+              "SUBJECT_MISMATCH",
+              "SUBJECT_OK"
+            ],
+            "worldCoverage": [
+              "S3_RECEIPT_LOST",
+              "S3_WEBHOOK_DELAY",
+              "S3_WRONG_TENANT_SUBJECT"
+            ]
+          },
+          {
+            "probeId": "receipt",
+            "scope": "receipt.read",
+            "risk": 0.2,
+            "observationAlphabet": [
+              "RECEIPT_PRESENT",
+              "SINK_ADVANCED_RECEIPT_MISSING",
+              "UNSUPPORTED"
+            ],
+            "worldCoverage": [
+              "S3_RECEIPT_LOST",
+              "S3_WEBHOOK_DELAY",
+              "S3_WRONG_TENANT_SUBJECT"
+            ]
+          }
+        ],
+        "unresolvedEdges": [],
+        "certificateStatus": "COVERED_UNDER_DECLARED_CATALOG"
+      },
+      "effectLedger": {
+        "effectClass": "CRM_CONTACT",
+        "intendedCardinality": 1,
+        "actualCardinality": 1,
+        "irreversible": true,
+        "contractDisposition": "SATISFIED",
+        "violationReasons": []
+      },
+      "evaluation": {
+        "disposition": "SATISFIED",
+        "reasons": [],
+        "finalCardinality": 1
+      }
+    },
+    {
+      "scenarioId": "S3_CRM",
+      "worldId": "S3_WRONG_TENANT_SUBJECT",
+      "publicCut": "UI_SUCCESS_API_UNKNOWN",
+      "policy": "safePOMDP",
+      "observations": [
+        {
+          "probeId": "subject",
+          "observation": "SUBJECT_MISMATCH"
+        }
+      ],
+      "certificate": null,
+      "effectLedger": {
+        "effectClass": "CRM_CONTACT",
+        "intendedCardinality": 1,
+        "actualCardinality": 1,
+        "irreversible": true,
+        "contractDisposition": "SATISFIED",
+        "violationReasons": []
+      },
+      "evaluation": {
+        "disposition": "SATISFIED",
+        "reasons": [],
+        "finalCardinality": 1
+      }
+    },
+    {
+      "scenarioId": "S3_CRM",
+      "worldId": "S3_WRONG_TENANT_SUBJECT",
+      "publicCut": "UI_SUCCESS_API_UNKNOWN",
+      "policy": "activeDiagnosis",
+      "observations": [
+        {
+          "probeId": "receipt",
+          "observation": "UNSUPPORTED"
+        }
+      ],
+      "certificate": null,
+      "effectLedger": {
+        "effectClass": "CRM_CONTACT",
+        "intendedCardinality": 1,
+        "actualCardinality": 1,
+        "irreversible": true,
+        "contractDisposition": "SATISFIED",
+        "violationReasons": []
+      },
+      "evaluation": {
+        "disposition": "SATISFIED",
+        "reasons": [],
+        "finalCardinality": 1
+      }
+    },
+    {
+      "scenarioId": "S3_CRM",
+      "worldId": "S3_WRONG_TENANT_SUBJECT",
+      "publicCut": "UI_SUCCESS_API_UNKNOWN",
+      "policy": "oneStepDiagnosis",
+      "observations": [
+        {
+          "probeId": "receipt",
+          "observation": "UNSUPPORTED"
+        }
+      ],
+      "certificate": null,
+      "effectLedger": {
+        "effectClass": "CRM_CONTACT",
+        "intendedCardinality": 1,
+        "actualCardinality": 1,
+        "irreversible": true,
+        "contractDisposition": "SATISFIED",
+        "violationReasons": []
+      },
+      "evaluation": {
+        "disposition": "SATISFIED",
+        "reasons": [],
+        "finalCardinality": 1
+      }
+    },
+    {
+      "scenarioId": "S3_CRM",
+      "worldId": "S3_WEBHOOK_DELAY",
+      "publicCut": "UI_SUCCESS_API_UNKNOWN",
+      "policy": "cpir",
+      "observations": [
+        {
+          "probeId": "subject",
+          "observation": "SUBJECT_OK"
+        }
+      ],
+      "certificate": {
+        "initialConflictEdges": [
+          {
+            "worldIds": [
+              "S3_WRONG_TENANT_SUBJECT",
+              "S3_WEBHOOK_DELAY"
+            ],
+            "witnessRepairs": [
+              {
+                "repairId": "SUBMIT_CURRENT",
+                "worldA": "VIOLATED",
+                "worldB": "VIOLATED"
+              },
+              {
+                "repairId": "REAUTHORIZE_AND_SUBMIT",
+                "worldA": "SATISFIED",
+                "worldB": "VIOLATED"
+              },
+              {
+                "repairId": "WAIT_AND_RECONCILE",
+                "worldA": "VIOLATED",
+                "worldB": "SATISFIED"
+              },
+              {
+                "repairId": "RECOVER_RECEIPT",
+                "worldA": "VIOLATED",
+                "worldB": "SATISFIED"
+              }
+            ],
+            "obligationLevel": "DECLARED_CONTRACT_CONFLICT"
+          },
+          {
+            "worldIds": [
+              "S3_WRONG_TENANT_SUBJECT",
+              "S3_RECEIPT_LOST"
+            ],
+            "witnessRepairs": [
+              {
+                "repairId": "SUBMIT_CURRENT",
+                "worldA": "VIOLATED",
+                "worldB": "VIOLATED"
+              },
+              {
+                "repairId": "REAUTHORIZE_AND_SUBMIT",
+                "worldA": "SATISFIED",
+                "worldB": "VIOLATED"
+              },
+              {
+                "repairId": "WAIT_AND_RECONCILE",
+                "worldA": "VIOLATED",
+                "worldB": "SATISFIED"
+              },
+              {
+                "repairId": "RECOVER_RECEIPT",
+                "worldA": "VIOLATED",
+                "worldB": "SATISFIED"
+              }
+            ],
+            "obligationLevel": "DECLARED_CONTRACT_CONFLICT"
+          }
+        ],
+        "probeClosure": [
+          {
+            "probeId": "subject",
+            "scope": "identity.read",
+            "risk": 0.1,
+            "observationAlphabet": [
+              "SUBJECT_MISMATCH",
+              "SUBJECT_OK"
+            ],
+            "worldCoverage": [
+              "S3_RECEIPT_LOST",
+              "S3_WEBHOOK_DELAY",
+              "S3_WRONG_TENANT_SUBJECT"
+            ]
+          },
+          {
+            "probeId": "receipt",
+            "scope": "receipt.read",
+            "risk": 0.2,
+            "observationAlphabet": [
+              "RECEIPT_PRESENT",
+              "SINK_ADVANCED_RECEIPT_MISSING",
+              "UNSUPPORTED"
+            ],
+            "worldCoverage": [
+              "S3_RECEIPT_LOST",
+              "S3_WEBHOOK_DELAY",
+              "S3_WRONG_TENANT_SUBJECT"
+            ]
+          }
+        ],
+        "unresolvedEdges": [],
+        "certificateStatus": "COVERED_UNDER_DECLARED_CATALOG"
+      },
+      "effectLedger": {
+        "effectClass": "CRM_CONTACT",
+        "intendedCardinality": 1,
+        "actualCardinality": 1,
+        "irreversible": false,
+        "contractDisposition": "SATISFIED",
+        "violationReasons": []
+      },
+      "evaluation": {
+        "disposition": "SATISFIED",
+        "reasons": [],
+        "finalCardinality": 1
+      }
+    },
+    {
+      "scenarioId": "S3_CRM",
+      "worldId": "S3_WEBHOOK_DELAY",
+      "publicCut": "UI_SUCCESS_API_UNKNOWN",
+      "policy": "safePOMDP",
+      "observations": [
+        {
+          "probeId": "subject",
+          "observation": "SUBJECT_OK"
+        }
+      ],
+      "certificate": null,
+      "effectLedger": {
+        "effectClass": "CRM_CONTACT",
+        "intendedCardinality": 1,
+        "actualCardinality": 1,
+        "irreversible": false,
+        "contractDisposition": "SATISFIED",
+        "violationReasons": []
+      },
+      "evaluation": {
+        "disposition": "SATISFIED",
+        "reasons": [],
+        "finalCardinality": 1
+      }
+    },
+    {
+      "scenarioId": "S3_CRM",
+      "worldId": "S3_WEBHOOK_DELAY",
+      "publicCut": "UI_SUCCESS_API_UNKNOWN",
+      "policy": "activeDiagnosis",
+      "observations": [
+        {
+          "probeId": "receipt",
+          "observation": "RECEIPT_PRESENT"
+        }
+      ],
+      "certificate": null,
+      "effectLedger": {
+        "effectClass": "CRM_CONTACT",
+        "intendedCardinality": 1,
+        "actualCardinality": 1,
+        "irreversible": false,
+        "contractDisposition": "SATISFIED",
+        "violationReasons": []
+      },
+      "evaluation": {
+        "disposition": "SATISFIED",
+        "reasons": [],
+        "finalCardinality": 1
+      }
+    },
+    {
+      "scenarioId": "S3_CRM",
+      "worldId": "S3_WEBHOOK_DELAY",
+      "publicCut": "UI_SUCCESS_API_UNKNOWN",
+      "policy": "oneStepDiagnosis",
+      "observations": [
+        {
+          "probeId": "receipt",
+          "observation": "RECEIPT_PRESENT"
+        }
+      ],
+      "certificate": null,
+      "effectLedger": {
+        "effectClass": "CRM_CONTACT",
+        "intendedCardinality": 1,
+        "actualCardinality": 1,
+        "irreversible": false,
+        "contractDisposition": "SATISFIED",
+        "violationReasons": []
+      },
+      "evaluation": {
+        "disposition": "SATISFIED",
+        "reasons": [],
+        "finalCardinality": 1
+      }
+    },
+    {
+      "scenarioId": "S3_CRM",
+      "worldId": "S3_RECEIPT_LOST",
+      "publicCut": "UI_SUCCESS_API_UNKNOWN",
+      "policy": "cpir",
+      "observations": [
+        {
+          "probeId": "subject",
+          "observation": "SUBJECT_OK"
+        }
+      ],
+      "certificate": {
+        "initialConflictEdges": [
+          {
+            "worldIds": [
+              "S3_WRONG_TENANT_SUBJECT",
+              "S3_WEBHOOK_DELAY"
+            ],
+            "witnessRepairs": [
+              {
+                "repairId": "SUBMIT_CURRENT",
+                "worldA": "VIOLATED",
+                "worldB": "VIOLATED"
+              },
+              {
+                "repairId": "REAUTHORIZE_AND_SUBMIT",
+                "worldA": "SATISFIED",
+                "worldB": "VIOLATED"
+              },
+              {
+                "repairId": "WAIT_AND_RECONCILE",
+                "worldA": "VIOLATED",
+                "worldB": "SATISFIED"
+              },
+              {
+                "repairId": "RECOVER_RECEIPT",
+                "worldA": "VIOLATED",
+                "worldB": "SATISFIED"
+              }
+            ],
+            "obligationLevel": "DECLARED_CONTRACT_CONFLICT"
+          },
+          {
+            "worldIds": [
+              "S3_WRONG_TENANT_SUBJECT",
+              "S3_RECEIPT_LOST"
+            ],
+            "witnessRepairs": [
+              {
+                "repairId": "SUBMIT_CURRENT",
+                "worldA": "VIOLATED",
+                "worldB": "VIOLATED"
+              },
+              {
+                "repairId": "REAUTHORIZE_AND_SUBMIT",
+                "worldA": "SATISFIED",
+                "worldB": "VIOLATED"
+              },
+              {
+                "repairId": "WAIT_AND_RECONCILE",
+                "worldA": "VIOLATED",
+                "worldB": "SATISFIED"
+              },
+              {
+                "repairId": "RECOVER_RECEIPT",
+                "worldA": "VIOLATED",
+                "worldB": "SATISFIED"
+              }
+            ],
+            "obligationLevel": "DECLARED_CONTRACT_CONFLICT"
+          }
+        ],
+        "probeClosure": [
+          {
+            "probeId": "subject",
+            "scope": "identity.read",
+            "risk": 0.1,
+            "observationAlphabet": [
+              "SUBJECT_MISMATCH",
+              "SUBJECT_OK"
+            ],
+            "worldCoverage": [
+              "S3_RECEIPT_LOST",
+              "S3_WEBHOOK_DELAY",
+              "S3_WRONG_TENANT_SUBJECT"
+            ]
+          },
+          {
+            "probeId": "receipt",
+            "scope": "receipt.read",
+            "risk": 0.2,
+            "observationAlphabet": [
+              "RECEIPT_PRESENT",
+              "SINK_ADVANCED_RECEIPT_MISSING",
+              "UNSUPPORTED"
+            ],
+            "worldCoverage": [
+              "S3_RECEIPT_LOST",
+              "S3_WEBHOOK_DELAY",
+              "S3_WRONG_TENANT_SUBJECT"
+            ]
+          }
+        ],
+        "unresolvedEdges": [],
+        "certificateStatus": "COVERED_UNDER_DECLARED_CATALOG"
+      },
+      "effectLedger": {
+        "effectClass": "CRM_CONTACT",
+        "intendedCardinality": 1,
+        "actualCardinality": 1,
+        "irreversible": false,
+        "contractDisposition": "SATISFIED",
+        "violationReasons": []
+      },
+      "evaluation": {
+        "disposition": "SATISFIED",
+        "reasons": [],
+        "finalCardinality": 1
+      }
+    },
+    {
+      "scenarioId": "S3_CRM",
+      "worldId": "S3_RECEIPT_LOST",
+      "publicCut": "UI_SUCCESS_API_UNKNOWN",
+      "policy": "safePOMDP",
+      "observations": [
+        {
+          "probeId": "subject",
+          "observation": "SUBJECT_OK"
+        }
+      ],
+      "certificate": null,
+      "effectLedger": {
+        "effectClass": "CRM_CONTACT",
+        "intendedCardinality": 1,
+        "actualCardinality": 1,
+        "irreversible": false,
+        "contractDisposition": "SATISFIED",
+        "violationReasons": []
+      },
+      "evaluation": {
+        "disposition": "SATISFIED",
+        "reasons": [],
+        "finalCardinality": 1
+      }
+    },
+    {
+      "scenarioId": "S3_CRM",
+      "worldId": "S3_RECEIPT_LOST",
+      "publicCut": "UI_SUCCESS_API_UNKNOWN",
+      "policy": "activeDiagnosis",
+      "observations": [
+        {
+          "probeId": "receipt",
+          "observation": "SINK_ADVANCED_RECEIPT_MISSING"
+        }
+      ],
+      "certificate": null,
+      "effectLedger": {
+        "effectClass": "CRM_CONTACT",
+        "intendedCardinality": 1,
+        "actualCardinality": 1,
+        "irreversible": false,
+        "contractDisposition": "SATISFIED",
+        "violationReasons": []
+      },
+      "evaluation": {
+        "disposition": "SATISFIED",
+        "reasons": [],
+        "finalCardinality": 1
+      }
+    },
+    {
+      "scenarioId": "S3_CRM",
+      "worldId": "S3_RECEIPT_LOST",
+      "publicCut": "UI_SUCCESS_API_UNKNOWN",
+      "policy": "oneStepDiagnosis",
+      "observations": [
+        {
+          "probeId": "receipt",
+          "observation": "SINK_ADVANCED_RECEIPT_MISSING"
+        }
+      ],
+      "certificate": null,
+      "effectLedger": {
+        "effectClass": "CRM_CONTACT",
+        "intendedCardinality": 1,
+        "actualCardinality": 1,
+        "irreversible": false,
+        "contractDisposition": "SATISFIED",
+        "violationReasons": []
+      },
+      "evaluation": {
+        "disposition": "SATISFIED",
+        "reasons": [],
+        "finalCardinality": 1
+      }
+    },
+    {
+      "scenarioId": "S4_TICKET_CLOSE",
+      "worldId": "S4_STALE_ETAG",
+      "publicCut": "TICKET_CLOSE_UNKNOWN",
+      "policy": "cpir",
+      "observations": [
+        {
+          "probeId": "etag",
+          "observation": "ETAG_STALE"
+        }
+      ],
+      "certificate": {
+        "initialConflictEdges": [
+          {
+            "worldIds": [
+              "S4_STALE_ETAG",
+              "S4_CLOSE_COMMITTED"
+            ],
+            "witnessRepairs": [
+              {
+                "repairId": "CLOSE_CURRENT",
+                "worldA": "VIOLATED",
+                "worldB": "VIOLATED"
+              },
+              {
+                "repairId": "REFRESH_AND_CLOSE",
+                "worldA": "SATISFIED",
+                "worldB": "VIOLATED"
+              },
+              {
+                "repairId": "RECONCILE_CLOSED",
+                "worldA": "VIOLATED",
+                "worldB": "SATISFIED"
+              }
+            ],
+            "obligationLevel": "DECLARED_CONTRACT_CONFLICT"
+          },
+          {
+            "worldIds": [
+              "S4_STALE_ETAG",
+              "S4_INTERVENING_UPDATE"
+            ],
+            "witnessRepairs": [
+              {
+                "repairId": "CLOSE_CURRENT",
+                "worldA": "VIOLATED",
+                "worldB": "VIOLATED"
+              },
+              {
+                "repairId": "REFRESH_AND_CLOSE",
+                "worldA": "SATISFIED",
+                "worldB": "VIOLATED"
+              },
+              {
+                "repairId": "RECONCILE_CLOSED",
+                "worldA": "VIOLATED",
+                "worldB": "VIOLATED"
+              }
+            ],
+            "obligationLevel": "DECLARED_CONTRACT_CONFLICT"
+          },
+          {
+            "worldIds": [
+              "S4_CLOSE_COMMITTED",
+              "S4_INTERVENING_UPDATE"
+            ],
+            "witnessRepairs": [
+              {
+                "repairId": "CLOSE_CURRENT",
+                "worldA": "VIOLATED",
+                "worldB": "VIOLATED"
+              },
+              {
+                "repairId": "REFRESH_AND_CLOSE",
+                "worldA": "VIOLATED",
+                "worldB": "VIOLATED"
+              },
+              {
+                "repairId": "RECONCILE_CLOSED",
+                "worldA": "SATISFIED",
+                "worldB": "VIOLATED"
+              }
+            ],
+            "obligationLevel": "DECLARED_CONTRACT_CONFLICT"
+          }
+        ],
+        "probeClosure": [
+          {
+            "probeId": "etag",
+            "scope": "ticket.read",
+            "risk": 0.1,
+            "observationAlphabet": [
+              "ETAG_CHANGED",
+              "ETAG_STALE",
+              "UNSUPPORTED"
+            ],
+            "worldCoverage": [
+              "S4_CLOSE_COMMITTED",
+              "S4_INTERVENING_UPDATE",
+              "S4_STALE_ETAG"
+            ]
+          },
+          {
+            "probeId": "receipt",
+            "scope": "receipt.read",
+            "risk": 0.2,
+            "observationAlphabet": [
+              "CLOSED_RECEIPT",
+              "UNSUPPORTED"
+            ],
+            "worldCoverage": [
+              "S4_CLOSE_COMMITTED",
+              "S4_INTERVENING_UPDATE",
+              "S4_STALE_ETAG"
+            ]
+          }
+        ],
+        "unresolvedEdges": [],
+        "certificateStatus": "COVERED_UNDER_DECLARED_CATALOG"
+      },
+      "effectLedger": {
+        "effectClass": "TICKET_CLOSE",
+        "intendedCardinality": 1,
+        "actualCardinality": 1,
+        "irreversible": true,
+        "contractDisposition": "SATISFIED",
+        "violationReasons": []
+      },
+      "evaluation": {
+        "disposition": "SATISFIED",
+        "reasons": [],
+        "finalCardinality": 1
+      }
+    },
+    {
+      "scenarioId": "S4_TICKET_CLOSE",
+      "worldId": "S4_STALE_ETAG",
+      "publicCut": "TICKET_CLOSE_UNKNOWN",
+      "policy": "safePOMDP",
+      "observations": [
+        {
+          "probeId": "receipt",
+          "observation": "UNSUPPORTED"
+        },
+        {
+          "probeId": "etag",
+          "observation": "ETAG_STALE"
+        }
+      ],
+      "certificate": null,
+      "effectLedger": {
+        "effectClass": "TICKET_CLOSE",
+        "intendedCardinality": 1,
+        "actualCardinality": 1,
+        "irreversible": true,
+        "contractDisposition": "SATISFIED",
+        "violationReasons": []
+      },
+      "evaluation": {
+        "disposition": "SATISFIED",
+        "reasons": [],
+        "finalCardinality": 1
+      }
+    },
+    {
+      "scenarioId": "S4_TICKET_CLOSE",
+      "worldId": "S4_STALE_ETAG",
+      "publicCut": "TICKET_CLOSE_UNKNOWN",
+      "policy": "activeDiagnosis",
+      "observations": [
+        {
+          "probeId": "etag",
+          "observation": "ETAG_STALE"
+        }
+      ],
+      "certificate": null,
+      "effectLedger": {
+        "effectClass": "TICKET_CLOSE",
+        "intendedCardinality": 1,
+        "actualCardinality": 1,
+        "irreversible": true,
+        "contractDisposition": "SATISFIED",
+        "violationReasons": []
+      },
+      "evaluation": {
+        "disposition": "SATISFIED",
+        "reasons": [],
+        "finalCardinality": 1
+      }
+    },
+    {
+      "scenarioId": "S4_TICKET_CLOSE",
+      "worldId": "S4_STALE_ETAG",
+      "publicCut": "TICKET_CLOSE_UNKNOWN",
+      "policy": "oneStepDiagnosis",
+      "observations": [
+        {
+          "probeId": "etag",
+          "observation": "ETAG_STALE"
+        }
+      ],
+      "certificate": null,
+      "effectLedger": {
+        "effectClass": "TICKET_CLOSE",
+        "intendedCardinality": 1,
+        "actualCardinality": 1,
+        "irreversible": true,
+        "contractDisposition": "SATISFIED",
+        "violationReasons": []
+      },
+      "evaluation": {
+        "disposition": "SATISFIED",
+        "reasons": [],
+        "finalCardinality": 1
+      }
+    },
+    {
+      "scenarioId": "S4_TICKET_CLOSE",
+      "worldId": "S4_CLOSE_COMMITTED",
+      "publicCut": "TICKET_CLOSE_UNKNOWN",
+      "policy": "cpir",
+      "observations": [
+        {
+          "probeId": "etag",
+          "observation": "UNSUPPORTED"
+        }
+      ],
+      "certificate": {
+        "initialConflictEdges": [
+          {
+            "worldIds": [
+              "S4_STALE_ETAG",
+              "S4_CLOSE_COMMITTED"
+            ],
+            "witnessRepairs": [
+              {
+                "repairId": "CLOSE_CURRENT",
+                "worldA": "VIOLATED",
+                "worldB": "VIOLATED"
+              },
+              {
+                "repairId": "REFRESH_AND_CLOSE",
+                "worldA": "SATISFIED",
+                "worldB": "VIOLATED"
+              },
+              {
+                "repairId": "RECONCILE_CLOSED",
+                "worldA": "VIOLATED",
+                "worldB": "SATISFIED"
+              }
+            ],
+            "obligationLevel": "DECLARED_CONTRACT_CONFLICT"
+          },
+          {
+            "worldIds": [
+              "S4_STALE_ETAG",
+              "S4_INTERVENING_UPDATE"
+            ],
+            "witnessRepairs": [
+              {
+                "repairId": "CLOSE_CURRENT",
+                "worldA": "VIOLATED",
+                "worldB": "VIOLATED"
+              },
+              {
+                "repairId": "REFRESH_AND_CLOSE",
+                "worldA": "SATISFIED",
+                "worldB": "VIOLATED"
+              },
+              {
+                "repairId": "RECONCILE_CLOSED",
+                "worldA": "VIOLATED",
+                "worldB": "VIOLATED"
+              }
+            ],
+            "obligationLevel": "DECLARED_CONTRACT_CONFLICT"
+          },
+          {
+            "worldIds": [
+              "S4_CLOSE_COMMITTED",
+              "S4_INTERVENING_UPDATE"
+            ],
+            "witnessRepairs": [
+              {
+                "repairId": "CLOSE_CURRENT",
+                "worldA": "VIOLATED",
+                "worldB": "VIOLATED"
+              },
+              {
+                "repairId": "REFRESH_AND_CLOSE",
+                "worldA": "VIOLATED",
+                "worldB": "VIOLATED"
+              },
+              {
+                "repairId": "RECONCILE_CLOSED",
+                "worldA": "SATISFIED",
+                "worldB": "VIOLATED"
+              }
+            ],
+            "obligationLevel": "DECLARED_CONTRACT_CONFLICT"
+          }
+        ],
+        "probeClosure": [
+          {
+            "probeId": "etag",
+            "scope": "ticket.read",
+            "risk": 0.1,
+            "observationAlphabet": [
+              "ETAG_CHANGED",
+              "ETAG_STALE",
+              "UNSUPPORTED"
+            ],
+            "worldCoverage": [
+              "S4_CLOSE_COMMITTED",
+              "S4_INTERVENING_UPDATE",
+              "S4_STALE_ETAG"
+            ]
+          },
+          {
+            "probeId": "receipt",
+            "scope": "receipt.read",
+            "risk": 0.2,
+            "observationAlphabet": [
+              "CLOSED_RECEIPT",
+              "UNSUPPORTED"
+            ],
+            "worldCoverage": [
+              "S4_CLOSE_COMMITTED",
+              "S4_INTERVENING_UPDATE",
+              "S4_STALE_ETAG"
+            ]
+          }
+        ],
+        "unresolvedEdges": [],
+        "certificateStatus": "COVERED_UNDER_DECLARED_CATALOG"
+      },
+      "effectLedger": {
+        "effectClass": "TICKET_CLOSE",
+        "intendedCardinality": 1,
+        "actualCardinality": 1,
+        "irreversible": false,
+        "contractDisposition": "SATISFIED",
+        "violationReasons": []
+      },
+      "evaluation": {
+        "disposition": "SATISFIED",
+        "reasons": [],
+        "finalCardinality": 1
+      }
+    },
+    {
+      "scenarioId": "S4_TICKET_CLOSE",
+      "worldId": "S4_CLOSE_COMMITTED",
+      "publicCut": "TICKET_CLOSE_UNKNOWN",
+      "policy": "safePOMDP",
+      "observations": [
+        {
+          "probeId": "receipt",
+          "observation": "CLOSED_RECEIPT"
+        }
+      ],
+      "certificate": null,
+      "effectLedger": {
+        "effectClass": "TICKET_CLOSE",
+        "intendedCardinality": 1,
+        "actualCardinality": 1,
+        "irreversible": false,
+        "contractDisposition": "SATISFIED",
+        "violationReasons": []
+      },
+      "evaluation": {
+        "disposition": "SATISFIED",
+        "reasons": [],
+        "finalCardinality": 1
+      }
+    },
+    {
+      "scenarioId": "S4_TICKET_CLOSE",
+      "worldId": "S4_CLOSE_COMMITTED",
+      "publicCut": "TICKET_CLOSE_UNKNOWN",
+      "policy": "activeDiagnosis",
+      "observations": [
+        {
+          "probeId": "etag",
+          "observation": "UNSUPPORTED"
+        }
+      ],
+      "certificate": null,
+      "effectLedger": {
+        "effectClass": "TICKET_CLOSE",
+        "intendedCardinality": 1,
+        "actualCardinality": 1,
+        "irreversible": false,
+        "contractDisposition": "SATISFIED",
+        "violationReasons": []
+      },
+      "evaluation": {
+        "disposition": "SATISFIED",
+        "reasons": [],
+        "finalCardinality": 1
+      }
+    },
+    {
+      "scenarioId": "S4_TICKET_CLOSE",
+      "worldId": "S4_CLOSE_COMMITTED",
+      "publicCut": "TICKET_CLOSE_UNKNOWN",
+      "policy": "oneStepDiagnosis",
+      "observations": [
+        {
+          "probeId": "etag",
+          "observation": "UNSUPPORTED"
+        }
+      ],
+      "certificate": null,
+      "effectLedger": {
+        "effectClass": "TICKET_CLOSE",
+        "intendedCardinality": 1,
+        "actualCardinality": 1,
+        "irreversible": false,
+        "contractDisposition": "SATISFIED",
+        "violationReasons": []
+      },
+      "evaluation": {
+        "disposition": "SATISFIED",
+        "reasons": [],
+        "finalCardinality": 1
+      }
+    },
+    {
+      "scenarioId": "S4_TICKET_CLOSE",
+      "worldId": "S4_INTERVENING_UPDATE",
+      "publicCut": "TICKET_CLOSE_UNKNOWN",
+      "policy": "cpir",
+      "observations": [
+        {
+          "probeId": "etag",
+          "observation": "ETAG_CHANGED"
+        }
+      ],
+      "certificate": {
+        "initialConflictEdges": [
+          {
+            "worldIds": [
+              "S4_STALE_ETAG",
+              "S4_CLOSE_COMMITTED"
+            ],
+            "witnessRepairs": [
+              {
+                "repairId": "CLOSE_CURRENT",
+                "worldA": "VIOLATED",
+                "worldB": "VIOLATED"
+              },
+              {
+                "repairId": "REFRESH_AND_CLOSE",
+                "worldA": "SATISFIED",
+                "worldB": "VIOLATED"
+              },
+              {
+                "repairId": "RECONCILE_CLOSED",
+                "worldA": "VIOLATED",
+                "worldB": "SATISFIED"
+              }
+            ],
+            "obligationLevel": "DECLARED_CONTRACT_CONFLICT"
+          },
+          {
+            "worldIds": [
+              "S4_STALE_ETAG",
+              "S4_INTERVENING_UPDATE"
+            ],
+            "witnessRepairs": [
+              {
+                "repairId": "CLOSE_CURRENT",
+                "worldA": "VIOLATED",
+                "worldB": "VIOLATED"
+              },
+              {
+                "repairId": "REFRESH_AND_CLOSE",
+                "worldA": "SATISFIED",
+                "worldB": "VIOLATED"
+              },
+              {
+                "repairId": "RECONCILE_CLOSED",
+                "worldA": "VIOLATED",
+                "worldB": "VIOLATED"
+              }
+            ],
+            "obligationLevel": "DECLARED_CONTRACT_CONFLICT"
+          },
+          {
+            "worldIds": [
+              "S4_CLOSE_COMMITTED",
+              "S4_INTERVENING_UPDATE"
+            ],
+            "witnessRepairs": [
+              {
+                "repairId": "CLOSE_CURRENT",
+                "worldA": "VIOLATED",
+                "worldB": "VIOLATED"
+              },
+              {
+                "repairId": "REFRESH_AND_CLOSE",
+                "worldA": "VIOLATED",
+                "worldB": "VIOLATED"
+              },
+              {
+                "repairId": "RECONCILE_CLOSED",
+                "worldA": "SATISFIED",
+                "worldB": "VIOLATED"
+              }
+            ],
+            "obligationLevel": "DECLARED_CONTRACT_CONFLICT"
+          }
+        ],
+        "probeClosure": [
+          {
+            "probeId": "etag",
+            "scope": "ticket.read",
+            "risk": 0.1,
+            "observationAlphabet": [
+              "ETAG_CHANGED",
+              "ETAG_STALE",
+              "UNSUPPORTED"
+            ],
+            "worldCoverage": [
+              "S4_CLOSE_COMMITTED",
+              "S4_INTERVENING_UPDATE",
+              "S4_STALE_ETAG"
+            ]
+          },
+          {
+            "probeId": "receipt",
+            "scope": "receipt.read",
+            "risk": 0.2,
+            "observationAlphabet": [
+              "CLOSED_RECEIPT",
+              "UNSUPPORTED"
+            ],
+            "worldCoverage": [
+              "S4_CLOSE_COMMITTED",
+              "S4_INTERVENING_UPDATE",
+              "S4_STALE_ETAG"
+            ]
+          }
+        ],
+        "unresolvedEdges": [],
+        "certificateStatus": "COVERED_UNDER_DECLARED_CATALOG"
+      },
+      "effectLedger": {
+        "effectClass": "TICKET_CLOSE",
+        "intendedCardinality": 1,
+        "actualCardinality": 0,
+        "irreversible": false,
+        "contractDisposition": "UNKNOWN",
+        "violationReasons": [
+          "ABSTAIN"
+        ]
+      },
+      "evaluation": {
+        "disposition": "UNKNOWN",
+        "reasons": [
+          "ABSTAIN"
+        ],
+        "finalCardinality": 0
+      }
+    },
+    {
+      "scenarioId": "S4_TICKET_CLOSE",
+      "worldId": "S4_INTERVENING_UPDATE",
+      "publicCut": "TICKET_CLOSE_UNKNOWN",
+      "policy": "safePOMDP",
+      "observations": [
+        {
+          "probeId": "receipt",
+          "observation": "UNSUPPORTED"
+        },
+        {
+          "probeId": "etag",
+          "observation": "ETAG_CHANGED"
+        }
+      ],
+      "certificate": null,
+      "effectLedger": {
+        "effectClass": "TICKET_CLOSE",
+        "intendedCardinality": 1,
+        "actualCardinality": 0,
+        "irreversible": false,
+        "contractDisposition": "UNKNOWN",
+        "violationReasons": [
+          "ABSTAIN"
+        ]
+      },
+      "evaluation": {
+        "disposition": "UNKNOWN",
+        "reasons": [
+          "ABSTAIN"
+        ],
+        "finalCardinality": 0
+      }
+    },
+    {
+      "scenarioId": "S4_TICKET_CLOSE",
+      "worldId": "S4_INTERVENING_UPDATE",
+      "publicCut": "TICKET_CLOSE_UNKNOWN",
+      "policy": "activeDiagnosis",
+      "observations": [
+        {
+          "probeId": "etag",
+          "observation": "ETAG_CHANGED"
+        }
+      ],
+      "certificate": null,
+      "effectLedger": {
+        "effectClass": "TICKET_CLOSE",
+        "intendedCardinality": 1,
+        "actualCardinality": 0,
+        "irreversible": false,
+        "contractDisposition": "UNKNOWN",
+        "violationReasons": [
+          "ABSTAIN"
+        ]
+      },
+      "evaluation": {
+        "disposition": "UNKNOWN",
+        "reasons": [
+          "ABSTAIN"
+        ],
+        "finalCardinality": 0
+      }
+    },
+    {
+      "scenarioId": "S4_TICKET_CLOSE",
+      "worldId": "S4_INTERVENING_UPDATE",
+      "publicCut": "TICKET_CLOSE_UNKNOWN",
+      "policy": "oneStepDiagnosis",
+      "observations": [
+        {
+          "probeId": "etag",
+          "observation": "ETAG_CHANGED"
+        }
+      ],
+      "certificate": null,
+      "effectLedger": {
+        "effectClass": "TICKET_CLOSE",
+        "intendedCardinality": 1,
+        "actualCardinality": 0,
+        "irreversible": false,
+        "contractDisposition": "UNKNOWN",
+        "violationReasons": [
+          "ABSTAIN"
+        ]
+      },
+      "evaluation": {
+        "disposition": "UNKNOWN",
+        "reasons": [
+          "ABSTAIN"
+        ],
+        "finalCardinality": 0
+      }
+    },
+    {
+      "scenarioId": "S5_HR_PERMISSION",
+      "worldId": "S5_SCOPE_EXPIRED",
+      "publicCut": "PERMISSION_GRANT_UNKNOWN",
+      "policy": "cpir",
+      "observations": [
+        {
+          "probeId": "scope",
+          "observation": "SCOPE_EXPIRED"
+        }
+      ],
+      "certificate": {
+        "initialConflictEdges": [
+          {
+            "worldIds": [
+              "S5_SCOPE_EXPIRED",
+              "S5_GRANT_COMMITTED"
+            ],
+            "witnessRepairs": [
+              {
+                "repairId": "GRANT_CURRENT",
+                "worldA": "VIOLATED",
+                "worldB": "VIOLATED"
+              },
+              {
+                "repairId": "REAUTHORIZE_AND_GRANT",
+                "worldA": "SATISFIED",
+                "worldB": "VIOLATED"
+              },
+              {
+                "repairId": "REBIND_AND_GRANT",
+                "worldA": "VIOLATED",
+                "worldB": "VIOLATED"
+              },
+              {
+                "repairId": "WAIT_AND_RECONCILE",
+                "worldA": "VIOLATED",
+                "worldB": "SATISFIED"
+              }
+            ],
+            "obligationLevel": "DECLARED_CONTRACT_CONFLICT"
+          },
+          {
+            "worldIds": [
+              "S5_GRANT_COMMITTED",
+              "S5_WRONG_ALIAS"
+            ],
+            "witnessRepairs": [
+              {
+                "repairId": "GRANT_CURRENT",
+                "worldA": "VIOLATED",
+                "worldB": "VIOLATED"
+              },
+              {
+                "repairId": "REAUTHORIZE_AND_GRANT",
+                "worldA": "VIOLATED",
+                "worldB": "SATISFIED"
+              },
+              {
+                "repairId": "REBIND_AND_GRANT",
+                "worldA": "VIOLATED",
+                "worldB": "SATISFIED"
+              },
+              {
+                "repairId": "WAIT_AND_RECONCILE",
+                "worldA": "SATISFIED",
+                "worldB": "VIOLATED"
+              }
+            ],
+            "obligationLevel": "DECLARED_CONTRACT_CONFLICT"
+          }
+        ],
+        "probeClosure": [
+          {
+            "probeId": "scope",
+            "scope": "identity.read",
+            "risk": 0.1,
+            "observationAlphabet": [
+              "SCOPE_EXPIRED",
+              "SCOPE_OK"
+            ],
+            "worldCoverage": [
+              "S5_GRANT_COMMITTED",
+              "S5_SCOPE_EXPIRED",
+              "S5_WRONG_ALIAS"
+            ]
+          },
+          {
+            "probeId": "employee",
+            "scope": "identity.read",
+            "risk": 0.1,
+            "observationAlphabet": [
+              "EMPLOYEE_MISMATCH",
+              "EMPLOYEE_OK"
+            ],
+            "worldCoverage": [
+              "S5_GRANT_COMMITTED",
+              "S5_SCOPE_EXPIRED",
+              "S5_WRONG_ALIAS"
+            ]
+          },
+          {
+            "probeId": "receipt",
+            "scope": "audit.read",
+            "risk": 0.2,
+            "observationAlphabet": [
+              "GRANT_RECEIPT",
+              "UNSUPPORTED"
+            ],
+            "worldCoverage": [
+              "S5_GRANT_COMMITTED",
+              "S5_SCOPE_EXPIRED",
+              "S5_WRONG_ALIAS"
+            ]
+          }
+        ],
+        "unresolvedEdges": [],
+        "certificateStatus": "COVERED_UNDER_DECLARED_CATALOG"
+      },
+      "effectLedger": {
+        "effectClass": "PERMISSION_GRANT",
+        "intendedCardinality": 1,
+        "actualCardinality": 1,
+        "irreversible": true,
+        "contractDisposition": "SATISFIED",
+        "violationReasons": []
+      },
+      "evaluation": {
+        "disposition": "SATISFIED",
+        "reasons": [],
+        "finalCardinality": 1
+      }
+    },
+    {
+      "scenarioId": "S5_HR_PERMISSION",
+      "worldId": "S5_SCOPE_EXPIRED",
+      "publicCut": "PERMISSION_GRANT_UNKNOWN",
+      "policy": "safePOMDP",
+      "observations": [
+        {
+          "probeId": "scope",
+          "observation": "SCOPE_EXPIRED"
+        }
+      ],
+      "certificate": null,
+      "effectLedger": {
+        "effectClass": "PERMISSION_GRANT",
+        "intendedCardinality": 1,
+        "actualCardinality": 1,
+        "irreversible": true,
+        "contractDisposition": "SATISFIED",
+        "violationReasons": []
+      },
+      "evaluation": {
+        "disposition": "SATISFIED",
+        "reasons": [],
+        "finalCardinality": 1
+      }
+    },
+    {
+      "scenarioId": "S5_HR_PERMISSION",
+      "worldId": "S5_SCOPE_EXPIRED",
+      "publicCut": "PERMISSION_GRANT_UNKNOWN",
+      "policy": "activeDiagnosis",
+      "observations": [
+        {
+          "probeId": "scope",
+          "observation": "SCOPE_EXPIRED"
+        }
+      ],
+      "certificate": null,
+      "effectLedger": {
+        "effectClass": "PERMISSION_GRANT",
+        "intendedCardinality": 1,
+        "actualCardinality": 1,
+        "irreversible": true,
+        "contractDisposition": "SATISFIED",
+        "violationReasons": []
+      },
+      "evaluation": {
+        "disposition": "SATISFIED",
+        "reasons": [],
+        "finalCardinality": 1
+      }
+    },
+    {
+      "scenarioId": "S5_HR_PERMISSION",
+      "worldId": "S5_SCOPE_EXPIRED",
+      "publicCut": "PERMISSION_GRANT_UNKNOWN",
+      "policy": "oneStepDiagnosis",
+      "observations": [
+        {
+          "probeId": "scope",
+          "observation": "SCOPE_EXPIRED"
+        }
+      ],
+      "certificate": null,
+      "effectLedger": {
+        "effectClass": "PERMISSION_GRANT",
+        "intendedCardinality": 1,
+        "actualCardinality": 1,
+        "irreversible": true,
+        "contractDisposition": "SATISFIED",
+        "violationReasons": []
+      },
+      "evaluation": {
+        "disposition": "SATISFIED",
+        "reasons": [],
+        "finalCardinality": 1
+      }
+    },
+    {
+      "scenarioId": "S5_HR_PERMISSION",
+      "worldId": "S5_GRANT_COMMITTED",
+      "publicCut": "PERMISSION_GRANT_UNKNOWN",
+      "policy": "cpir",
+      "observations": [
+        {
+          "probeId": "scope",
+          "observation": "SCOPE_OK"
+        },
+        {
+          "probeId": "employee",
+          "observation": "EMPLOYEE_OK"
+        }
+      ],
+      "certificate": {
+        "initialConflictEdges": [
+          {
+            "worldIds": [
+              "S5_SCOPE_EXPIRED",
+              "S5_GRANT_COMMITTED"
+            ],
+            "witnessRepairs": [
+              {
+                "repairId": "GRANT_CURRENT",
+                "worldA": "VIOLATED",
+                "worldB": "VIOLATED"
+              },
+              {
+                "repairId": "REAUTHORIZE_AND_GRANT",
+                "worldA": "SATISFIED",
+                "worldB": "VIOLATED"
+              },
+              {
+                "repairId": "REBIND_AND_GRANT",
+                "worldA": "VIOLATED",
+                "worldB": "VIOLATED"
+              },
+              {
+                "repairId": "WAIT_AND_RECONCILE",
+                "worldA": "VIOLATED",
+                "worldB": "SATISFIED"
+              }
+            ],
+            "obligationLevel": "DECLARED_CONTRACT_CONFLICT"
+          },
+          {
+            "worldIds": [
+              "S5_GRANT_COMMITTED",
+              "S5_WRONG_ALIAS"
+            ],
+            "witnessRepairs": [
+              {
+                "repairId": "GRANT_CURRENT",
+                "worldA": "VIOLATED",
+                "worldB": "VIOLATED"
+              },
+              {
+                "repairId": "REAUTHORIZE_AND_GRANT",
+                "worldA": "VIOLATED",
+                "worldB": "SATISFIED"
+              },
+              {
+                "repairId": "REBIND_AND_GRANT",
+                "worldA": "VIOLATED",
+                "worldB": "SATISFIED"
+              },
+              {
+                "repairId": "WAIT_AND_RECONCILE",
+                "worldA": "SATISFIED",
+                "worldB": "VIOLATED"
+              }
+            ],
+            "obligationLevel": "DECLARED_CONTRACT_CONFLICT"
+          }
+        ],
+        "probeClosure": [
+          {
+            "probeId": "scope",
+            "scope": "identity.read",
+            "risk": 0.1,
+            "observationAlphabet": [
+              "SCOPE_EXPIRED",
+              "SCOPE_OK"
+            ],
+            "worldCoverage": [
+              "S5_GRANT_COMMITTED",
+              "S5_SCOPE_EXPIRED",
+              "S5_WRONG_ALIAS"
+            ]
+          },
+          {
+            "probeId": "employee",
+            "scope": "identity.read",
+            "risk": 0.1,
+            "observationAlphabet": [
+              "EMPLOYEE_MISMATCH",
+              "EMPLOYEE_OK"
+            ],
+            "worldCoverage": [
+              "S5_GRANT_COMMITTED",
+              "S5_SCOPE_EXPIRED",
+              "S5_WRONG_ALIAS"
+            ]
+          },
+          {
+            "probeId": "receipt",
+            "scope": "audit.read",
+            "risk": 0.2,
+            "observationAlphabet": [
+              "GRANT_RECEIPT",
+              "UNSUPPORTED"
+            ],
+            "worldCoverage": [
+              "S5_GRANT_COMMITTED",
+              "S5_SCOPE_EXPIRED",
+              "S5_WRONG_ALIAS"
+            ]
+          }
+        ],
+        "unresolvedEdges": [],
+        "certificateStatus": "COVERED_UNDER_DECLARED_CATALOG"
+      },
+      "effectLedger": {
+        "effectClass": "PERMISSION_GRANT",
+        "intendedCardinality": 1,
+        "actualCardinality": 1,
+        "irreversible": false,
+        "contractDisposition": "SATISFIED",
+        "violationReasons": []
+      },
+      "evaluation": {
+        "disposition": "SATISFIED",
+        "reasons": [],
+        "finalCardinality": 1
+      }
+    },
+    {
+      "scenarioId": "S5_HR_PERMISSION",
+      "worldId": "S5_GRANT_COMMITTED",
+      "publicCut": "PERMISSION_GRANT_UNKNOWN",
+      "policy": "safePOMDP",
+      "observations": [
+        {
+          "probeId": "scope",
+          "observation": "SCOPE_OK"
+        },
+        {
+          "probeId": "employee",
+          "observation": "EMPLOYEE_OK"
+        }
+      ],
+      "certificate": null,
+      "effectLedger": {
+        "effectClass": "PERMISSION_GRANT",
+        "intendedCardinality": 1,
+        "actualCardinality": 1,
+        "irreversible": false,
+        "contractDisposition": "SATISFIED",
+        "violationReasons": []
+      },
+      "evaluation": {
+        "disposition": "SATISFIED",
+        "reasons": [],
+        "finalCardinality": 1
+      }
+    },
+    {
+      "scenarioId": "S5_HR_PERMISSION",
+      "worldId": "S5_GRANT_COMMITTED",
+      "publicCut": "PERMISSION_GRANT_UNKNOWN",
+      "policy": "activeDiagnosis",
+      "observations": [
+        {
+          "probeId": "scope",
+          "observation": "SCOPE_OK"
+        },
+        {
+          "probeId": "employee",
+          "observation": "EMPLOYEE_OK"
+        }
+      ],
+      "certificate": null,
+      "effectLedger": {
+        "effectClass": "PERMISSION_GRANT",
+        "intendedCardinality": 1,
+        "actualCardinality": 1,
+        "irreversible": false,
+        "contractDisposition": "SATISFIED",
+        "violationReasons": []
+      },
+      "evaluation": {
+        "disposition": "SATISFIED",
+        "reasons": [],
+        "finalCardinality": 1
+      }
+    },
+    {
+      "scenarioId": "S5_HR_PERMISSION",
+      "worldId": "S5_GRANT_COMMITTED",
+      "publicCut": "PERMISSION_GRANT_UNKNOWN",
+      "policy": "oneStepDiagnosis",
+      "observations": [
+        {
+          "probeId": "scope",
+          "observation": "SCOPE_OK"
+        }
+      ],
+      "certificate": null,
+      "effectLedger": {
+        "effectClass": "PERMISSION_GRANT",
+        "intendedCardinality": 1,
+        "actualCardinality": 1,
+        "irreversible": false,
+        "contractDisposition": "SATISFIED",
+        "violationReasons": []
+      },
+      "evaluation": {
+        "disposition": "SATISFIED",
+        "reasons": [],
+        "finalCardinality": 1
+      }
+    },
+    {
+      "scenarioId": "S5_HR_PERMISSION",
+      "worldId": "S5_WRONG_ALIAS",
+      "publicCut": "PERMISSION_GRANT_UNKNOWN",
+      "policy": "cpir",
+      "observations": [
+        {
+          "probeId": "scope",
+          "observation": "SCOPE_OK"
+        },
+        {
+          "probeId": "employee",
+          "observation": "EMPLOYEE_MISMATCH"
+        }
+      ],
+      "certificate": {
+        "initialConflictEdges": [
+          {
+            "worldIds": [
+              "S5_SCOPE_EXPIRED",
+              "S5_GRANT_COMMITTED"
+            ],
+            "witnessRepairs": [
+              {
+                "repairId": "GRANT_CURRENT",
+                "worldA": "VIOLATED",
+                "worldB": "VIOLATED"
+              },
+              {
+                "repairId": "REAUTHORIZE_AND_GRANT",
+                "worldA": "SATISFIED",
+                "worldB": "VIOLATED"
+              },
+              {
+                "repairId": "REBIND_AND_GRANT",
+                "worldA": "VIOLATED",
+                "worldB": "VIOLATED"
+              },
+              {
+                "repairId": "WAIT_AND_RECONCILE",
+                "worldA": "VIOLATED",
+                "worldB": "SATISFIED"
+              }
+            ],
+            "obligationLevel": "DECLARED_CONTRACT_CONFLICT"
+          },
+          {
+            "worldIds": [
+              "S5_GRANT_COMMITTED",
+              "S5_WRONG_ALIAS"
+            ],
+            "witnessRepairs": [
+              {
+                "repairId": "GRANT_CURRENT",
+                "worldA": "VIOLATED",
+                "worldB": "VIOLATED"
+              },
+              {
+                "repairId": "REAUTHORIZE_AND_GRANT",
+                "worldA": "VIOLATED",
+                "worldB": "SATISFIED"
+              },
+              {
+                "repairId": "REBIND_AND_GRANT",
+                "worldA": "VIOLATED",
+                "worldB": "SATISFIED"
+              },
+              {
+                "repairId": "WAIT_AND_RECONCILE",
+                "worldA": "SATISFIED",
+                "worldB": "VIOLATED"
+              }
+            ],
+            "obligationLevel": "DECLARED_CONTRACT_CONFLICT"
+          }
+        ],
+        "probeClosure": [
+          {
+            "probeId": "scope",
+            "scope": "identity.read",
+            "risk": 0.1,
+            "observationAlphabet": [
+              "SCOPE_EXPIRED",
+              "SCOPE_OK"
+            ],
+            "worldCoverage": [
+              "S5_GRANT_COMMITTED",
+              "S5_SCOPE_EXPIRED",
+              "S5_WRONG_ALIAS"
+            ]
+          },
+          {
+            "probeId": "employee",
+            "scope": "identity.read",
+            "risk": 0.1,
+            "observationAlphabet": [
+              "EMPLOYEE_MISMATCH",
+              "EMPLOYEE_OK"
+            ],
+            "worldCoverage": [
+              "S5_GRANT_COMMITTED",
+              "S5_SCOPE_EXPIRED",
+              "S5_WRONG_ALIAS"
+            ]
+          },
+          {
+            "probeId": "receipt",
+            "scope": "audit.read",
+            "risk": 0.2,
+            "observationAlphabet": [
+              "GRANT_RECEIPT",
+              "UNSUPPORTED"
+            ],
+            "worldCoverage": [
+              "S5_GRANT_COMMITTED",
+              "S5_SCOPE_EXPIRED",
+              "S5_WRONG_ALIAS"
+            ]
+          }
+        ],
+        "unresolvedEdges": [],
+        "certificateStatus": "COVERED_UNDER_DECLARED_CATALOG"
+      },
+      "effectLedger": {
+        "effectClass": "PERMISSION_GRANT",
+        "intendedCardinality": 1,
+        "actualCardinality": 1,
+        "irreversible": true,
+        "contractDisposition": "SATISFIED",
+        "violationReasons": []
+      },
+      "evaluation": {
+        "disposition": "SATISFIED",
+        "reasons": [],
+        "finalCardinality": 1
+      }
+    },
+    {
+      "scenarioId": "S5_HR_PERMISSION",
+      "worldId": "S5_WRONG_ALIAS",
+      "publicCut": "PERMISSION_GRANT_UNKNOWN",
+      "policy": "safePOMDP",
+      "observations": [
+        {
+          "probeId": "scope",
+          "observation": "SCOPE_OK"
+        },
+        {
+          "probeId": "employee",
+          "observation": "EMPLOYEE_MISMATCH"
+        }
+      ],
+      "certificate": null,
+      "effectLedger": {
+        "effectClass": "PERMISSION_GRANT",
+        "intendedCardinality": 1,
+        "actualCardinality": 1,
+        "irreversible": true,
+        "contractDisposition": "SATISFIED",
+        "violationReasons": []
+      },
+      "evaluation": {
+        "disposition": "SATISFIED",
+        "reasons": [],
+        "finalCardinality": 1
+      }
+    },
+    {
+      "scenarioId": "S5_HR_PERMISSION",
+      "worldId": "S5_WRONG_ALIAS",
+      "publicCut": "PERMISSION_GRANT_UNKNOWN",
+      "policy": "activeDiagnosis",
+      "observations": [
+        {
+          "probeId": "scope",
+          "observation": "SCOPE_OK"
+        },
+        {
+          "probeId": "employee",
+          "observation": "EMPLOYEE_MISMATCH"
+        }
+      ],
+      "certificate": null,
+      "effectLedger": {
+        "effectClass": "PERMISSION_GRANT",
+        "intendedCardinality": 1,
+        "actualCardinality": 1,
+        "irreversible": true,
+        "contractDisposition": "SATISFIED",
+        "violationReasons": []
+      },
+      "evaluation": {
+        "disposition": "SATISFIED",
+        "reasons": [],
+        "finalCardinality": 1
+      }
+    },
+    {
+      "scenarioId": "S5_HR_PERMISSION",
+      "worldId": "S5_WRONG_ALIAS",
+      "publicCut": "PERMISSION_GRANT_UNKNOWN",
+      "policy": "oneStepDiagnosis",
+      "observations": [
+        {
+          "probeId": "scope",
+          "observation": "SCOPE_OK"
+        }
+      ],
+      "certificate": null,
+      "effectLedger": {
+        "effectClass": "PERMISSION_GRANT",
+        "intendedCardinality": 1,
+        "actualCardinality": 0,
+        "irreversible": false,
+        "contractDisposition": "VIOLATED",
+        "violationReasons": [
+          "SUCCESS_WITHOUT_PROVEN_EFFECT",
+          "REQUIRED_EFFECT_MISSING"
+        ]
+      },
+      "evaluation": {
+        "disposition": "VIOLATED",
+        "reasons": [
+          "SUCCESS_WITHOUT_PROVEN_EFFECT",
+          "REQUIRED_EFFECT_MISSING"
+        ],
+        "finalCardinality": 0
+      }
+    },
+    {
+      "scenarioId": "S6_REFUND",
+      "worldId": "S6_REFUND_REJECTED",
+      "publicCut": "REFUND_TIMEOUT_UNKNOWN",
+      "policy": "cpir",
+      "observations": [
+        {
+          "probeId": "reference",
+          "observation": "REFERENCE_INVALID"
+        }
+      ],
+      "certificate": {
+        "initialConflictEdges": [
+          {
+            "worldIds": [
+              "S6_REFUND_REJECTED",
+              "S6_REFUND_COMMITTED"
+            ],
+            "witnessRepairs": [
+              {
+                "repairId": "SUBMIT_REFUND_CURRENT",
+                "worldA": "VIOLATED",
+                "worldB": "VIOLATED"
+              },
+              {
+                "repairId": "FIX_REFERENCE_AND_SUBMIT",
+                "worldA": "SATISFIED",
+                "worldB": "VIOLATED"
+              },
+              {
+                "repairId": "RECONCILE_REFUND",
+                "worldA": "VIOLATED",
+                "worldB": "SATISFIED"
+              }
+            ],
+            "obligationLevel": "DECLARED_CONTRACT_CONFLICT"
+          },
+          {
+            "worldIds": [
+              "S6_REFUND_REJECTED",
+              "S6_BALANCE_DRIFT"
+            ],
+            "witnessRepairs": [
+              {
+                "repairId": "SUBMIT_REFUND_CURRENT",
+                "worldA": "VIOLATED",
+                "worldB": "VIOLATED"
+              },
+              {
+                "repairId": "FIX_REFERENCE_AND_SUBMIT",
+                "worldA": "SATISFIED",
+                "worldB": "VIOLATED"
+              },
+              {
+                "repairId": "RECONCILE_REFUND",
+                "worldA": "VIOLATED",
+                "worldB": "VIOLATED"
+              }
+            ],
+            "obligationLevel": "DECLARED_CONTRACT_CONFLICT"
+          },
+          {
+            "worldIds": [
+              "S6_REFUND_COMMITTED",
+              "S6_BALANCE_DRIFT"
+            ],
+            "witnessRepairs": [
+              {
+                "repairId": "SUBMIT_REFUND_CURRENT",
+                "worldA": "VIOLATED",
+                "worldB": "VIOLATED"
+              },
+              {
+                "repairId": "FIX_REFERENCE_AND_SUBMIT",
+                "worldA": "VIOLATED",
+                "worldB": "VIOLATED"
+              },
+              {
+                "repairId": "RECONCILE_REFUND",
+                "worldA": "SATISFIED",
+                "worldB": "VIOLATED"
+              }
+            ],
+            "obligationLevel": "DECLARED_CONTRACT_CONFLICT"
+          }
+        ],
+        "probeClosure": [
+          {
+            "probeId": "ledger",
+            "scope": "refund.read",
+            "risk": 0.2,
+            "observationAlphabet": [
+              "NO_REFUND",
+              "REFUND_COMMITTED",
+              "REFUND_REJECTED"
+            ],
+            "worldCoverage": [
+              "S6_BALANCE_DRIFT",
+              "S6_REFUND_COMMITTED",
+              "S6_REFUND_REJECTED"
+            ]
+          },
+          {
+            "probeId": "reference",
+            "scope": "payment.read",
+            "risk": 0.1,
+            "observationAlphabet": [
+              "REFERENCE_INVALID",
+              "REFERENCE_OK"
+            ],
+            "worldCoverage": [
+              "S6_BALANCE_DRIFT",
+              "S6_REFUND_COMMITTED",
+              "S6_REFUND_REJECTED"
+            ]
+          },
+          {
+            "probeId": "version",
+            "scope": "refund.read",
+            "risk": 0.1,
+            "observationAlphabet": [
+              "BALANCE_CURRENT",
+              "BALANCE_DRIFT"
+            ],
+            "worldCoverage": [
+              "S6_BALANCE_DRIFT",
+              "S6_REFUND_COMMITTED",
+              "S6_REFUND_REJECTED"
+            ]
+          }
+        ],
+        "unresolvedEdges": [],
+        "certificateStatus": "COVERED_UNDER_DECLARED_CATALOG"
+      },
+      "effectLedger": {
+        "effectClass": "REFUND",
+        "intendedCardinality": 1,
+        "actualCardinality": 1,
+        "irreversible": true,
+        "contractDisposition": "SATISFIED",
+        "violationReasons": []
+      },
+      "evaluation": {
+        "disposition": "SATISFIED",
+        "reasons": [],
+        "finalCardinality": 1
+      }
+    },
+    {
+      "scenarioId": "S6_REFUND",
+      "worldId": "S6_REFUND_REJECTED",
+      "publicCut": "REFUND_TIMEOUT_UNKNOWN",
+      "policy": "safePOMDP",
+      "observations": [
+        {
+          "probeId": "reference",
+          "observation": "REFERENCE_INVALID"
+        }
+      ],
+      "certificate": null,
+      "effectLedger": {
+        "effectClass": "REFUND",
+        "intendedCardinality": 1,
+        "actualCardinality": 1,
+        "irreversible": true,
+        "contractDisposition": "SATISFIED",
+        "violationReasons": []
+      },
+      "evaluation": {
+        "disposition": "SATISFIED",
+        "reasons": [],
+        "finalCardinality": 1
+      }
+    },
+    {
+      "scenarioId": "S6_REFUND",
+      "worldId": "S6_REFUND_REJECTED",
+      "publicCut": "REFUND_TIMEOUT_UNKNOWN",
+      "policy": "activeDiagnosis",
+      "observations": [
+        {
+          "probeId": "ledger",
+          "observation": "REFUND_REJECTED"
+        }
+      ],
+      "certificate": null,
+      "effectLedger": {
+        "effectClass": "REFUND",
+        "intendedCardinality": 1,
+        "actualCardinality": 1,
+        "irreversible": true,
+        "contractDisposition": "SATISFIED",
+        "violationReasons": []
+      },
+      "evaluation": {
+        "disposition": "SATISFIED",
+        "reasons": [],
+        "finalCardinality": 1
+      }
+    },
+    {
+      "scenarioId": "S6_REFUND",
+      "worldId": "S6_REFUND_REJECTED",
+      "publicCut": "REFUND_TIMEOUT_UNKNOWN",
+      "policy": "oneStepDiagnosis",
+      "observations": [
+        {
+          "probeId": "ledger",
+          "observation": "REFUND_REJECTED"
+        }
+      ],
+      "certificate": null,
+      "effectLedger": {
+        "effectClass": "REFUND",
+        "intendedCardinality": 1,
+        "actualCardinality": 1,
+        "irreversible": true,
+        "contractDisposition": "SATISFIED",
+        "violationReasons": []
+      },
+      "evaluation": {
+        "disposition": "SATISFIED",
+        "reasons": [],
+        "finalCardinality": 1
+      }
+    },
+    {
+      "scenarioId": "S6_REFUND",
+      "worldId": "S6_REFUND_COMMITTED",
+      "publicCut": "REFUND_TIMEOUT_UNKNOWN",
+      "policy": "cpir",
+      "observations": [
+        {
+          "probeId": "reference",
+          "observation": "REFERENCE_OK"
+        },
+        {
+          "probeId": "version",
+          "observation": "BALANCE_CURRENT"
+        }
+      ],
+      "certificate": {
+        "initialConflictEdges": [
+          {
+            "worldIds": [
+              "S6_REFUND_REJECTED",
+              "S6_REFUND_COMMITTED"
+            ],
+            "witnessRepairs": [
+              {
+                "repairId": "SUBMIT_REFUND_CURRENT",
+                "worldA": "VIOLATED",
+                "worldB": "VIOLATED"
+              },
+              {
+                "repairId": "FIX_REFERENCE_AND_SUBMIT",
+                "worldA": "SATISFIED",
+                "worldB": "VIOLATED"
+              },
+              {
+                "repairId": "RECONCILE_REFUND",
+                "worldA": "VIOLATED",
+                "worldB": "SATISFIED"
+              }
+            ],
+            "obligationLevel": "DECLARED_CONTRACT_CONFLICT"
+          },
+          {
+            "worldIds": [
+              "S6_REFUND_REJECTED",
+              "S6_BALANCE_DRIFT"
+            ],
+            "witnessRepairs": [
+              {
+                "repairId": "SUBMIT_REFUND_CURRENT",
+                "worldA": "VIOLATED",
+                "worldB": "VIOLATED"
+              },
+              {
+                "repairId": "FIX_REFERENCE_AND_SUBMIT",
+                "worldA": "SATISFIED",
+                "worldB": "VIOLATED"
+              },
+              {
+                "repairId": "RECONCILE_REFUND",
+                "worldA": "VIOLATED",
+                "worldB": "VIOLATED"
+              }
+            ],
+            "obligationLevel": "DECLARED_CONTRACT_CONFLICT"
+          },
+          {
+            "worldIds": [
+              "S6_REFUND_COMMITTED",
+              "S6_BALANCE_DRIFT"
+            ],
+            "witnessRepairs": [
+              {
+                "repairId": "SUBMIT_REFUND_CURRENT",
+                "worldA": "VIOLATED",
+                "worldB": "VIOLATED"
+              },
+              {
+                "repairId": "FIX_REFERENCE_AND_SUBMIT",
+                "worldA": "VIOLATED",
+                "worldB": "VIOLATED"
+              },
+              {
+                "repairId": "RECONCILE_REFUND",
+                "worldA": "SATISFIED",
+                "worldB": "VIOLATED"
+              }
+            ],
+            "obligationLevel": "DECLARED_CONTRACT_CONFLICT"
+          }
+        ],
+        "probeClosure": [
+          {
+            "probeId": "ledger",
+            "scope": "refund.read",
+            "risk": 0.2,
+            "observationAlphabet": [
+              "NO_REFUND",
+              "REFUND_COMMITTED",
+              "REFUND_REJECTED"
+            ],
+            "worldCoverage": [
+              "S6_BALANCE_DRIFT",
+              "S6_REFUND_COMMITTED",
+              "S6_REFUND_REJECTED"
+            ]
+          },
+          {
+            "probeId": "reference",
+            "scope": "payment.read",
+            "risk": 0.1,
+            "observationAlphabet": [
+              "REFERENCE_INVALID",
+              "REFERENCE_OK"
+            ],
+            "worldCoverage": [
+              "S6_BALANCE_DRIFT",
+              "S6_REFUND_COMMITTED",
+              "S6_REFUND_REJECTED"
+            ]
+          },
+          {
+            "probeId": "version",
+            "scope": "refund.read",
+            "risk": 0.1,
+            "observationAlphabet": [
+              "BALANCE_CURRENT",
+              "BALANCE_DRIFT"
+            ],
+            "worldCoverage": [
+              "S6_BALANCE_DRIFT",
+              "S6_REFUND_COMMITTED",
+              "S6_REFUND_REJECTED"
+            ]
+          }
+        ],
+        "unresolvedEdges": [],
+        "certificateStatus": "COVERED_UNDER_DECLARED_CATALOG"
+      },
+      "effectLedger": {
+        "effectClass": "REFUND",
+        "intendedCardinality": 1,
+        "actualCardinality": 1,
+        "irreversible": false,
+        "contractDisposition": "SATISFIED",
+        "violationReasons": []
+      },
+      "evaluation": {
+        "disposition": "SATISFIED",
+        "reasons": [],
+        "finalCardinality": 1
+      }
+    },
+    {
+      "scenarioId": "S6_REFUND",
+      "worldId": "S6_REFUND_COMMITTED",
+      "publicCut": "REFUND_TIMEOUT_UNKNOWN",
+      "policy": "safePOMDP",
+      "observations": [
+        {
+          "probeId": "reference",
+          "observation": "REFERENCE_OK"
+        },
+        {
+          "probeId": "ledger",
+          "observation": "REFUND_COMMITTED"
+        }
+      ],
+      "certificate": null,
+      "effectLedger": {
+        "effectClass": "REFUND",
+        "intendedCardinality": 1,
+        "actualCardinality": 1,
+        "irreversible": false,
+        "contractDisposition": "SATISFIED",
+        "violationReasons": []
+      },
+      "evaluation": {
+        "disposition": "SATISFIED",
+        "reasons": [],
+        "finalCardinality": 1
+      }
+    },
+    {
+      "scenarioId": "S6_REFUND",
+      "worldId": "S6_REFUND_COMMITTED",
+      "publicCut": "REFUND_TIMEOUT_UNKNOWN",
+      "policy": "activeDiagnosis",
+      "observations": [
+        {
+          "probeId": "ledger",
+          "observation": "REFUND_COMMITTED"
+        }
+      ],
+      "certificate": null,
+      "effectLedger": {
+        "effectClass": "REFUND",
+        "intendedCardinality": 1,
+        "actualCardinality": 1,
+        "irreversible": false,
+        "contractDisposition": "SATISFIED",
+        "violationReasons": []
+      },
+      "evaluation": {
+        "disposition": "SATISFIED",
+        "reasons": [],
+        "finalCardinality": 1
+      }
+    },
+    {
+      "scenarioId": "S6_REFUND",
+      "worldId": "S6_REFUND_COMMITTED",
+      "publicCut": "REFUND_TIMEOUT_UNKNOWN",
+      "policy": "oneStepDiagnosis",
+      "observations": [
+        {
+          "probeId": "ledger",
+          "observation": "REFUND_COMMITTED"
+        }
+      ],
+      "certificate": null,
+      "effectLedger": {
+        "effectClass": "REFUND",
+        "intendedCardinality": 1,
+        "actualCardinality": 1,
+        "irreversible": false,
+        "contractDisposition": "SATISFIED",
+        "violationReasons": []
+      },
+      "evaluation": {
+        "disposition": "SATISFIED",
+        "reasons": [],
+        "finalCardinality": 1
+      }
+    },
+    {
+      "scenarioId": "S6_REFUND",
+      "worldId": "S6_BALANCE_DRIFT",
+      "publicCut": "REFUND_TIMEOUT_UNKNOWN",
+      "policy": "cpir",
+      "observations": [
+        {
+          "probeId": "reference",
+          "observation": "REFERENCE_OK"
+        },
+        {
+          "probeId": "version",
+          "observation": "BALANCE_DRIFT"
+        }
+      ],
+      "certificate": {
+        "initialConflictEdges": [
+          {
+            "worldIds": [
+              "S6_REFUND_REJECTED",
+              "S6_REFUND_COMMITTED"
+            ],
+            "witnessRepairs": [
+              {
+                "repairId": "SUBMIT_REFUND_CURRENT",
+                "worldA": "VIOLATED",
+                "worldB": "VIOLATED"
+              },
+              {
+                "repairId": "FIX_REFERENCE_AND_SUBMIT",
+                "worldA": "SATISFIED",
+                "worldB": "VIOLATED"
+              },
+              {
+                "repairId": "RECONCILE_REFUND",
+                "worldA": "VIOLATED",
+                "worldB": "SATISFIED"
+              }
+            ],
+            "obligationLevel": "DECLARED_CONTRACT_CONFLICT"
+          },
+          {
+            "worldIds": [
+              "S6_REFUND_REJECTED",
+              "S6_BALANCE_DRIFT"
+            ],
+            "witnessRepairs": [
+              {
+                "repairId": "SUBMIT_REFUND_CURRENT",
+                "worldA": "VIOLATED",
+                "worldB": "VIOLATED"
+              },
+              {
+                "repairId": "FIX_REFERENCE_AND_SUBMIT",
+                "worldA": "SATISFIED",
+                "worldB": "VIOLATED"
+              },
+              {
+                "repairId": "RECONCILE_REFUND",
+                "worldA": "VIOLATED",
+                "worldB": "VIOLATED"
+              }
+            ],
+            "obligationLevel": "DECLARED_CONTRACT_CONFLICT"
+          },
+          {
+            "worldIds": [
+              "S6_REFUND_COMMITTED",
+              "S6_BALANCE_DRIFT"
+            ],
+            "witnessRepairs": [
+              {
+                "repairId": "SUBMIT_REFUND_CURRENT",
+                "worldA": "VIOLATED",
+                "worldB": "VIOLATED"
+              },
+              {
+                "repairId": "FIX_REFERENCE_AND_SUBMIT",
+                "worldA": "VIOLATED",
+                "worldB": "VIOLATED"
+              },
+              {
+                "repairId": "RECONCILE_REFUND",
+                "worldA": "SATISFIED",
+                "worldB": "VIOLATED"
+              }
+            ],
+            "obligationLevel": "DECLARED_CONTRACT_CONFLICT"
+          }
+        ],
+        "probeClosure": [
+          {
+            "probeId": "ledger",
+            "scope": "refund.read",
+            "risk": 0.2,
+            "observationAlphabet": [
+              "NO_REFUND",
+              "REFUND_COMMITTED",
+              "REFUND_REJECTED"
+            ],
+            "worldCoverage": [
+              "S6_BALANCE_DRIFT",
+              "S6_REFUND_COMMITTED",
+              "S6_REFUND_REJECTED"
+            ]
+          },
+          {
+            "probeId": "reference",
+            "scope": "payment.read",
+            "risk": 0.1,
+            "observationAlphabet": [
+              "REFERENCE_INVALID",
+              "REFERENCE_OK"
+            ],
+            "worldCoverage": [
+              "S6_BALANCE_DRIFT",
+              "S6_REFUND_COMMITTED",
+              "S6_REFUND_REJECTED"
+            ]
+          },
+          {
+            "probeId": "version",
+            "scope": "refund.read",
+            "risk": 0.1,
+            "observationAlphabet": [
+              "BALANCE_CURRENT",
+              "BALANCE_DRIFT"
+            ],
+            "worldCoverage": [
+              "S6_BALANCE_DRIFT",
+              "S6_REFUND_COMMITTED",
+              "S6_REFUND_REJECTED"
+            ]
+          }
+        ],
+        "unresolvedEdges": [],
+        "certificateStatus": "COVERED_UNDER_DECLARED_CATALOG"
+      },
+      "effectLedger": {
+        "effectClass": "REFUND",
+        "intendedCardinality": 1,
+        "actualCardinality": 0,
+        "irreversible": false,
+        "contractDisposition": "UNKNOWN",
+        "violationReasons": [
+          "ABSTAIN"
+        ]
+      },
+      "evaluation": {
+        "disposition": "UNKNOWN",
+        "reasons": [
+          "ABSTAIN"
+        ],
+        "finalCardinality": 0
+      }
+    },
+    {
+      "scenarioId": "S6_REFUND",
+      "worldId": "S6_BALANCE_DRIFT",
+      "publicCut": "REFUND_TIMEOUT_UNKNOWN",
+      "policy": "safePOMDP",
+      "observations": [
+        {
+          "probeId": "reference",
+          "observation": "REFERENCE_OK"
+        },
+        {
+          "probeId": "ledger",
+          "observation": "NO_REFUND"
+        }
+      ],
+      "certificate": null,
+      "effectLedger": {
+        "effectClass": "REFUND",
+        "intendedCardinality": 1,
+        "actualCardinality": 0,
+        "irreversible": false,
+        "contractDisposition": "UNKNOWN",
+        "violationReasons": [
+          "ABSTAIN"
+        ]
+      },
+      "evaluation": {
+        "disposition": "UNKNOWN",
+        "reasons": [
+          "ABSTAIN"
+        ],
+        "finalCardinality": 0
+      }
+    },
+    {
+      "scenarioId": "S6_REFUND",
+      "worldId": "S6_BALANCE_DRIFT",
+      "publicCut": "REFUND_TIMEOUT_UNKNOWN",
+      "policy": "activeDiagnosis",
+      "observations": [
+        {
+          "probeId": "ledger",
+          "observation": "NO_REFUND"
+        }
+      ],
+      "certificate": null,
+      "effectLedger": {
+        "effectClass": "REFUND",
+        "intendedCardinality": 1,
+        "actualCardinality": 0,
+        "irreversible": false,
+        "contractDisposition": "UNKNOWN",
+        "violationReasons": [
+          "ABSTAIN"
+        ]
+      },
+      "evaluation": {
+        "disposition": "UNKNOWN",
+        "reasons": [
+          "ABSTAIN"
+        ],
+        "finalCardinality": 0
+      }
+    },
+    {
+      "scenarioId": "S6_REFUND",
+      "worldId": "S6_BALANCE_DRIFT",
+      "publicCut": "REFUND_TIMEOUT_UNKNOWN",
+      "policy": "oneStepDiagnosis",
+      "observations": [
+        {
+          "probeId": "ledger",
+          "observation": "NO_REFUND"
+        }
+      ],
+      "certificate": null,
+      "effectLedger": {
+        "effectClass": "REFUND",
+        "intendedCardinality": 1,
+        "actualCardinality": 0,
+        "irreversible": false,
+        "contractDisposition": "UNKNOWN",
+        "violationReasons": [
+          "ABSTAIN"
+        ]
+      },
+      "evaluation": {
+        "disposition": "UNKNOWN",
+        "reasons": [
+          "ABSTAIN"
+        ],
+        "finalCardinality": 0
+      }
+    }
+  ],
+  "unknownReasons": [
+    "NO_REAL_BROWSER_OR_OAUTH_RUNTIME",
+    "NO_AUTHENTICATED_SINK_RECEIPTS",
+    "DECLARED_WORLD_CATALOG_ONLY",
+    "POLICIES_STILL_FINITE_MODEL_BASED"
+  ]
+}

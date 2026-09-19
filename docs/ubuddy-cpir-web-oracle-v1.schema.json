@@ -1,0 +1,22 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://janus.local/research/cpir-web-oracle-v1.schema.json",
+  "title": "CPIR-Web candidate-independent finite oracle manifest v1",
+  "type": "object",
+  "required": ["schemaVersion", "manifestId", "contractRegistryHash", "observationProjectorHash", "transitionVerifierHash", "trustRootHashes", "observationProjector", "budget", "worlds", "actions", "probes", "faultSchedules"],
+  "properties": {
+    "schemaVersion": {"const": "cpir-web/oracle/v1"},
+    "manifestId": {"type": "string", "minLength": 1},
+    "contractRegistryHash": {"type": "string", "minLength": 1},
+    "observationProjectorHash": {"type": "string", "minLength": 1},
+    "transitionVerifierHash": {"type": "string", "minLength": 1},
+    "trustRootHashes": {"type": "array", "minItems": 1, "uniqueItems": true, "items": {"type": "string", "minLength": 1}},
+    "observationProjector": {"type": "object", "required": ["fields"], "properties": {"fields": {"type": "array", "uniqueItems": true, "items": {"type": "string"}}}},
+    "budget": {"type": "object", "required": ["maxCost"], "properties": {"maxCost": {"type": "number", "minimum": 0}}},
+    "worlds": {"type": "array", "items": {"type": "object", "required": ["id"], "properties": {"id": {"type": "string", "minLength": 1}}}},
+    "actions": {"type": "array", "items": {"type": "object", "required": ["id", "cost", "effectClass", "transition"], "properties": {"id": {"type": "string", "minLength": 1}, "cost": {"type": "number", "minimum": 0}, "effectClass": {"type": "string"}, "transition": {"type": "object", "required": ["guards"], "properties": {"guards": {"type": "array"}, "set": {"type": "array"}, "increments": {"type": "array"}}}}}},
+    "probes": {"type": "array", "items": {"type": "object", "required": ["id", "cost", "effectClass", "projection"], "properties": {"id": {"type": "string", "minLength": 1}, "cost": {"type": "number", "minimum": 0}, "effectClass": {"const": "READ_ONLY"}, "projection": {"type": "array"}}}},
+    "faultSchedules": {"type": "array", "items": {"type": "object", "required": ["id", "events"], "properties": {"id": {"type": "string", "minLength": 1}, "events": {"type": "array"}}}}
+  },
+  "additionalProperties": false
+}

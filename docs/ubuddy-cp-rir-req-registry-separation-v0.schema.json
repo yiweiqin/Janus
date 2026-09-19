@@ -1,0 +1,19 @@
+{
+  "$schema":"https://json-schema.org/draft/2020-12/schema",
+  "$id":"https://ubuddy.invalid/schemas/cp-rir-req-registry-separation-v0.json",
+  "type":"object","additionalProperties":false,
+  "required":["$schema","schemaVersion","status","cases","implementationStatus"],
+  "properties":{
+    "$schema":{"const":"ubuddy-cp-rir-req-registry-separation-v0.schema.json"},
+    "schemaVersion":{"const":"cp-rir/req-registry-separation/v0"},
+    "status":{"const":"illustrative_v0_draft"},
+    "cases":{"type":"array","minItems":2,"items":{"$ref":"#/$defs/case"}},
+    "implementationStatus":{"const":"planned/unverified"}
+  },
+  "$defs":{
+    "obligation":{"type":"object","additionalProperties":false,"required":["id","kind","required","multiplicity","trigger","discharge","deadline"],"properties":{"id":{"type":"string","minLength":1},"kind":{"enum":["HARD","SOFT","EXCEPTION","MANUAL"]},"required":{"type":"boolean"},"multiplicity":{"type":"integer","minimum":1},"trigger":{"type":"string","minLength":1},"discharge":{"type":"string","minLength":1},"deadline":{"type":"string","minLength":1}}},
+    "registry":{"type":"object","additionalProperties":false,"required":["registryId","registryDigest","independentFromCandidate","lockedBeforeCandidate","obligations"],"properties":{"registryId":{"type":"string","minLength":1},"registryDigest":{"type":"string","pattern":"^[a-f0-9]{64}$"},"independentFromCandidate":{"const":true},"lockedBeforeCandidate":{"const":true},"obligations":{"type":"array","minItems":1,"items":{"$ref":"#/$defs/obligation"}}}},
+    "contract":{"type":"object","additionalProperties":false,"required":["scope","inputDomain","obligationIds","footprint","projection","exceptionPolicy","deadline","attemptLimit","freshness","idempotence","authorization","evaluator","costModel"],"properties":{"scope":{"type":"string"},"inputDomain":{"type":"array","items":{"type":"string"}},"obligationIds":{"type":"array","items":{"type":"string"},"uniqueItems":true},"footprint":{"type":"string"},"projection":{"type":"string"},"exceptionPolicy":{"type":"string"},"deadline":{"type":"string"},"attemptLimit":{"type":"integer","minimum":0},"freshness":{"type":"string"},"idempotence":{"type":"string"},"authorization":{"type":"string"},"evaluator":{"type":"string"},"costModel":{"type":"string"}}},
+    "case":{"type":"object","additionalProperties":false,"required":["caseId","registry","contractBefore","contractAfter","implementationStatus"],"properties":{"caseId":{"type":"string","minLength":1},"registry":{"$ref":"#/$defs/registry"},"contractBefore":{"$ref":"#/$defs/contract"},"contractAfter":{"$ref":"#/$defs/contract"},"implementationStatus":{"const":"planned/unverified"}}}
+  }
+}

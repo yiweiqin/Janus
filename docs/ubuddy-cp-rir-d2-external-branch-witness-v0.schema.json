@@ -1,0 +1,18 @@
+{
+  "$schema":"https://json-schema.org/draft/2020-12/schema",
+  "$id":"https://ubuddy.invalid/schemas/cp-rir-d2-external-branch-witness-v0.json",
+  "title":"CP-RIR D2 recovery witness without a self-declared branch universe",
+  "type":"object",
+  "additionalProperties":false,
+  "required":["$schema","schemaVersion","status","purpose","sharedBinding","observerContract","cases","implementationStatus"],
+  "properties":{
+    "$schema":{"const":"ubuddy-cp-rir-d2-external-branch-witness-v0.schema.json"},
+    "schemaVersion":{"const":"cp-rir/d2-external-branch-witness/v0"},
+    "status":{"const":"illustrative_v0_draft"},
+    "purpose":{"const":"recovery_witness_without_self_declared_branch_universe"},
+    "sharedBinding":{"type":"object","additionalProperties":false,"required":["candidateDigest","worldDigest","contractDigest","faultDigest","recoveryDigest"],"properties":{"candidateDigest":{"$ref":"https://ubuddy.invalid/schemas/cp-rir-d2-recovery-branch-closure-v2.json#/$defs/digest"},"worldDigest":{"$ref":"https://ubuddy.invalid/schemas/cp-rir-d2-recovery-branch-closure-v2.json#/$defs/digest"},"contractDigest":{"$ref":"https://ubuddy.invalid/schemas/cp-rir-d2-recovery-branch-closure-v2.json#/$defs/digest"},"faultDigest":{"$ref":"https://ubuddy.invalid/schemas/cp-rir-d2-recovery-branch-closure-v2.json#/$defs/digest"},"recoveryDigest":{"$ref":"https://ubuddy.invalid/schemas/cp-rir-d2-recovery-branch-closure-v2.json#/$defs/digest"}}},
+    "observerContract":{"type":"object","additionalProperties":false,"required":["solverVisible","auditOnly","processNamespaceIsolation"],"properties":{"solverVisible":{"const":["freshAlias","coarseDispositionBucket","fixedLengthCommitment"]},"auditOnly":{"const":["canonicalFact","sinkAuthority","receiptClaim","branchLabels"]},"processNamespaceIsolation":{"const":"NOT_IMPLEMENTED"}}},
+    "cases":{"type":"array","minItems":1,"items":{"allOf":[{"$ref":"https://ubuddy.invalid/schemas/cp-rir-d2-recovery-branch-closure-v2.json#/$defs/case"},{"type":"object","properties":{"branches":{"type":"array","minItems":1}}}]}},
+    "implementationStatus":{"const":"prototype/unverified"}
+  }
+}

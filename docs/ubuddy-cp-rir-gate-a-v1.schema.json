@@ -1,0 +1,222 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://ubuddy.invalid/schemas/cp-rir-gate-a-v1.manifest.json",
+  "title": "CP-RIR Gate A v1 manifest (normative draft)",
+  "description": "Normative schema draft for the finite closed-world central_full correctness artifact. It is not an implementation claim.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["$schema", "$id", "schemaVersion", "schemaRef", "status", "purpose", "accessRegime", "artifactBoundary", "instance", "completion", "universe", "model", "contract", "policy", "actions", "verdictPolicy", "lockedGoldCases", "corpusPartition", "metamorphicGates", "hardFailurePolicy", "reproducibility", "runtimeGoldReference"],
+  "properties": {
+    "$schema": {"const": "https://json-schema.org/draft/2020-12/schema"},
+    "$id": {"const": "https://ubuddy.invalid/schemas/cp-rir-gate-a-v1.manifest.json"},
+    "schemaVersion": {"const": "cp-rir-gate-a/v1"},
+    "schemaRef": {"const": "ubuddy-cp-rir-gate-a-v1.schema.json"},
+    "status": {"enum": ["illustrative_v0_draft", "normative_draft", "executable_locked"]},
+    "purpose": {"const": "research_artifact_specification_only"},
+    "accessRegime": {"const": "central_full"},
+    "artifactBoundary": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["inputArtifactRef", "lockedExpectedCorpusRef", "inputHash", "expectedCorpusHash", "a1A2A3MayRead", "a1A2A3MustNotRead"],
+      "properties": {
+        "inputArtifactRef": {"type": "string"},
+        "lockedExpectedCorpusRef": {"type": "string"},
+        "inputHash": {"type": "string"},
+        "expectedCorpusHash": {"type": "string"},
+        "a1A2A3MayRead": {"type": "array", "items": {"type": "string"}},
+        "a1A2A3MustNotRead": {"type": "array", "items": {"type": "string"}}
+      }
+    },
+    "instance": {"$ref": "#/$defs/instance"},
+    "completion": {"$ref": "#/$defs/completion"},
+    "universe": {"type": "object", "required": ["owners", "resources", "channels", "sinks", "crossSinkInvariantHash"], "additionalProperties": true},
+    "model": {"type": "object", "required": ["worldHashes", "transitionHash", "authExecHash", "effectHash", "softKernelHash", "faultAutomatonHash", "faultBound", "nominalKernelIsFaultIndependent"], "additionalProperties": true},
+    "contract": {"$ref": "#/$defs/contract"},
+    "policy": {"$ref": "#/$defs/policy"},
+    "actions": {"type": "array", "minItems": 1, "items": {"$ref": "#/$defs/action"}},
+    "verdictPolicy": {"$ref": "#/$defs/verdictPolicy"},
+    "lockedGoldCases": {"type": "array", "minItems": 6, "items": {"$ref": "#/$defs/goldCase"}},
+    "corpusPartition": {"type": "object", "additionalProperties": false, "required": ["gateA", "gateB"], "properties": {"gateA": {"type": "array", "items": {"type": "string"}}, "gateB": {"type": "array", "items": {"type": "string"}}}},
+    "metamorphicGates": {"type": "array", "minItems": 1, "items": {"type": "string"}},
+    "hardFailurePolicy": {"type": "object", "required": ["unsafeFalseAcceptTarget", "rejectAllOrAlwaysUnknown", "candidateWorldFiltering", "wrongDeltaArithmetic", "unknownOrTimeoutAsInfeasibilityWitness", "missingIndependentOracle", "unreproducibleManifestHash"], "additionalProperties": true},
+    "reproducibility": {"$ref": "#/$defs/reproducibility"},
+    "runtimeGoldReference": {"type": "string", "minLength": 1}
+  },
+  "$defs": {
+    "rational": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["num", "den"],
+      "properties": {
+        "num": {"type": "integer"},
+        "den": {"type": "integer", "exclusiveMinimum": 0}
+      }
+    },
+    "instance": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": ["id", "accessRegime", "manifestHash", "comp0Digest", "comp0Version", "cutHash", "contractHash", "dslHash", "evaluatorHash", "gammaHash", "evaluatorSemanticsVersion", "horizon", "eta", "kappa", "budget", "policyClassHash"],
+      "properties": {
+        "id": {"type": "string", "minLength": 1},
+        "accessRegime": {"const": "central_full"},
+        "manifestHash": {"type": "string"},
+        "comp0Digest": {"type": "string"},
+        "comp0Version": {"type": "string"},
+        "cutHash": {"type": "string"},
+        "contractHash": {"type": "string"},
+        "dslHash": {"type": "string"},
+        "evaluatorHash": {"type": "string"},
+        "gammaHash": {"type": ["null", "string"]},
+        "evaluatorSemanticsVersion": {"type": "string"},
+        "horizon": {"type": "integer", "minimum": 0},
+        "eta": {"$ref": "#/$defs/rational"},
+        "kappa": {"$ref": "#/$defs/rational"},
+        "budget": {"$ref": "#/$defs/rational"},
+        "policyClassHash": {"type": "string"}
+      }
+    },
+    "completion": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": ["mode", "representationHash", "cardinality", "nonEmptyProof", "coverageRoot", "reachabilityClosed", "actualMembershipMode"],
+      "properties": {
+        "mode": {"const": "closed_world_exact"},
+        "representationHash": {"type": "string"},
+        "cardinality": {"type": "integer", "minimum": 0},
+        "nonEmptyProof": {"type": ["null", "string"]},
+        "coverageRoot": {"type": "string"},
+        "reachabilityClosed": {"type": "boolean"},
+        "actualMembershipMode": {"const": "not_claimed"}
+      }
+    },
+    "contract": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": ["hardInvariantHash", "inputDomainHash", "assumptionScopeHash", "obligationSetHash", "registeredObligationHash", "evaluatorSemanticsVersion", "refinementDirection", "refinementRuleHash"],
+      "properties": {
+        "hardInvariantHash": {"type": "string"},
+        "inputDomainHash": {"type": "string"},
+        "assumptionScopeHash": {"type": "string"},
+        "obligationSetHash": {"type": "string"},
+        "registeredObligationHash": {"type": "string"},
+        "evaluatorSemanticsVersion": {"type": "string"},
+        "refinementDirection": {"const": "implementation_strengthens_specification"},
+        "refinementRuleHash": {"type": "string"}
+      }
+    },
+    "policy": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": ["policyClassHash", "candidateCanonicalizerHash", "baselinePolicyHash", "tieBreak", "sameFiltrationForPolicyAndBaseline"],
+      "properties": {
+        "policyClassHash": {"type": "string"},
+        "candidateCanonicalizerHash": {"type": "string"},
+        "baselinePolicyHash": {"type": "string"},
+        "tieBreak": {"type": "array", "minItems": 1, "items": {"type": "string"}},
+        "sameFiltrationForPolicyAndBaseline": {"const": true}
+      }
+    },
+    "action": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": ["actionId", "ownerId", "type", "capabilityHash", "footprintHash", "effectClass", "cost"],
+      "properties": {
+        "actionId": {"type": "string"},
+        "ownerId": {"type": "string"},
+        "type": {"type": "string"},
+        "capabilityHash": {"type": "string"},
+        "footprintHash": {"type": "string"},
+        "effectClass": {"type": "string"},
+        "cost": {"$ref": "#/$defs/rational"}
+      }
+    },
+    "verdictPolicy": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": ["input", "candidate", "instance", "optimality", "runtime", "safety", "publicDisposition", "reasonCodes", "statusEncoding"],
+      "properties": {
+        "input": {"contains": {"const": "VALID"}, "type": "array", "items": {"type": "string"}},
+        "candidate": {"contains": {"const": "NOT_RUN"}, "type": "array", "items": {"type": "string"}},
+        "instance": {"type": "array", "items": {"type": "string"}},
+        "optimality": {"type": "array", "items": {"type": "string"}},
+        "runtime": {"type": "array", "items": {"type": "string"}},
+        "safety": {"contains": {"const": "NOT_EVALUATED"}, "type": "array", "items": {"type": "string"}},
+        "publicDisposition": {"type": "array", "items": {"type": "string"}},
+        "reasonCodes": {"type": "array", "items": {"type": "string", "pattern": "^[A-Z][A-Z0-9_]+$"}},
+        "statusEncoding": {"const": "{status,reasonCode,witnessRef}"}
+      }
+    },
+    "goldCase": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": ["id", "kind", "scope", "expected"],
+      "properties": {
+        "id": {"type": "string"},
+        "kind": {"type": "string"},
+        "scope": {"enum": ["gate_a", "gate_b"]},
+        "expected": {"$ref": "#/$defs/expectedVerdict"}
+      }
+    },
+    "statusObject": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["status", "reasonCode", "witnessRef"],
+      "properties": {
+        "status": {"type": "string", "minLength": 1},
+        "reasonCode": {
+          "oneOf": [
+            {"type": "null"},
+            {"$ref": "#/$defs/reasonCode"},
+            {"type": "array", "minItems": 1, "items": {"$ref": "#/$defs/reasonCode"}, "uniqueItems": true}
+          ]
+        },
+        "witnessRef": {"type": ["null", "string"]}
+      }
+    },
+    "expectedVerdict": {
+      "type": "object",
+      "additionalProperties": true,
+      "properties": {
+        "input": {"$ref": "#/$defs/statusObject"},
+        "artifactValidity": {"$ref": "#/$defs/statusObject"},
+        "candidate": {"$ref": "#/$defs/statusObject"},
+        "instance": {"$ref": "#/$defs/statusObject"},
+        "optimality": {"$ref": "#/$defs/statusObject"},
+        "runtime": {"$ref": "#/$defs/statusObject"},
+        "safety": {"$ref": "#/$defs/statusObject"},
+        "publicDisposition": {"$ref": "#/$defs/statusObject"},
+        "effect": {"$ref": "#/$defs/statusObject"}
+      }
+    },
+    "reasonCode": {
+      "type": "string",
+      "enum": [
+        "EMPTY_COMPLETION", "CERT_INCONSISTENT", "CERT_INVALID_GHOST_WORLD",
+        "CANDIDATE_WORLD_FILTERING", "DELTA", "AUTHORIZATION_NONPOSITIVITY",
+        "VALUE_CERT_UNVERIFIABLE", "STALE_CERT", "CERT_EQUIVOCATION",
+        "CROSS_SINK_INCONSISTENCY", "CROSS_SINK_PROOF_MISSING", "HIDDEN_EFFECT",
+        "BYPASS_DETECTED", "TOCTOU", "OLD_OWNER_WRITE", "OLD_GENERATION_REDEEM",
+        "TCB_UNTRUSTED", "RECEIPT_LOSS_AFTER_COMMIT", "RECEIPT_ATOMICITY_UNVERIFIED",
+        "TERMINAL_CLOSURE", "UNRESOLVED_LOWER_COST_CANDIDATE", "ALL_CANDIDATES_REJECTED",
+        "CERT_MISSING"
+      ]
+    },
+    "reproducibility": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": ["command", "canonicalization", "manifestHash", "lockedCorpusHash", "expectedOutputHash", "hashPurpose", "hidingClaim", "solverVersion", "oracleVersion", "verifierVersion"],
+      "properties": {
+        "command": {"type": "string"},
+        "canonicalization": {"type": "string"},
+        "manifestHash": {"type": "string"},
+        "lockedCorpusHash": {"type": "string"},
+        "expectedOutputHash": {"type": ["null", "string"]},
+        "hashPurpose": {"const": "integrity_only"},
+        "hidingClaim": {"const": "none"},
+        "solverVersion": {"type": "string"},
+        "oracleVersion": {"type": "string"},
+        "verifierVersion": {"type": "string"}
+      }
+    }
+  }
+}

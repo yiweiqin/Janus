@@ -1,0 +1,275 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://ubuddy.invalid/schemas/cp-rir-gate-a-v1.manifest.json",
+  "schemaVersion": "cp-rir-gate-a/v1",
+  "schemaRef": "ubuddy-cp-rir-gate-a-v1.schema.json",
+  "status": "illustrative_v0_draft",
+  "purpose": "research_artifact_specification_only",
+  "accessRegime": "central_full",
+  "artifactBoundary": {
+    "inputArtifactRef": "ubuddy-cp-rir-gate-a-v1.instance-manifest.example.json",
+    "lockedExpectedCorpusRef": "ubuddy-cp-rir-gate-a-v1.locked-expected-corpus.example.json",
+    "inputHash": "TO_BE_COMPUTED",
+    "expectedCorpusHash": "TO_BE_COMPUTED",
+    "a1A2A3MayRead": ["inputArtifactRef"],
+    "a1A2A3MustNotRead": ["lockedExpectedCorpusRef", "expected", "worldValues"]
+  },
+  "instance": {
+    "id": "gate-a-manual-gold-v0",
+    "accessRegime": "central_full",
+    "manifestHash": "TO_BE_COMPUTED_FROM_CANONICAL_BYTES",
+    "comp0Digest": "TO_BE_COMPUTED_FROM_CANONICAL_BYTES",
+    "comp0Version": "comp0-v1",
+    "cutHash": "CUT-GOLD-V1",
+    "contractHash": "CONTRACT-GOLD-V1",
+    "dslHash": "DSL-GOLD-V1",
+    "evaluatorHash": "EVAL-GOLD-V1",
+    "gammaHash": null,
+    "evaluatorSemanticsVersion": "finite-nominal-v1",
+    "horizon": 2,
+    "eta": { "num": 4, "den": 5 },
+    "kappa": { "num": 1, "den": 10 },
+    "budget": { "num": 10, "den": 1 },
+    "policyClassHash": "PI-GOLD-V1"
+  },
+  "completion": {
+    "mode": "closed_world_exact",
+    "representationHash": "COMP-REP-GOLD-V1",
+    "cardinality": 2,
+    "nonEmptyProof": "NONEMPTY-GOLD-V1",
+    "coverageRoot": "COVERAGE-GOLD-V1",
+    "reachabilityClosed": true,
+    "actualMembershipMode": "not_claimed"
+  },
+  "universe": {
+    "owners": [
+      { "id": "owner-a", "epoch": 1, "snapshotId": "snap-a-1" },
+      { "id": "owner-b", "epoch": 1, "snapshotId": "snap-b-1" }
+    ],
+    "resources": [
+      { "id": "resource-r", "version": 1, "sinkId": "sink-r" }
+    ],
+    "channels": [
+      { "id": "channel-ab", "capacity": 1 }
+    ],
+    "sinks": [
+      { "id": "sink-r", "mediated": true, "atomicEffectDedupReceipt": true },
+      { "id": "sink-ledger", "mediated": true, "atomicEffectDedupReceipt": true }
+    ],
+    "crossSinkInvariantHash": "CROSS-SINK-INVARIANT-GOLD-V1"
+  },
+  "model": {
+    "payloadStatus": "unavailable_in_exemplar",
+    "externalReferenceFiles": [],
+    "worldHashes": ["WORLD-m1-GOLD-V1", "WORLD-m2-GOLD-V1"],
+    "transitionHash": "DELTA-GOLD-V1",
+    "authExecHash": "AUTH-EXEC-GOLD-V1",
+    "effectHash": "EFFECT-GOLD-V1",
+    "softKernelHash": "KSOFT-GOLD-V1",
+    "faultAutomatonHash": "FAULT-GOLD-V1",
+    "faultBound": 1,
+    "nominalKernelIsFaultIndependent": true
+  },
+  "contract": {
+    "hardInvariantHash": "INV-GOLD-V1",
+    "inputDomainHash": "INPUT-DOMAIN-GOLD-V1",
+    "assumptionScopeHash": "ASSUMPTION-SCOPE-GOLD-V1",
+    "obligationSetHash": "OBLIGATION-SET-GOLD-V1",
+    "registeredObligationHash": "REGISTERED-OBLIGATION-GOLD-V1",
+    "evaluatorSemanticsVersion": "finite-nominal-v1",
+    "footprintHash": "FOOTPRINT-GOLD-V1",
+    "projectionHash": "PROJECTION-GOLD-V1",
+    "exceptionHash": "EXCEPTION-GOLD-V1",
+    "deadlineHash": "DEADLINE-GOLD-V1",
+    "attemptHash": "ATTEMPT-GOLD-V1",
+    "freshnessHash": "FRESHNESS-GOLD-V1",
+    "idempotenceHash": "IDEMPOTENCE-GOLD-V1",
+    "authorizationHash": "AUTHORIZATION-GOLD-V1",
+    "refinementDirection": "implementation_strengthens_specification",
+    "refinementRuleHash": "REFINEMENT-GOLD-V1"
+  },
+  "policy": {
+    "grammarPayloadStatus": "unavailable_in_exemplar",
+    "externalReferenceFiles": [],
+    "policyClassHash": "PI-GOLD-V1",
+    "candidateCanonicalizerHash": "CANONICALIZER-GOLD-V1",
+    "baselinePolicyHash": "PI0-NO-OP-GOLD-V1",
+    "tieBreak": ["cost", "branch-depth", "probe-risk", "canonical-id"],
+    "sameFiltrationForPolicyAndBaseline": true
+  },
+  "actions": [
+    {
+      "actionId": "repair-a",
+      "ownerId": "owner-a",
+      "type": "typed-repair",
+      "capabilityHash": "CAP-A-GOLD-V1",
+      "footprintHash": "FP-A-GOLD-V1",
+      "effectClass": "idempotent-forward-repair",
+      "cost": { "num": 1, "den": 1 }
+    },
+    {
+      "actionId": "repair-b",
+      "ownerId": "owner-b",
+      "type": "typed-repair",
+      "capabilityHash": "CAP-B-GOLD-V1",
+      "footprintHash": "FP-B-GOLD-V1",
+      "effectClass": "idempotent-forward-repair",
+      "cost": { "num": 1, "den": 1 }
+    }
+  ],
+  "verdictPolicy": {
+    "input": ["VALID", "UNKNOWN"],
+    "candidate": ["PLAN_FEASIBLE", "PLAN_REJECT", "UNRESOLVED", "NOT_RUN"],
+    "instance": ["ACCEPT", "INSTANCE_INFEASIBLE", "UNKNOWN", "TIMEOUT"],
+    "optimality": ["OPTIMAL_WITHIN_PI", "FEASIBLE_NOT_PROVEN_OPTIMAL", "NOT_APPLICABLE"],
+    "runtime": ["NOT_RUN", "ABORTED", "STALE_REJECTED", "COMMITTED", "IN_DOUBT", "FINALIZED"],
+    "safety": ["SAFE", "HARD_VIOLATION", "HISTORICAL_VIOLATION", "NOT_EVALUATED"],
+    "publicDisposition": ["MODEL_INPUT_INVALID", "NEEDS_OWNER_CONFIRMATION", "POSSIBLE_EFFECT_DO_NOT_RETRY", "NONE"],
+    "reasonCodes": ["EMPTY_COMPLETION", "CERT_INCONSISTENT", "CERT_INVALID_GHOST_WORLD", "CANDIDATE_WORLD_FILTERING", "DELTA", "AUTHORIZATION_NONPOSITIVITY", "VALUE_CERT_UNVERIFIABLE", "STALE_CERT", "CERT_EQUIVOCATION", "CROSS_SINK_INCONSISTENCY", "CROSS_SINK_PROOF_MISSING", "HIDDEN_EFFECT", "BYPASS_DETECTED", "TOCTOU", "OLD_OWNER_WRITE", "OLD_GENERATION_REDEEM", "TCB_UNTRUSTED", "RECEIPT_LOSS_AFTER_COMMIT", "RECEIPT_ATOMICITY_UNVERIFIED", "TERMINAL_CLOSURE", "UNRESOLVED_LOWER_COST_CANDIDATE", "ALL_CANDIDATES_REJECTED", "CERT_MISSING"],
+    "statusEncoding": "{status,reasonCode,witnessRef}"
+  },
+  "lockedGoldCases": [
+    {
+      "id": "G00",
+      "kind": "positive_nontrivial",
+      "scope": "gate_a",
+      "override": { "completion.cardinality": 1, "model.worldHashes": ["WORLD-g00-GOLD-V1"] },
+      "expected": {
+        "input": {"status": "VALID", "reasonCode": null, "witnessRef": "G00/input"},
+        "candidate": {"status": "PLAN_FEASIBLE", "reasonCode": null, "witnessRef": "G00/candidate"},
+        "instance": {"status": "ACCEPT", "reasonCode": null, "witnessRef": "G00/instance"},
+        "optimality": {"status": "OPTIMAL_WITHIN_PI", "reasonCode": null, "witnessRef": "G00/optimality"},
+        "runtime": {"status": "NOT_RUN", "reasonCode": null, "witnessRef": null},
+        "safety": {"status": "SAFE", "reasonCode": null, "witnessRef": "G00/safety"}
+      }
+    },
+    {
+      "id": "G01",
+      "kind": "empty_completion",
+      "scope": "gate_a",
+      "override": { "completion.cardinality": 0, "completion.nonEmptyProof": null },
+      "expected": {
+        "input": {"status": "UNKNOWN", "reasonCode": "EMPTY_COMPLETION", "witnessRef": "G01/input"},
+        "candidate": {"status": "NOT_RUN", "reasonCode": "EMPTY_COMPLETION", "witnessRef": null},
+        "instance": {"status": "UNKNOWN", "reasonCode": "EMPTY_COMPLETION", "witnessRef": "G01/input"},
+        "optimality": {"status": "NOT_APPLICABLE", "reasonCode": "EMPTY_COMPLETION", "witnessRef": null},
+        "runtime": {"status": "NOT_RUN", "reasonCode": null, "witnessRef": null},
+        "safety": {"status": "NOT_EVALUATED", "reasonCode": "EMPTY_COMPLETION", "witnessRef": null}
+      }
+    },
+    {
+      "id": "G03",
+      "kind": "candidate_specific_world_filtering",
+      "scope": "gate_a",
+      "expected": {
+        "artifactValidity": {"status": "INVALID", "reasonCode": "CANDIDATE_WORLD_FILTERING", "witnessRef": "G03/input"},
+        "input": {"status": "UNKNOWN", "reasonCode": "CANDIDATE_WORLD_FILTERING", "witnessRef": "G03/input"},
+        "candidate": {"status": "NOT_RUN", "reasonCode": "CANDIDATE_WORLD_FILTERING", "witnessRef": null},
+        "instance": {"status": "UNKNOWN", "reasonCode": "CANDIDATE_WORLD_FILTERING", "witnessRef": "G03/input"}
+      }
+    },
+    {
+      "id": "G04",
+      "kind": "min_of_differences",
+      "scope": "gate_a",
+      "override": {
+        "instance.eta": { "num": 4, "den": 5 },
+        "instance.kappa": { "num": 1, "den": 2 },
+        "worldValues": {
+          "m1": { "policy": { "num": 4, "den": 5 }, "baseline": { "num": 7, "den": 10 } },
+          "m2": { "policy": { "num": 9, "den": 10 }, "baseline": { "num": 1, "den": 10 } }
+        }
+      },
+      "expected": {
+        "robustPolicyValue": { "num": 4, "den": 5 },
+        "robustBaselineValue": { "num": 1, "den": 10, "purpose": "diagnostic_only" },
+        "robustDelta": { "num": 1, "den": 10 },
+        "deltaWitnessWorld": "m1",
+        "candidate": {"status": "PLAN_REJECT", "reasonCode": "DELTA", "witnessRef": "G04/m1"},
+        "instance": {"status": "INSTANCE_INFEASIBLE", "reasonCode": "DELTA", "witnessRef": "G04/all-candidates"},
+        "optimality": {"status": "NOT_APPLICABLE", "reasonCode": "DELTA", "witnessRef": "G04/all-candidates"}
+      }
+    },
+    {
+      "id": "G06",
+      "kind": "authorization_collider",
+      "scope": "gate_a",
+      "override": {
+        "completion.cardinality": 1,
+        "model.worldHashes": ["WORLD-g06-GOLD-V1"],
+        "hiddenState": "H~Bernoulli(1/2)",
+        "naturalUtility": "U=H",
+        "authorization": "Auth=H",
+        "candidateProposal": "constant_action",
+        "instance.eta": { "num": 1, "den": 2 },
+        "instance.kappa": { "num": 1, "den": 10 }
+      },
+      "expected": {
+        "policyValue": { "num": 1, "den": 2 },
+        "baselineValue": { "num": 1, "den": 2 },
+        "delta": { "num": 0, "den": 1 },
+        "candidate": {"status": "PLAN_REJECT", "reasonCode": "DELTA", "witnessRef": "G06/worldwise"},
+        "instance": {"status": "INSTANCE_INFEASIBLE", "reasonCode": "DELTA", "witnessRef": "G06/all-candidates"}
+      }
+    },
+    {
+      "id": "G11",
+      "kind": "receipt_loss_after_atomic_commit",
+      "scope": "gate_a",
+      "expected": {
+        "runtime": {"status": "IN_DOUBT", "reasonCode": "RECEIPT_LOSS_AFTER_COMMIT", "witnessRef": "G11/runtime"},
+        "publicDisposition": {"status": "POSSIBLE_EFFECT_DO_NOT_RETRY", "reasonCode": "RECEIPT_LOSS_AFTER_COMMIT", "witnessRef": "G11/public"},
+        "safety": {"status": "NOT_EVALUATED", "reasonCode": "RECEIPT_LOSS_AFTER_COMMIT", "witnessRef": null}
+      }
+    },
+    { "id": "G02", "kind": "contradictory_attestation", "scope": "gate_a", "expected": { "input": {"status":"UNKNOWN","reasonCode":"CERT_INCONSISTENT","witnessRef":"G02/input"}, "candidate": {"status":"NOT_RUN","reasonCode":"CERT_INCONSISTENT","witnessRef":null}, "instance": {"status":"UNKNOWN","reasonCode":"CERT_INCONSISTENT","witnessRef":"G02/input"} } },
+    { "id": "G05", "kind": "strict_baseline_dominance_pair", "scope": "gate_a", "inputRef": "ubuddy-cp-rir-g05-baseline-dominance-v0.input.example.json", "expected": { "diagnosticKind": "STRICT_BASELINE_DOMINANCE", "baseRobustDelta": { "num": 1, "den": 10 }, "robustDeltaPrime": { "num": 1, "den": 100 }, "baseCandidate": {"status":"SOFT_ACCEPT","reasonCode":null,"witnessRef":"G05/base"}, "variantCandidate": {"status":"SOFT_PLAN_REJECT","reasonCode":"DELTA","witnessRef":"G05/variant"}, "mustStrictlyDecrease": true, "planningSafety": {"status":"NOT_EVALUATED","reasonCode":null,"witnessRef":null}, "hardSafety": {"status":"NOT_EVALUATED","reasonCode":null,"witnessRef":null} } },
+    { "id": "G07", "kind": "authorization_nonpositivity", "scope": "gate_b", "expected": { "input": {"status":"UNKNOWN","reasonCode":"AUTHORIZATION_NONPOSITIVITY","witnessRef":"G07/input"}, "candidate": {"status":"UNRESOLVED","reasonCode":"AUTHORIZATION_NONPOSITIVITY","witnessRef":"G07/candidate"}, "instance": {"status":"UNKNOWN","reasonCode":"AUTHORIZATION_NONPOSITIVITY","witnessRef":"G07/input"} } },
+    { "id": "G08", "kind": "wrong_value_certificate", "scope": "gate_b", "expected": { "candidate": {"status":"UNRESOLVED","reasonCode":"VALUE_CERT_UNVERIFIABLE","witnessRef":"G08/candidate"}, "instance": {"status":"UNKNOWN","reasonCode":"VALUE_CERT_UNVERIFIABLE","witnessRef":"G08/candidate"} } },
+    { "id": "G09", "kind": "stale_token_unknown_refresh", "scope": "gate_b", "expected": { "candidate": {"status":"UNRESOLVED","reasonCode":"STALE_CERT","witnessRef":"G09/candidate"}, "runtime": {"status":"NOT_RUN","reasonCode":"STALE_CERT","witnessRef":null} } },
+    { "id": "G10", "kind": "owner_equivocation", "scope": "gate_b", "expected": { "candidate": {"status":"UNRESOLVED","reasonCode":"CERT_EQUIVOCATION","witnessRef":"G10/candidate"}, "instance": {"status":"UNKNOWN","reasonCode":"CERT_EQUIVOCATION","witnessRef":"G10/candidate"} } },
+    { "id": "G12", "kind": "cross_sink_half_commit", "scope": "gate_a", "expected": { "safety": {"status":"HARD_VIOLATION","reasonCode":"CROSS_SINK_INCONSISTENCY","witnessRef":"G12/sinks"} } },
+    { "id": "G13", "kind": "hidden_bypass_effect", "scope": "gate_a", "expected": { "safety": {"status":"HARD_VIOLATION","reasonCode":"HIDDEN_EFFECT","witnessRef":"G13/effect"} } },
+    { "id": "G14", "kind": "toctou_version_race", "scope": "gate_a", "expected": { "runtime": {"status":"ABORTED","reasonCode":"TOCTOU","witnessRef":"G14/runtime"}, "effect": {"status":"ABORTED_NO_EFFECT","reasonCode":"TOCTOU","witnessRef":"G14/effect"} } },
+    { "id": "G15", "kind": "old_owner_generation_redeem", "scope": "gate_a", "expected": { "safety": {"status":"HARD_VIOLATION","reasonCode":"OLD_OWNER_WRITE","witnessRef":"G15/effect"} } },
+    { "id": "G16", "kind": "post_horizon_time_bomb", "scope": "gate_a", "expected": { "candidate": {"status":"PLAN_REJECT","reasonCode":"TERMINAL_CLOSURE","witnessRef":"G16/terminal"} } },
+    { "id": "G17", "kind": "lower_cost_candidate_unresolved", "scope": "gate_b", "expected": { "instance": {"status":"ACCEPT","reasonCode":null,"witnessRef":"G17/feasible"}, "optimality": {"status":"FEASIBLE_NOT_PROVEN_OPTIMAL","reasonCode":"UNRESOLVED_LOWER_COST_CANDIDATE","witnessRef":"G17/candidate"} } },
+    { "id": "G18", "kind": "all_candidates_negative_witnesses", "scope": "gate_a", "expected": { "instance": {"status":"INSTANCE_INFEASIBLE","reasonCode":"ALL_CANDIDATES_REJECTED","witnessRef":"G18/all-candidates"} } }
+  ],
+  "corpusPartition": {
+    "gateA": ["G00", "G01", "G02", "G03", "G04", "G05", "G06", "G11", "G12", "G13", "G14", "G15", "G16", "G18"],
+    "gateB": ["G07", "G08", "G09", "G10", "G17"]
+  },
+  "metamorphicGates": [
+    "world_permutation_invariance",
+    "unreachable_state_insertion_invariance",
+    "legal_completion_set_enlargement_nonincrease_of_robust_value",
+    "dominated_action_invariance",
+    "budget_monotonicity",
+    "threshold_monotonicity",
+    "policy_alpha_renaming_invariance",
+    "registered_obligation_conservation"
+  ],
+  "hardFailurePolicy": {
+    "unsafeFalseAcceptTarget": 0,
+    "rejectAllOrAlwaysUnknown": "FAIL",
+    "candidateWorldFiltering": "FAIL",
+    "wrongDeltaArithmetic": "FAIL",
+    "unknownOrTimeoutAsInfeasibilityWitness": "FAIL",
+    "missingIndependentOracle": "FAIL",
+    "unreproducibleManifestHash": "FAIL"
+  },
+  "runtimeGoldReference": "ubuddy-cp-rir-gate-a-v1.runtime-gold.example.json",
+  "reproducibility": {
+    "command": "RESEARCH_ONLY: canonicalize manifest, run independent A1/A2/A3 artifact, compare output hash",
+    "canonicalization": "UTF-8 JSON; reject duplicate keys and unknown fields; NFC strings; exact rationals only; recursively sort object keys; preserve non-commutative array order; exclude only JSON Pointers /instance/manifestHash, /reproducibility/manifestHash, /reproducibility/lockedCorpusHash, /reproducibility/expectedOutputHash from manifest hashing; use domain tag cp-rir/gate-a/v1",
+    "manifestHash": "TO_BE_COMPUTED",
+    "lockedCorpusHash": "TO_BE_COMPUTED",
+    "expectedOutputHash": null,
+    "hashPurpose": "integrity_only",
+    "hidingClaim": "none",
+    "solverVersion": "TO_BE_PINNED",
+    "oracleVersion": "TO_BE_PINNED",
+    "verifierVersion": "TO_BE_PINNED"
+  }
+}

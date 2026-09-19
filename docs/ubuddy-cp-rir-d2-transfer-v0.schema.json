@@ -1,0 +1,488 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://ubuddy.invalid/schemas/cp-rir-d2-transfer-v0.json",
+  "title": "CP-RIR D2 abstract-to-concrete transfer input (draft)",
+  "description": "Input schema only. Structural validity is not evidence that D2 has been implemented or proved.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "$schema",
+    "schemaVersion",
+    "status",
+    "purpose",
+    "baseInputHash",
+    "horizon",
+    "organizationBoundary",
+    "faultModel",
+    "concreteSystem",
+    "abstractSystem",
+    "abstraction",
+    "contractMonitor",
+    "mediationEvidence",
+    "trials",
+    "implementationStatus"
+  ],
+  "properties": {
+    "$schema": { "const": "ubuddy-cp-rir-d2-transfer-v0.schema.json" },
+    "schemaVersion": { "const": "cp-rir/d2-transfer-input/v0" },
+    "status": { "const": "illustrative_v0_draft" },
+    "purpose": { "const": "A2_TRANSFER_INPUT_ONLY_NO_EXPECTED_OUTPUT" },
+    "baseInputHash": { "type": "string", "minLength": 1 },
+    "horizon": { "type": "integer", "minimum": 1 },
+    "organizationBoundary": { "$ref": "#/$defs/orgBoundary" },
+    "faultModel": { "$ref": "#/$defs/faultModel" },
+    "concreteSystem": { "$ref": "#/$defs/lts" },
+    "abstractSystem": { "$ref": "#/$defs/lts" },
+    "abstraction": { "$ref": "#/$defs/abstraction" },
+    "contractMonitor": { "$ref": "#/$defs/monitor" },
+    "mediationEvidence": { "$ref": "#/$defs/mediation" },
+    "trials": {
+      "type": "array",
+      "minItems": 3,
+      "items": { "$ref": "#/$defs/trial" }
+    },
+    "implementationStatus": { "const": "planned/unverified" }
+  },
+  "$defs": {
+    "organization": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "organizationId",
+        "credentialDomain",
+        "privateStateRoot",
+        "authoritativeSinkIds"
+      ],
+      "properties": {
+        "organizationId": { "type": "string" },
+        "credentialDomain": { "type": "string" },
+        "privateStateRoot": { "type": "string" },
+        "authoritativeSinkIds": {
+          "type": "array",
+          "items": { "type": "string" },
+          "uniqueItems": true
+        }
+      }
+    },
+    "resourceBinding": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "resourceId",
+        "organizationId",
+        "ownerId",
+        "authoritativeSinkId",
+        "epoch",
+        "generation",
+        "version",
+        "actionFootprintHash",
+        "sinkAclRef"
+      ],
+      "properties": {
+        "resourceId": { "type": "string" },
+        "organizationId": { "type": "string" },
+        "ownerId": { "type": "string" },
+        "authoritativeSinkId": { "type": "string" },
+        "epoch": { "type": "integer", "minimum": 0 },
+        "generation": { "type": "integer", "minimum": 0 },
+        "version": { "type": "integer", "minimum": 0 },
+        "actionFootprintHash": { "type": "string" },
+        "sinkAclRef": { "type": "string" }
+      }
+    },
+    "orgBoundary": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "organizations",
+        "resourceBindings",
+        "noSinglePrincipalHasAllPrivateStateAndWriteAuthority"
+      ],
+      "properties": {
+        "organizations": {
+          "type": "array",
+          "minItems": 2,
+          "items": { "$ref": "#/$defs/organization" }
+        },
+        "resourceBindings": {
+          "type": "array",
+          "minItems": 2,
+          "items": { "$ref": "#/$defs/resourceBinding" }
+        },
+        "noSinglePrincipalHasAllPrivateStateAndWriteAuthority": {
+          "const": true
+        }
+      }
+    },
+    "faultTransition": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["from", "event", "to"],
+      "properties": {
+        "from": { "type": "string" },
+        "event": { "type": "string" },
+        "to": { "type": "string" }
+      }
+    },
+    "faultModel": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "automatonId",
+        "stateIds",
+        "initialStateId",
+        "faultEventIds",
+        "acceptingStateIds",
+        "violationStateIds",
+        "normalEventPolicy",
+        "prefixAcceptance",
+        "transitions",
+        "membershipRuleRef"
+      ],
+      "properties": {
+        "automatonId": { "type": "string" },
+        "stateIds": {
+          "type": "array",
+          "items": { "type": "string" },
+          "uniqueItems": true
+        },
+        "initialStateId": { "type": "string" },
+        "faultEventIds": {
+          "type": "array",
+          "items": { "type": "string" },
+          "uniqueItems": true
+        },
+        "acceptingStateIds": {
+          "type": "array",
+          "items": { "type": "string" },
+          "uniqueItems": true
+        },
+        "violationStateIds": {
+          "type": "array",
+          "items": { "type": "string" },
+          "uniqueItems": true
+        },
+        "normalEventPolicy": { "const": "SELF_LOOP" },
+        "prefixAcceptance": { "const": "EVERY_DEFINED_PREFIX" },
+        "transitions": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/faultTransition" }
+        },
+        "membershipRuleRef": { "type": "string" }
+      }
+    },
+    "transition": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "from",
+        "event",
+        "to",
+        "sinkId",
+        "resourceId",
+        "linearizationIndex",
+        "eventClass"
+      ],
+      "properties": {
+        "from": { "type": "string" },
+        "event": { "type": "string" },
+        "to": { "type": "string" },
+        "sinkId": { "type": ["null", "string"] },
+        "resourceId": { "type": ["null", "string"] },
+        "linearizationIndex": { "type": ["null", "integer"], "minimum": 0 },
+        "eventClass": {
+          "enum": [
+            "INTERNAL",
+            "MEDIATED_EFFECT",
+            "UNMEDIATED_EFFECT",
+            "STUTTER"
+          ]
+        }
+      }
+    },
+    "lts": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "modelKind",
+        "stateIds",
+        "initialStateId",
+        "eventAlphabet",
+        "transitions",
+        "terminalStateIds",
+        "badStateIds"
+      ],
+      "properties": {
+        "modelKind": { "enum": ["CONCRETE", "ABSTRACT"] },
+        "stateIds": {
+          "type": "array",
+          "items": { "type": "string" },
+          "uniqueItems": true
+        },
+        "initialStateId": { "type": "string" },
+        "eventAlphabet": {
+          "type": "array",
+          "items": { "type": "string" },
+          "uniqueItems": true
+        },
+        "transitions": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/transition" }
+        },
+        "terminalStateIds": {
+          "type": "array",
+          "items": { "type": "string" },
+          "uniqueItems": true
+        },
+        "badStateIds": {
+          "type": "array",
+          "items": { "type": "string" },
+          "uniqueItems": true
+        }
+      }
+    },
+    "mapping": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["concrete", "abstract"],
+      "properties": {
+        "concrete": { "type": "string" },
+        "abstract": { "type": "string" }
+      }
+    },
+    "abstraction": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "stateMap",
+        "eventMap",
+        "stutterEvents",
+        "effectCompleteEventSet",
+        "divergenceRankRef",
+        "initialStatePair",
+        "stateMapCoverage",
+        "eventMapCoverage",
+        "safetyReflectionWitnessRef"
+      ],
+      "properties": {
+        "stateMap": { "type": "array", "items": { "$ref": "#/$defs/mapping" } },
+        "eventMap": { "type": "array", "items": { "$ref": "#/$defs/mapping" } },
+        "stutterEvents": {
+          "type": "array",
+          "items": { "type": "string" },
+          "uniqueItems": true
+        },
+        "effectCompleteEventSet": {
+          "type": "array",
+          "items": { "type": "string" },
+          "uniqueItems": true
+        },
+        "divergenceRankRef": { "type": "string" },
+        "initialStatePair": { "$ref": "#/$defs/mapping" },
+        "stateMapCoverage": { "enum": ["COMPLETE", "PARTIAL_UNVERIFIED"] },
+        "eventMapCoverage": { "enum": ["COMPLETE", "PARTIAL_UNVERIFIED"] },
+        "safetyReflectionWitnessRef": { "type": "string" }
+      }
+    },
+    "monitorRule": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["from", "event", "to"],
+      "properties": {
+        "from": { "type": "string" },
+        "event": { "type": "string" },
+        "to": { "type": "string" }
+      }
+    },
+    "monitor": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "monitorId",
+        "inputLayer",
+        "stateIds",
+        "initialStateId",
+        "violationStateIds",
+        "rules",
+        "terminalClosureStateIds"
+      ],
+      "properties": {
+        "monitorId": { "type": "string" },
+        "inputLayer": { "const": "ABSTRACT_AFTER_ALPHA" },
+        "stateIds": {
+          "type": "array",
+          "items": { "type": "string" },
+          "uniqueItems": true
+        },
+        "initialStateId": { "type": "string" },
+        "violationStateIds": {
+          "type": "array",
+          "items": { "type": "string" },
+          "uniqueItems": true
+        },
+        "rules": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/monitorRule" }
+        },
+        "terminalClosureStateIds": {
+          "type": "array",
+          "items": { "type": "string" },
+          "uniqueItems": true
+        }
+      }
+    },
+    "sinkEvidence": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "sinkId",
+        "organizationId",
+        "ownerId",
+        "bypassWriterSet",
+        "epochHighWatermark",
+        "generationHighWatermark",
+        "atomicEffectDedupReceipt",
+        "compareAndFence",
+        "aclRef",
+        "linearizationPointRef",
+        "receiptCommitWitnessRef",
+        "attestationRef"
+      ],
+      "properties": {
+        "sinkId": { "type": "string" },
+        "organizationId": { "type": "string" },
+        "ownerId": { "type": "string" },
+        "bypassWriterSet": {
+          "type": "array",
+          "items": { "type": "string" },
+          "uniqueItems": true
+        },
+        "epochHighWatermark": { "type": "integer", "minimum": 0 },
+        "generationHighWatermark": { "type": "integer", "minimum": 0 },
+        "atomicEffectDedupReceipt": { "type": "boolean" },
+        "compareAndFence": { "type": "boolean" },
+        "aclRef": { "type": "string" },
+        "linearizationPointRef": { "type": "string" },
+        "receiptCommitWitnessRef": { "type": "string" },
+        "attestationRef": { "type": "string" }
+      }
+    },
+    "mediation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "completeMediationClaim",
+        "sinkEvidence",
+        "crossSinkMode",
+        "globalDecisionCertificateRef",
+        "receiptSchemaRef",
+        "perSinkReceiptSchemaRef",
+        "crossSinkLinearizationWitnessRef"
+      ],
+      "properties": {
+        "completeMediationClaim": { "type": "boolean" },
+        "sinkEvidence": {
+          "type": "array",
+          "minItems": 2,
+          "items": { "$ref": "#/$defs/sinkEvidence" }
+        },
+        "crossSinkMode": {
+          "enum": [
+            "SINGLE_ATOMIC_DOMAIN",
+            "ESCROW",
+            "SERIALIZABLE_DECOMPOSITION"
+          ]
+        },
+        "globalDecisionCertificateRef": { "type": "string" },
+        "receiptSchemaRef": { "type": "string" },
+        "perSinkReceiptSchemaRef": { "type": "string" },
+        "crossSinkLinearizationWitnessRef": { "type": "string" }
+      }
+    },
+    "traceEvent": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "index",
+        "event",
+        "eventClass",
+        "sinkId",
+        "resourceId",
+        "ownerId",
+        "tokenEpoch",
+        "tokenGeneration",
+        "versionBefore",
+        "versionAfter",
+        "transactionGroupId",
+        "receiptRef",
+        "eventCommitment"
+      ],
+      "properties": {
+        "index": { "type": "integer", "minimum": 0 },
+        "event": { "type": "string" },
+        "eventClass": {
+          "enum": [
+            "INTERNAL",
+            "MEDIATED_EFFECT",
+            "UNMEDIATED_EFFECT",
+            "STUTTER"
+          ]
+        },
+        "sinkId": { "type": ["null", "string"] },
+        "resourceId": { "type": ["null", "string"] },
+        "ownerId": { "type": ["null", "string"] },
+        "tokenEpoch": { "type": ["null", "integer"], "minimum": 0 },
+        "tokenGeneration": { "type": ["null", "integer"], "minimum": 0 },
+        "versionBefore": { "type": ["null", "integer"], "minimum": 0 },
+        "versionAfter": { "type": ["null", "integer"], "minimum": 0 },
+        "transactionGroupId": { "type": ["null", "string"] },
+        "receiptRef": { "type": ["null", "string"] },
+        "eventCommitment": { "type": "string" }
+      }
+    },
+    "trial": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "inputId",
+        "baseStateId",
+        "sealedBaseBindingHash",
+        "faultAutomatonMembershipRef",
+        "traceModelRelation",
+        "traceCommitment",
+        "concreteTrace",
+        "abstractTrace",
+        "alphaProjectionRef",
+        "declaredMutationScope"
+      ],
+      "properties": {
+        "inputId": { "type": "string" },
+        "baseStateId": { "type": "string" },
+        "sealedBaseBindingHash": { "type": "string" },
+        "faultAutomatonMembershipRef": { "type": "string" },
+        "traceModelRelation": {
+          "enum": [
+            "MEMBER_OF_FROZEN_MODEL",
+            "OUTSIDE_FROZEN_MODEL",
+            "PREFLIGHT_NOT_CHECKED"
+          ]
+        },
+        "traceCommitment": { "type": "string" },
+        "concreteTrace": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "$ref": "#/$defs/traceEvent" }
+        },
+        "abstractTrace": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "$ref": "#/$defs/traceEvent" }
+        },
+        "alphaProjectionRef": { "type": "string" },
+        "declaredMutationScope": {
+          "enum": ["PREFLIGHT_EVIDENCE", "CONCRETE_MODEL", "DEPLOYED_RUNTIME"]
+        }
+      }
+    }
+  }
+}

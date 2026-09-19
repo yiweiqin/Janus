@@ -1,0 +1,17 @@
+{
+  "$schema":"ubuddy-cp-rir-d2-scheduler-fault-branch-manifest-v0.schema.json",
+  "schemaVersion":"cp-rir/d2-scheduler-fault-branch-manifest/v0",
+  "implementationStatus":"prototype/unverified",
+  "generatorVersion":"cp-rir/d2-rule-enumerator/v0",
+  "grammarId":"cp-rir/recovery-scheduler-fault/h1/v0",
+  "grammarDigest":"1be0729d75db72eb82d6cdaff70a74b343333b10410c676faa6b0b3da20b23f4",
+  "horizon":1,
+  "generationMode":"EXTERNAL_RULE_ENUMERATION_ONLY",
+  "branches":[
+    {"branchKey":"CRASH_AFTER_EFFECT|CRASH_RESTART","ruleId":"R-CRASH","schedulerChoice":"CRASH_AFTER_EFFECT","faultEvent":"CRASH_RESTART","branchSemantic":"CRASHED_EFFECT_POSSIBLE"},
+    {"branchKey":"DELIVER_RECEIPT|NONE","ruleId":"R-DELIVER","schedulerChoice":"DELIVER_RECEIPT","faultEvent":"NONE","branchSemantic":"RECEIPT_PRESENT_UNVERIFIED"},
+    {"branchKey":"DROP_RECEIPT|RECEIPT_DROP","ruleId":"R-DROP","schedulerChoice":"DROP_RECEIPT","faultEvent":"RECEIPT_DROP","branchSemantic":"RECEIPT_LOST_EFFECT_DECLARED_APPLIED"}
+  ],
+  "branchSetDigest":"dd6a8ad0086810da32bbea03bd3d6fa1aaaa1e52169e0c637a1148392a9524e7",
+  "limitations":["NO_MACHINE_CHECKED_REACHABILITY","NO_ALL_PREFIX_CLOSURE","NO_REAL_SCHEDULER_REPLAY"]
+}

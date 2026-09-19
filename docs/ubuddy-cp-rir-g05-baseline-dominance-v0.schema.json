@@ -1,0 +1,96 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://ubuddy.invalid/schemas/cp-rir-g05-baseline-dominance-v0.json",
+  "title": "CP-RIR G05 strict baseline-dominance paired input (draft)",
+  "description": "Answer-free paired input. The two arms share one finite kernel and differ only in baselinePolicyRef.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["$schema", "schemaVersion", "status", "purpose", "baselineVariantId", "fixedBindings", "kernel", "candidatePolicy", "baseBaselinePolicy", "variantBaselinePolicy", "thresholds", "pairDiff", "answerIsolation", "inputHash", "implementationStatus"],
+  "properties": {
+    "$schema": {"const": "ubuddy-cp-rir-g05-baseline-dominance-v0.schema.json"},
+    "schemaVersion": {"const": "cp-rir/g05-baseline-dominance-input/v0"},
+    "status": {"const": "illustrative_v0_draft"},
+    "purpose": {"const": "answer_free_input_for_strict_baseline_dominance_pair"},
+    "baselineVariantId": {"const": "B0001"},
+    "fixedBindings": {
+      "type": "object", "additionalProperties": false,
+      "required": ["kernelAlias", "authorizationExecKernel", "contract", "evaluator", "faultModel", "worldSet", "horizon", "kernelDigest", "authDigest", "execDigest", "contractDigest", "evaluatorDigest", "faultDigest"],
+      "properties": {
+        "kernelAlias": {"const": "K05"},
+        "authorizationExecKernel": {"const": "K05"},
+        "contract": {"const": "K05"},
+        "evaluator": {"const": "K05"},
+        "faultModel": {"const": "K05"},
+        "worldSet": {"const": "K05"},
+        "horizon": {"const": 1},
+        "kernelDigest": {"type": "string"}, "authDigest": {"type": "string"}, "execDigest": {"type": "string"}, "contractDigest": {"type": "string"}, "evaluatorDigest": {"type": "string"}, "faultDigest": {"type": "string"}
+      }
+    },
+    "kernel": {"$ref": "#/$defs/kernel"},
+    "candidatePolicy": {"$ref": "#/$defs/policy"},
+    "baseBaselinePolicy": {"$ref": "#/$defs/policy"},
+    "variantBaselinePolicy": {"$ref": "#/$defs/policy"},
+    "thresholds": {"$ref": "#/$defs/thresholds"},
+    "pairDiff": {
+      "type": "object", "additionalProperties": false,
+      "required": ["allowedChangedPath", "observationallyFixedPaths", "candidateUnchanged", "hardSafetyUnchanged"],
+      "properties": {
+        "allowedChangedPath": {"const": "/variantBaselinePolicy"},
+        "observationallyFixedPaths": {"type": "array", "minItems": 1, "items": {"type": "string"}, "uniqueItems": true},
+        "candidateUnchanged": {"const": true},
+        "hardSafetyUnchanged": {"const": true}
+      }
+    },
+    "answerIsolation": {
+      "type": "object", "additionalProperties": false,
+      "required": ["mustNotContain", "transitiveExpectedReference"],
+      "properties": {
+        "mustNotContain": {"type": "array", "items": {"type": "string"}, "uniqueItems": true},
+        "transitiveExpectedReference": {"const": "forbidden"}
+      }
+    },
+    "inputHash": {"type": "string", "minLength": 1},
+    "implementationStatus": {"const": "planned/unverified"}
+  },
+  "$defs": {
+    "rational": {
+      "type": "object", "additionalProperties": false, "required": ["num", "den"],
+      "properties": {"num": {"type": "integer"}, "den": {"type": "integer", "exclusiveMinimum": 0}}
+    },
+    "policy": {
+      "type": "object", "additionalProperties": false,
+      "required": ["policyId", "proposal", "canonicalPolicyHash", "canonicalAst", "grammarDigest", "cost", "role"],
+      "properties": {
+        "policyId": {"type": "string"},
+        "proposal": {"enum": ["repair", "noop", "incumbent_recovery"]},
+        "canonicalPolicyHash": {"type": "string"},
+        "canonicalAst": {"type": "string"},
+        "grammarDigest": {"type": "string"},
+        "cost": {"$ref": "#/$defs/rational"},
+        "role": {"enum": ["candidate", "baseline"]}
+      }
+    },
+    "thresholds": {
+      "type": "object", "additionalProperties": false, "required": ["eta", "kappa", "costBudget"],
+      "properties": {"eta": {"$ref": "#/$defs/rational"}, "kappa": {"$ref": "#/$defs/rational"}, "costBudget": {"$ref": "#/$defs/rational"}}
+    },
+    "kernel": {
+      "type": "object", "additionalProperties": false,
+      "required": ["kernelAlias", "stateSpace", "initialState", "terminalUtility", "worlds", "actions"],
+      "properties": {
+        "kernelAlias": {"const": "K05"},
+        "stateSpace": {"const": ["s0", "success", "failure"]},
+        "initialState": {"const": "s0"},
+        "terminalUtility": {
+          "type": "object", "additionalProperties": false, "required": ["success", "failure"],
+          "properties": {"success": {"const": {"num": 1, "den": 1}}, "failure": {"const": {"num": 0, "den": 1}}}
+        },
+        "actions": {"const": ["repair", "noop", "incumbent_recovery"]},
+        "worlds": {"type": "array", "const": [
+          {"worldId":"m1","authorization":{"repair":"ALLOW","noop":"ALLOW","incumbent_recovery":"ALLOW"},"executability":{"repair":true,"noop":true,"incumbent_recovery":true},"transitionRowMass":{"repair":{"num":1,"den":1},"noop":{"num":1,"den":1},"incumbent_recovery":{"num":1,"den":1}},"transitionRows":{"repair":[{"from":"s0","to":"success","prob":{"num":4,"den":5}},{"from":"s0","to":"failure","prob":{"num":1,"den":5}}],"noop":[{"from":"s0","to":"success","prob":{"num":7,"den":10}},{"from":"s0","to":"failure","prob":{"num":3,"den":10}}],"incumbent_recovery":[{"from":"s0","to":"success","prob":{"num":79,"den":100}},{"from":"s0","to":"failure","prob":{"num":21,"den":100}}]},"successProbability":{"repair":{"num":4,"den":5},"noop":{"num":7,"den":10},"incumbent_recovery":{"num":79,"den":100}}},
+          {"worldId":"m2","authorization":{"repair":"ALLOW","noop":"ALLOW","incumbent_recovery":"ALLOW"},"executability":{"repair":true,"noop":true,"incumbent_recovery":true},"transitionRowMass":{"repair":{"num":1,"den":1},"noop":{"num":1,"den":1},"incumbent_recovery":{"num":1,"den":1}},"transitionRows":{"repair":[{"from":"s0","to":"success","prob":{"num":9,"den":10}},{"from":"s0","to":"failure","prob":{"num":1,"den":10}}],"noop":[{"from":"s0","to":"success","prob":{"num":1,"den":10}},{"from":"s0","to":"failure","prob":{"num":9,"den":10}}],"incumbent_recovery":[{"from":"s0","to":"success","prob":{"num":41,"den":50}},{"from":"s0","to":"failure","prob":{"num":9,"den":50}}]},"successProbability":{"repair":{"num":9,"den":10},"noop":{"num":1,"den":10},"incumbent_recovery":{"num":41,"den":50}}}
+        ]}
+      }
+    }
+  }
+}

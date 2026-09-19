@@ -1,0 +1,10 @@
+{
+  "$schema":"ubuddy-cp-rir-obligation-separation-v0.schema.json",
+  "schemaVersion":"cp-rir/obligation-separation/v0",
+  "implementationStatus":"planned/unverified",
+  "registry":{"obligations":[{"id":"o1","kind":"HARD","required":true,"multiplicity":1,"cancelable":false}]},
+  "cases":[
+    {"caseId":"CC_FALSE_LEDGER_SELF_CONSISTENT","contractCompleteDeclared":false,"contractObligationIds":[],"ledgerEvents":[{"kind":"TRIGGER","obligationId":"o1"},{"kind":"DISCHARGE","obligationId":"o1","witnessId":"w1"}]},
+    {"caseId":"CC_TRUE_LEDGER_VIOLATION","contractCompleteDeclared":true,"contractObligationIds":["o1"],"ledgerEvents":[{"kind":"TRIGGER","obligationId":"o1"},{"kind":"VIOLATE","obligationId":"o1"},{"kind":"ACCEPT"}]}
+  ]
+}

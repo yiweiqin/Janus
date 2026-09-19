@@ -1,0 +1,27 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://ubuddy.invalid/schemas/cp-rir-d2-reflection-negative-v0.json",
+  "title": "CP-RIR D2 safety-reflection negative witness (draft)",
+  "description": "Answer-free witness where a reachable concrete bad effect maps to an abstract non-bad state.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["$schema", "schemaVersion", "status", "purpose", "horizon", "concrete", "abstract", "mapping", "trace", "answerIsolation", "implementationStatus"],
+  "properties": {
+    "$schema": {"const": "ubuddy-cp-rir-d2-reflection-negative-v0.schema.json"},
+    "schemaVersion": {"const": "cp-rir/d2-reflection-negative-input/v0"},
+    "status": {"const": "illustrative_v0_draft"},
+    "purpose": {"enum": ["answer_free_reflection_counterexample_input_only", "answer_free_effect_stutter_invalid_input_only", "answer_free_effect_class_laundering_invalid_input_only"]},
+    "horizon": {"const": 1},
+    "concrete": {"$ref": "#/$defs/system"},
+    "abstract": {"$ref": "#/$defs/system"},
+    "mapping": {"type": "object", "additionalProperties": false, "required": ["stateMap", "eventMap", "legalStutterEvents"], "properties": {"stateMap": {"type": "array", "items": {"$ref": "#/$defs/map"}}, "eventMap": {"type": "array", "items": {"$ref": "#/$defs/map"}}, "legalStutterEvents": {"type": "array", "items": {"type": "string"}}}},
+    "trace": {"type": "object", "additionalProperties": false, "required": ["concreteEvents", "abstractEvents", "traceRelation"], "properties": {"concreteEvents": {"type": "array", "minItems": 1, "items": {"$ref": "#/$defs/event"}}, "abstractEvents": {"type": "array", "minItems": 1, "items": {"$ref": "#/$defs/event"}}, "traceRelation": {"const": "MEMBER_OF_FROZEN_MODEL"}}},
+    "answerIsolation": {"type": "object", "additionalProperties": false, "required": ["mustNotContain", "transitiveExpectedReference"], "properties": {"mustNotContain": {"type": "array", "items": {"type": "string"}}, "transitiveExpectedReference": {"const": "forbidden"}}},
+    "implementationStatus": {"const": "planned/unverified"}
+  },
+  "$defs": {
+    "map": {"type": "object", "additionalProperties": false, "required": ["from", "to"], "properties": {"from": {"type": "string"}, "to": {"type": "string"}}},
+    "event": {"type": "object", "additionalProperties": false, "required": ["from", "event", "to", "eventClass", "effectId", "sinkId", "resourceId", "multiplicity", "versionDelta"], "properties": {"from": {"type": "string"}, "event": {"type": "string"}, "to": {"type": "string"}, "eventClass": {"enum": ["INTERNAL", "MEDIATED_EFFECT", "UNMEDIATED_EFFECT", "STUTTER"]}, "effectId": {"type": ["string", "null"]}, "sinkId": {"type": ["string", "null"]}, "resourceId": {"type": ["string", "null"]}, "multiplicity": {"type": "integer", "minimum": 0}, "versionDelta": {"type": "integer", "minimum": 0}}},
+    "system": {"type": "object", "additionalProperties": false, "required": ["stateIds", "initialStateId", "transitions", "terminalStateIds", "badStateIds"], "properties": {"stateIds": {"type": "array", "items": {"type": "string"}, "uniqueItems": true}, "initialStateId": {"type": "string"}, "transitions": {"type": "array", "minItems": 1, "items": {"$ref": "#/$defs/event"}}, "terminalStateIds": {"type": "array", "items": {"type": "string"}, "uniqueItems": true}, "badStateIds": {"type": "array", "items": {"type": "string"}, "uniqueItems": true}}}
+  }
+}

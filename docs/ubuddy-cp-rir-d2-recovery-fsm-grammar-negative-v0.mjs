@@ -1,0 +1,6 @@
+#!/usr/bin/env node
+import fs from 'node:fs'; import os from 'node:os'; import path from 'node:path'; import {spawnSync} from 'node:child_process';
+const grammar=JSON.parse(fs.readFileSync(new URL('./ubuddy-cp-rir-d2-recovery-fsm-grammar-v0.input.example.json',import.meta.url),'utf8'));
+grammar.transitions=grammar.transitions.filter(t=>!['T-MANUAL','T-COMPENSATION-FAILED'].includes(t.transitionId));
+const dir=fs.mkdtempSync(path.join(os.tmpdir(),'cp-rir-fsm-grammar-neg-')); const file=path.join(dir,'unreachable.json'); fs.writeFileSync(file,JSON.stringify(grammar));
+try{const generator=new URL('./ubuddy-cp-rir-d2-recovery-fsm-generator-v0.mjs',import.meta.url);const r=spawnSync(process.execPath,[generator.pathname.replace(/^\/(.:)/,'$1'),file],{encoding:'utf8'});const parsed=JSON.parse(r.stdout);const actual=String(parsed.reasonCode??'').split(':')[0];console.log(JSON.stringify({schemaVersion:'cp-rir/d2-recovery-fsm-grammar-negative/v0',implementationStatus:'prototype/unverified',fixture:'unreachable-state',expectedReasonCode:'UNREACHABLE_STATE_OR_TRANSITION',actualReasonCode:actual,passed:actual==='UNREACHABLE_STATE_OR_TRANSITION'},null,2));}finally{fs.rmSync(dir,{recursive:true,force:true});}

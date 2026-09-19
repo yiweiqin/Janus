@@ -1,0 +1,39 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "schemaVersion": "cp-rir/g05-reducer-invariants/v0",
+  "status": "illustrative_v0_draft",
+  "purpose": "independent_answer_free_reducer_obligations_only_no_expected_corpus",
+  "implementationStatus": "planned/unverified",
+  "input": "ubuddy-cp-rir-g05-baseline-dominance-v0.input.example.json",
+  "mustNotRead": ["lockedExpectedCorpus", "manifest.expected", "planningGold", "runtimeGold"],
+  "failurePrecedence": [
+    "INPUT_INVALID",
+    "PAIR_BINDING_UNKNOWN",
+    "BASELINE_SUPPORT_UNKNOWN",
+    "HARD_SAFETY_NOT_EVALUATED",
+    "SOFT_ARITHMETIC",
+    "DOMINANCE_CHECK",
+    "THRESHOLD_VERDICT"
+  ],
+  "invariants": [
+    {"id":"G05-R01","name":"canonical-pair-materialization","obligation":"materialize base and variant arms from one input; compute independent canonical bytes and hashes","failure":"INPUT_INVALID"},
+    {"id":"G05-R02","name":"fixed-binding-diff","obligation":"actual canonical diff is exactly /variantBaselinePolicy; fixedBindings, kernel, candidate, thresholds and all evaluator-relevant fields hash equal","failure":"PAIR_BINDING_UNKNOWN"},
+    {"id":"G05-R03","name":"policy-role-and-identity","obligation":"candidate role is candidate; both baselines role baseline; canonical policy hashes and proposals are distinct where required; pairDiff self-report is not trusted","failure":"PAIR_BINDING_UNKNOWN"},
+    {"id":"G05-R04","name":"candidate-cost-binding","obligation":"candidate cost, grammar digest, authorization and executability bindings resolve from the fixed kernel or the reducer returns unknown","failure":"PAIR_BINDING_UNKNOWN"},
+    {"id":"G05-R05","name":"support-closure","obligation":"for every arm x world x action, Auth=ALLOW, Exec=true, transition endpoints close, probabilities are nonnegative and row mass is exactly one, and terminal utility resolves","failure":"BASELINE_SUPPORT_UNKNOWN"},
+    {"id":"G05-R06","name":"exact-world-replay","obligation":"recompute exact rational V_m for candidate and each baseline from transition rows; never read worldValues or expected fields","failure":"SOFT_ARITHMETIC"},
+    {"id":"G05-R07","name":"delta-aggregation","obligation":"compute delta_m=V_m(candidate)-V_m(baseline) and robustDelta=min_m(delta_m), not min(Vcandidate)-min(Vbaseline)","failure":"SOFT_ARITHMETIC"},
+    {"id":"G05-R08","name":"strict-dominance","obligation":"verify every-world V_m(variantBaseline)>=V_m(baseBaseline) and at least one strict inequality; verify robustDeltaPrime<=robustDelta","failure":"DOMINANCE_CHECK"},
+    {"id":"G05-R09","name":"threshold-and-cost","obligation":"apply candidate value >= eta, robust delta >= kappa and cost <= budget only after all preceding checks; eta comparison is non-strict","failure":"THRESHOLD_VERDICT"},
+    {"id":"G05-R10","name":"axis-separation","obligation":"planningSafety is NOT_EVALUATED when no safety payload is supplied; baseline mutation cannot be used to claim hard-safety invariance","failure":"HARD_SAFETY_NOT_EVALUATED"}
+  ],
+  "requiredOutput": {
+    "fields": [
+      "artifactStatus", "inputStatus", "baseInputHash", "variantInputHash", "fixedBindingDigest", "changedPointers",
+      "candidateHash", "baseBaselineHash", "variantBaselineHash", "supportChecks", "worldArithmetic", "aggregateArithmetic",
+      "dominance", "baseArm", "variantArm", "planningSafety", "causalScope"
+    ],
+    "unknownRule": "if any preceding check is unknown or invalid, downstream numeric and verdict fields are null",
+    "causalScope": "fixed finite model policy-regime contrast only; not current-instance root cause, population efficacy or general monotonicity theorem"
+  }
+}

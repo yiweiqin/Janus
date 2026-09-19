@@ -1,0 +1,284 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "schemaVersion": "cp-rir/runtime-gold/v0",
+  "status": "illustrative_v0_draft",
+  "claimBoundary": "This file is a runner-side oracle fixture draft. It is never an input to A1, A2, or A3 and is not evidence that D2 has been implemented or checked.",
+  "runnerIsolation": {
+    "artifactInputs": ["instance payload", "policy grammar", "token/receipt payload", "fault trace"],
+    "runnerOnlyInputs": ["expected verdict", "negative witness", "mutation label"],
+    "forbiddenArtifactInput": ["expected verdict", "precomputed V", "precomputed delta", "selected candidate id"],
+    "comparisonStage": "after independent A1/A2/A3 outputs are sealed"
+  },
+  "basePlanningResult": {
+    "manifestHash": "TO_BE_COMPUTED",
+    "planningOutputHash": "TO_BE_COMPUTED",
+    "input": "VALID",
+    "candidate": "PLAN_FEASIBLE",
+    "instance": "ACCEPT",
+    "optimality": "OPTIMAL_WITHIN_PI"
+  },
+  "universe": {
+    "resources": [
+      {"resourceId": "resource-r", "sinkId": "sink-r", "version": 2},
+      {"resourceId": "resource-ledger", "sinkId": "sink-ledger", "version": 9}
+    ],
+    "crossSinkInvariant": {
+      "invariantId": "all-or-none-r-ledger-v1",
+      "sinkIds": ["sink-r", "sink-ledger"],
+      "resourceIds": ["resource-r", "resource-ledger"],
+      "mode": "SERIALIZABLE_DECOMPOSITION",
+      "predicate": "both committed with the same transactionGroupId and generation, or neither committed",
+      "checkerId": "PLANNED-A2-CROSS-SINK-CHECKER",
+      "checkerVersion": "TO_BE_PINNED"
+    }
+  },
+  "tokenTemplate": {
+    "schemaVersion": "cp-rir/token/v0-draft",
+    "tokenId": "token-gold-v1",
+    "instanceHash": "INSTANCE-HASH",
+    "cutHash": "CUT-HASH",
+    "contractHash": "CONTRACT-HASH",
+    "dslHash": "DSL-HASH",
+    "evaluatorHash": "EVALUATOR-HASH",
+    "gammaHash": null,
+    "policyHash": "POLICY-HASH",
+    "candidateHash": "CANDIDATE-HASH",
+    "worldCommitVectorHash": "WORLD-COMMIT-VECTOR-HASH",
+    "transactionGroupId": "tx-gold-v1",
+    "sinkIds": ["sink-r", "sink-ledger"],
+    "resourceIds": ["resource-r", "resource-ledger"],
+    "expectedEpochVector": {"owner-a": 2, "owner-b": 4},
+    "expectedVersionVector": {"resource-r": 2, "resource-ledger": 9},
+    "preStateHashVector": {"resource-r": "PRE-R", "resource-ledger": "PRE-LEDGER"},
+    "repairId": "repair-gold-v1",
+    "generation": 3,
+    "parentGeneration": 2,
+    "dedupKey": "dedup-gold-v1",
+    "effectHash": "EFFECT-HASH",
+    "changeSetHash": "CHANGESET-HASH",
+    "transitiveFootprintHash": "FOOTPRINT-HASH",
+    "crossSinkProofHash": "CROSS-SINK-PROOF-HASH",
+    "receiptSchemaHash": "RECEIPT-SCHEMA-HASH",
+    "issuerSequence": 21,
+    "nonce": "NONCE-GOLD-V1",
+    "issuedAt": "T0",
+    "expiry": "T4",
+    "issuerSet": ["owner-a", "owner-b"],
+    "quorum": 2,
+    "signatures": ["SIG-A-PLACEHOLDER", "SIG-B-PLACEHOLDER"],
+    "nonEquivocationProofHash": "NON-EQUIVOCATION-HASH",
+    "oneShot": true,
+    "tombstoneRef": "generation-2-revoked"
+  },
+  "receiptTemplate": {
+    "receiptSchemaVersion": "cp-rir/receipt/v0-draft",
+    "tokenId": "token-gold-v1",
+    "repairId": "repair-gold-v1",
+    "generation": 3,
+    "dedupKey": "dedup-gold-v1",
+    "transactionGroupId": "tx-gold-v1",
+    "effectHash": "EFFECT-HASH",
+    "changeSetHash": "CHANGESET-HASH",
+    "commitStatus": "COMMITTED",
+    "durable": true,
+    "signer": "SINK-SIGNER-PLACEHOLDER",
+    "signature": "RECEIPT-SIGNATURE-PLACEHOLDER"
+  },
+  "cases": [
+    {
+      "familyId": "G03",
+      "purpose": "candidate-specific completion filtering is an artifact-invalidity case, not a D3 instance verdict",
+      "variants": [
+        {
+          "variantId": "G03-PREFLIGHT",
+          "mutationLayer": "PREFLIGHT",
+          "mutationStage": "PRE_DECISION",
+          "inputPatch": [{"op": "replace", "path": "/completionBinding", "value": "candidate-dependent"}],
+          "expected": {
+            "artifactValidity": {"status": "INVALID", "reasonCode": "CANDIDATE_WORLD_FILTERING", "witnessRef": "G03/completion-binding"},
+            "input": {"status": "UNKNOWN", "reasonCode": "CANDIDATE_WORLD_FILTERING", "witnessRef": "G03/completion-binding"},
+            "candidate": {"status": "NOT_RUN", "reasonCode": "CANDIDATE_WORLD_FILTERING", "witnessRef": null},
+            "instance": {"status": "UNKNOWN", "reasonCode": "CANDIDATE_WORLD_FILTERING", "witnessRef": "G03/completion-binding"},
+            "runtime": {"status": "NOT_RUN", "reasonCode": null, "witnessRef": null},
+            "safety": {"status": "NOT_EVALUATED", "reasonCode": null, "witnessRef": null}
+          },
+          "countInD3ConfusionMatrix": false
+        }
+      ]
+    },
+    {
+      "familyId": "G11",
+      "purpose": "receipt atomicity preflight versus response loss after a committed effect",
+      "variants": [
+        {
+          "variantId": "G11-PREFLIGHT",
+          "mutationLayer": "PREFLIGHT",
+          "mutationStage": "PRE_DECISION",
+          "inputPatch": [{"op": "remove", "path": "/token/receiptSchemaHash"}],
+          "effectState": "NONE",
+          "expected": {"input": "UNKNOWN(RECEIPT_ATOMICITY_UNVERIFIED)", "candidate": "NOT_RUN", "runtime": "NOT_RUN", "safety": "NOT_EVALUATED"}
+        },
+        {
+          "variantId": "G11-RUNTIME-DELIVERY-LOSS",
+          "mutationLayer": "DEPLOYED_RUNTIME",
+          "mutationStage": "POST_COMMIT",
+          "planningAxes": "INHERIT_BASE",
+          "effectState": "COMMITTED_RECEIPT_DURABLE_RESPONSE_LOST",
+          "sinkEvents": ["TOKEN_CHECK", "PREPARE", "GLOBAL_DECISION_COMMIT", "EFFECT_WRITE", "DEDUP_WRITE", "RECEIPT_WRITE", "RESPONSE_LOSS"],
+          "expected": {"runtime": "IN_DOUBT", "safety": "NOT_EVALUATED", "publicDisposition": "POSSIBLE_EFFECT_DO_NOT_RETRY", "implementationConformance": "UNRESOLVED_UNTIL_RECEIPT_QUERY"}
+        }
+      ]
+    },
+    {
+      "familyId": "G12",
+      "purpose": "cross-sink proof coverage, modelled half commit, and deployed-runtime conformance",
+      "variants": [
+        {
+          "variantId": "G12-PREFLIGHT",
+          "mutationLayer": "PREFLIGHT",
+          "mutationStage": "PRE_DECISION",
+          "inputPatch": [{"op": "remove", "path": "/crossSinkInvariant/proofPayloadRef"}],
+          "expected": {"input": "UNKNOWN(CROSS_SINK_PROOF_MISSING)", "candidate": "NOT_RUN", "runtime": "NOT_RUN", "safety": "NOT_EVALUATED"}
+        },
+        {
+          "variantId": "G12-MODELLED-HALF-COMMIT",
+          "mutationLayer": "CONCRETE_MODEL",
+          "mutationStage": "AT_LINEARIZATION",
+          "faultTrace": [
+            {"sinkId": "sink-r", "events": ["EFFECT_WRITE", "DEDUP_WRITE", "RECEIPT_WRITE"]},
+            {"sinkId": "sink-ledger", "events": ["PREPARE", "CRASH_BEFORE_EFFECT"]}
+          ],
+          "expected": {"candidate": "PLAN_REJECT(CROSS_SINK_INCONSISTENCY)", "runtime": "NOT_RUN", "safety": "NOT_EVALUATED", "d2TransferVerdict": "COUNTEREXAMPLE_FOUND"}
+        },
+        {
+          "variantId": "G12-RUNTIME-HALF-COMMIT",
+          "mutationLayer": "DEPLOYED_RUNTIME",
+          "mutationStage": "AT_LINEARIZATION",
+          "planningAxes": "INHERIT_BASE",
+          "effectState": "HALF_COMMITTED",
+          "expected": {"runtime": "IN_DOUBT", "safety": "HARD_VIOLATION(CROSS_SINK_INCONSISTENCY)", "publicDisposition": "POSSIBLE_EFFECT_DO_NOT_RETRY", "implementationConformance": "FAILED"}
+        }
+      ]
+    },
+    {
+      "familyId": "G13",
+      "purpose": "mediation coverage preflight, modelled bypass, and deployed hidden effect",
+      "variants": [
+        {
+          "variantId": "G13-PREFLIGHT",
+          "mutationLayer": "PREFLIGHT",
+          "mutationStage": "PRE_DECISION",
+          "inputPatch": [{"op": "replace", "path": "/mediationCoverage", "value": "unproven"}],
+          "expected": {"input": "UNKNOWN(TCB_UNTRUSTED)", "candidate": "NOT_RUN", "runtime": "NOT_RUN", "safety": "NOT_EVALUATED"}
+        },
+        {
+          "variantId": "G13-MODELLED-BYPASS",
+          "mutationLayer": "CONCRETE_MODEL",
+          "mutationStage": "POST_COMMIT",
+          "faultTrace": [{"actor": "unmediated-writer", "event": "HIDDEN_EFFECT", "resourceId": "resource-r"}],
+          "expected": {"candidate": "PLAN_REJECT(HIDDEN_EFFECT)", "d2TransferVerdict": "COUNTEREXAMPLE_FOUND"}
+        },
+        {
+          "variantId": "G13-RUNTIME-BYPASS",
+          "mutationLayer": "DEPLOYED_RUNTIME",
+          "mutationStage": "POST_COMMIT",
+          "planningAxes": "INHERIT_BASE",
+          "effectState": "BYPASS_DETECTED",
+          "expected": {"runtime": "COMMITTED", "safety": "HARD_VIOLATION(HIDDEN_EFFECT)", "implementationConformance": "FAILED"}
+        }
+      ]
+    },
+    {
+      "familyId": "G14",
+      "purpose": "TOCTOU must distinguish a correct fence rejection from a stale write",
+      "variants": [
+        {
+          "variantId": "G14-PREFLIGHT",
+          "mutationLayer": "PREFLIGHT",
+          "mutationStage": "PRE_DECISION",
+          "inputPatch": [{"op": "replace", "path": "/token/expectedVersionVector/resource-r", "value": "UNKNOWN"}],
+          "expected": {"input": "UNKNOWN(STALE_CERT)", "candidate": "NOT_RUN", "runtime": "NOT_RUN", "safety": "NOT_EVALUATED"}
+        },
+        {
+          "variantId": "G14-RUNTIME-FENCE-CORRECT",
+          "mutationLayer": "DEPLOYED_RUNTIME",
+          "mutationStage": "PRE_COMMIT",
+          "planningAxes": "INHERIT_BASE",
+          "faultTrace": [{"event": "RESOURCE_VERSION_ADVANCE", "from": 2, "to": 3}, {"event": "COMPARE_AND_FENCE_REJECT"}],
+          "effectState": "NONE",
+          "expected": {"runtime": "STALE_REJECTED", "safety": "SAFE", "effect": "ABORTED_NO_EFFECT", "implementationConformance": "PASSED"}
+        },
+        {
+          "variantId": "G14-RUNTIME-FENCE-BUG",
+          "mutationLayer": "DEPLOYED_RUNTIME",
+          "mutationStage": "AT_LINEARIZATION",
+          "planningAxes": "INHERIT_BASE",
+          "faultTrace": [{"event": "RESOURCE_VERSION_ADVANCE", "from": 2, "to": 3}, {"event": "STALE_EFFECT_WRITE"}],
+          "effectState": "COMMITTED_STALE_WRITE",
+          "expected": {"runtime": "COMMITTED", "safety": "HARD_VIOLATION(TOCTOU)", "implementationConformance": "FAILED"}
+        }
+      ]
+    },
+    {
+      "familyId": "G15",
+      "purpose": "old owner epoch and old repair generation are separate fencing obligations",
+      "variants": [
+        {
+          "variantId": "G15-OLD-OWNER-REJECTED",
+          "mutationLayer": "DEPLOYED_RUNTIME",
+          "mutationStage": "PRE_COMMIT",
+          "planningAxes": "INHERIT_BASE",
+          "inputPatch": [{"op": "replace", "path": "/token/expectedEpochVector/owner-a", "value": 1}],
+          "effectState": "NONE",
+          "expected": {"runtime": "STALE_REJECTED", "safety": "SAFE", "effect": "ABORTED_NO_EFFECT"}
+        },
+        {
+          "variantId": "G15-OLD-OWNER-WRITE",
+          "mutationLayer": "DEPLOYED_RUNTIME",
+          "mutationStage": "AT_LINEARIZATION",
+          "planningAxes": "INHERIT_BASE",
+          "effectState": "COMMITTED_OLD_OWNER_WRITE",
+          "expected": {"runtime": "COMMITTED", "safety": "HARD_VIOLATION(OLD_OWNER_WRITE)", "implementationConformance": "FAILED"}
+        },
+        {
+          "variantId": "G15-OLD-GENERATION-REJECTED",
+          "mutationLayer": "DEPLOYED_RUNTIME",
+          "mutationStage": "PRE_COMMIT",
+          "planningAxes": "INHERIT_BASE",
+          "inputPatch": [{"op": "replace", "path": "/token/generation", "value": 2}],
+          "effectState": "NONE",
+          "expected": {"runtime": "STALE_REJECTED", "safety": "SAFE", "effect": "ABORTED_NO_EFFECT"}
+        },
+        {
+          "variantId": "G15-OLD-GENERATION-WRITE",
+          "mutationLayer": "DEPLOYED_RUNTIME",
+          "mutationStage": "AT_LINEARIZATION",
+          "planningAxes": "INHERIT_BASE",
+          "effectState": "COMMITTED_OLD_GENERATION_WRITE",
+          "expected": {"runtime": "COMMITTED", "safety": "HARD_VIOLATION(OLD_GENERATION_REDEEM)", "implementationConformance": "FAILED"}
+        }
+      ]
+    },
+    {
+      "familyId": "G16",
+      "purpose": "terminal closure is a planning obligation; an out-of-model post-horizon effect is a conformance failure",
+      "variants": [
+        {
+          "variantId": "G16-PLANNING-NO-CLOSURE",
+          "mutationLayer": "CONCRETE_MODEL",
+          "mutationStage": "POST_HORIZON",
+          "faultTrace": [{"time": "H+1", "event": "LEAVE_SAFE_CLOSED"}],
+          "expected": {"candidate": "PLAN_REJECT(TERMINAL_CLOSURE)", "runtime": "NOT_RUN", "safety": "NOT_EVALUATED", "d2TransferVerdict": "COUNTEREXAMPLE_FOUND"}
+        },
+        {
+          "variantId": "G16-RUNTIME-TIME-BOMB",
+          "mutationLayer": "DEPLOYED_RUNTIME",
+          "mutationStage": "POST_HORIZON",
+          "planningAxes": "INHERIT_BASE",
+          "faultTrace": [{"time": "H+1", "event": "UNMODELLED_DELAYED_EFFECT"}],
+          "expected": {"runtime": "FINALIZED", "safety": "HARD_VIOLATION(TERMINAL_CLOSURE)", "implementationConformance": "FAILED"}
+        }
+      ]
+    }
+  ]
+}

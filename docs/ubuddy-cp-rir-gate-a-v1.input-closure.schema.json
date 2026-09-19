@@ -1,0 +1,25 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://ubuddy.invalid/schemas/cp-rir-gate-a-input-closure-v0.json",
+  "title": "CP-RIR Gate A answer-free input closure (draft)",
+  "description": "Recursive structural lint for files visible to A1/A2/A3. Passing this lint is necessary but not sufficient for process-level isolation.",
+  "$ref": "#/$defs/cleanValue",
+  "$defs": {
+    "cleanValue": {
+      "oneOf": [
+        {"type": ["null", "boolean", "integer"]},
+        {"type": "string", "not": {"pattern": "([lL][oO][cC][kK][eE][dD][-_]?[eE][xX][pP][eE][cC][tT][eE][dD]|[rR][uU][nN][tT][iI][mM][eE][-_]?[gG][oO][lL][dD]|[mM][aA][nN][iI][fF][eE][sS][tT]\\.[eE][xX][aA][mM][pP][lL][eE]|[rR][eE][fF][eE][rR][eE][nN][cC][eE][-_]?[pP][aA][yY][lL][oO][aA][dD])"}},
+        {"type": "array", "items": {"$ref": "#/$defs/cleanValue"}},
+        {
+          "type": "object",
+          "propertyNames": {
+            "not": {
+              "pattern": "^([eE][xX][pP][eE][cC][tT][eE][dD]([_-]?[vV][eE][rR][dD][iI][cC][tT]|[_-]?[cC][oO][rR][pP][uU][sS]|[_-]?[oO][uU][tT][pP][uU][tT]|[_-]?[aA][nN][sS][wW][eE][rR])?|[wW][oO][rR][lL][dD][_-]?[vV][aA][lL][uU][eE][sS]|[rR][oO][bB][uU][sS][tT][_-]?[dD][eE][lL][tT][aA]|[sS][eE][lL][eE][cC][tT][eE][dD][_-]?[cC][aA][nN][dD][iI][dD][aA][tT][eE]|[nN][eE][gG][aA][tT][iI][vV][eE][_-]?[wW][iI][tT][nN][eE][sS][sS]|[pP][lL][aA][nN][nN][iI][nN][gG][_-]?[oO][uU][tT][pP][uU][tT]|[lL][oO][cC][kK][eE][dD][_-]?[eE][xX][pP][eE][cC][tT][eE][dD]|[oO][rR][aA][cC][lL][eE][_-]?[aA][nN][sS][wW][eE][rR]|[rR][eE][fF][eE][rR][eE][nN][cC][eE][_-]?[vV][eE][rR][dD][iI][cC][tT]|[oO][pP][tT][iI][mM][aA][lL][iI][tT][yY][_-]?[sS][cC][oO][rR][eE]|[dD][eE][lL][tT][aA][_-]?[wW][iI][tT][nN][eE][sS][sS]|[hH][aA][rR][dD][_-]?[tT][rR][aA][cC][eE][_-]?[vV][eE][rR][dD][iI][cC][tT]|[bB][aA][sS][eE][_-]?[pP][lL][aA][nN][nN][iI][nN][gG])$"
+            }
+          },
+          "additionalProperties": {"$ref": "#/$defs/cleanValue"}
+        }
+      ]
+    }
+  }
+}

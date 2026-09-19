@@ -1,0 +1,46 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "schemaVersion": "cp-rir/baseline-variant-input/v0",
+  "status": "illustrative_v0_draft",
+  "purpose": "answer_free_input_for_self_baseline_sanity_mutant",
+  "baseCaseAlias": "C0002",
+  "baselineVariantId": "B0000-LEGACY",
+  "diagnosticKind": "SELF_BASELINE_SANITY",
+  "fixedBindings": {
+    "modelAlias": "C0002",
+    "contractAlias": "C0002",
+    "evaluatorAlias": "C0002",
+    "policyAlias": "C0002",
+    "authorizationExecKernel": "UNCHANGED_FROM_BASE_CASE",
+    "nominalKernel": "UNCHANGED_FROM_BASE_CASE"
+  },
+  "finiteKernelRef": "ubuddy-cp-rir-gate-a-v1.instance-input-payload.example.json#/cases/1",
+  "baselinePolicy": {
+    "policyId": "pi-repair",
+    "proposal": "repair",
+    "semantics": "evaluate_the_registered_repair_policy_as_pi0_prime_from_the_same_full_transition_kernel"
+  },
+  "candidatePolicy": {
+    "policyId": "pi-repair",
+    "proposal": "repair",
+    "semantics": "evaluate_repair_from_the_referenced_full_transition_kernel"
+  },
+  "thresholds": {
+    "eta": { "num": 4, "den": 5 },
+    "kappa": { "num": 1, "den": 2 },
+    "costBudget": { "num": 1, "den": 1 }
+  },
+  "derivationNote": "The referenced case contains initial distribution, terminal utility, authorization, executability and nominal transitions. The runner must recompute both policy and baselines from that one fixed kernel. This legacy self-baseline sanity fixture is retained only for regression compatibility; it is not evidence for a strict or general baseline-monotonicity theorem, and no result value is supplied here.",
+  "answerIsolation": {
+    "mustNotContain": [
+      "expected",
+      "robustDelta",
+      "verdict",
+      "selectedCandidateId",
+      "negativeWitnessSet"
+    ],
+    "transitiveExpectedReference": "forbidden"
+  },
+  "inputHash": "TO_BE_COMPUTED",
+  "implementationStatus": "planned/unverified"
+}

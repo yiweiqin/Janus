@@ -1,0 +1,25 @@
+{
+  "$schema":"https://json-schema.org/draft/2020-12/schema",
+  "$id":"https://ubuddy.invalid/schemas/cp-rir-d2-canonical-recovery-product-v1.json",
+  "title":"Canonical D2 recovery product input (research draft)",
+  "description":"Answer-free integration artifact for bounded D2 witnesses and per-sink recovery transitions. It is not a runtime protocol or a soundness certificate.",
+  "type":"object",
+  "additionalProperties":false,
+  "required":["$schema","schemaVersion","status","purpose","sharedBinding","observerContract","cases","implementationStatus"],
+  "properties":{
+    "$schema":{"const":"ubuddy-cp-rir-d2-canonical-recovery-product-v1.schema.json"},
+    "schemaVersion":{"const":"cp-rir/d2-canonical-recovery-product-input/v1"},
+    "status":{"const":"illustrative_v1_draft"},
+    "purpose":{"const":"answer_free_canonical_d2_recovery_product_input_only"},
+    "sharedBinding":{"type":"object","additionalProperties":false,"required":["candidateDigest","worldDigest","contractDigest","faultDigest","recoveryDigest"],"properties":{"candidateDigest":{"type":"string","pattern":"^[a-f0-9]{64}$"},"worldDigest":{"type":"string","pattern":"^[a-f0-9]{64}$"},"contractDigest":{"type":"string","pattern":"^[a-f0-9]{64}$"},"faultDigest":{"type":"string","pattern":"^[a-f0-9]{64}$"},"recoveryDigest":{"type":"string","pattern":"^[a-f0-9]{64}$"}}},
+    "observerContract":{"type":"object","additionalProperties":false,"required":["solverVisible","auditOnly","processNamespaceIsolation"],"properties":{"solverVisible":{"const":["caseAlias","coarsePublicDisposition","productDigest"]},"auditOnly":{"const":["canonicalCase","eventTrace","sinkPrivateState","receiptEvidence","negativeWitness"]},"processNamespaceIsolation":{"const":"NOT_IMPLEMENTED"}}},
+    "cases":{"type":"array","minItems":3,"items":{"$ref":"#/$defs/case"}},
+    "implementationStatus":{"const":"prototype/unverified"}
+  },
+  "$defs":{
+    "sink":{"type":"object","additionalProperties":false,"required":["sinkId","effectReality","effectKnowledge","receiptState","dedupState","version"],"properties":{"sinkId":{"type":"string"},"effectReality":{"enum":["NOT_APPLIED","POSSIBLE_APPLIED","CONFIRMED_APPLIED"]},"effectKnowledge":{"enum":["NO_EFFECT_CONFIRMED","EFFECT_POSSIBLE","IN_DOUBT","EFFECT_CONFIRMED"]},"receiptState":{"enum":["ABSENT","LOST","PRESENT_UNVERIFIED","PRESENT_VERIFIED","DUPLICATE","MALFORMED"]},"dedupState":{"enum":["NONE","UNIQUE","DUPLICATE","UNKNOWN"]},"version":{"type":"integer","minimum":0}}},
+    "snapshot":{"type":"object","additionalProperties":false,"required":["stateName","globalSafety","recoveryPhase","publicDisposition","allowedActions","sinks","historicalViolation"],"properties":{"stateName":{"enum":["PRE_EFFECT","EFFECT_POSSIBLE","EFFECT_CONFIRMED","NO_EFFECT_CONFIRMED","IN_DOUBT","REMEDIATED","HARD_VIOLATION","MANUAL_INTERVENTION"]},"globalSafety":{"enum":["SAFE","HARD_VIOLATION","UNKNOWN"]},"recoveryPhase":{"enum":["IDLE","RECONCILING","FORWARD_COMPLETING","COMPENSATING","REMEDIATED","MANUAL_INTERVENTION"]},"publicDisposition":{"enum":["NONE","IN_DOUBT","DO_NOT_RETRY","AUDIT_ONLY","REMEDIATION_REQUIRED"]},"allowedActions":{"type":"array","items":{"enum":["QUERY_RECEIPT","RESUME_IDEMPOTENT_TX","RETRY_SAME_EFFECT","COMPLETE_FORWARD","COMPENSATE","MANUAL"]},"uniqueItems":true},"sinks":{"type":"array","minItems":1,"items":{"$ref":"#/$defs/sink"}},"historicalViolation":{"type":"boolean"}}},
+    "step":{"type":"object","additionalProperties":false,"required":["canonicalStepIndex","canonicalEvent","event","fromState","toState","retryDisposition","post"],"properties":{"canonicalStepIndex":{"type":"integer","minimum":0},"canonicalEvent":{"type":"string"},"event":{"type":"string"},"fromState":{"type":"string"},"toState":{"type":"string"},"retryDisposition":{"enum":["RETRY_ALLOWED","DO_NOT_RETRY","CONDITIONAL_RECONCILE"]},"post":{"$ref":"#/$defs/snapshot"}}},
+    "case":{"type":"object","additionalProperties":false,"required":["caseAlias","canonicalCaseDigest","initial","steps","final","evidence"],"properties":{"caseAlias":{"type":"string","pattern":"^[A-Z0-9]{8}$"},"canonicalCaseDigest":{"type":"string","pattern":"^[a-f0-9]{64}$"},"initial":{"$ref":"#/$defs/snapshot"},"steps":{"type":"array","minItems":1,"items":{"$ref":"#/$defs/step"}},"final":{"$ref":"#/$defs/snapshot"},"evidence":{"type":"object","additionalProperties":false,"required":["receiptReplay","negativeWitnessReplay","sinkEnforcement","escrowReachability"],"properties":{"receiptReplay":{"const":"NOT_IMPLEMENTED"},"negativeWitnessReplay":{"const":"NOT_IMPLEMENTED"},"sinkEnforcement":{"const":"NOT_IMPLEMENTED"},"escrowReachability":{"const":"NOT_IMPLEMENTED"}}}}}
+  }
+}

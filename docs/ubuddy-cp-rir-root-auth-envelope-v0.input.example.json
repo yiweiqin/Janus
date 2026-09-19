@@ -1,0 +1,10 @@
+{
+  "$schema":"ubuddy-cp-rir-root-auth-envelope-v0.schema.json",
+  "schemaVersion":"cp-rir/root-auth-envelope/v0",
+  "rootType":"REQ_REGISTRY",
+  "root":"bc3059b55019860c6faa9c91e953183b6d10453aa7d16de0b321448dabbb657e",
+  "issuer":{"issuerId":"normative-authority-A","keyId":"key-2026-09-A","algorithm":"ed25519"},
+  "keyLifecycle":{"status":"ACTIVE","validFrom":0,"validUntil":999999,"rotationPredecessor":null,"revocationEvidence":null},
+  "signature":{"value":"NOT_IMPLEMENTED","verificationStatus":"NOT_IMPLEMENTED","signedRoot":"bc3059b55019860c6faa9c91e953183b6d10453aa7d16de0b321448dabbb657e","signedKeyId":"key-2026-09-A"},
+  "implementationStatus":"planned/unverified"
+}

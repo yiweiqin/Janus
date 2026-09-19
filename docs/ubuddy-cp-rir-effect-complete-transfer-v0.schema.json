@@ -1,0 +1,19 @@
+{
+  "$schema":"https://json-schema.org/draft/2020-12/schema",
+  "$id":"https://ubuddy.invalid/schemas/cp-rir-effect-complete-transfer-v0.json",
+  "type":"object","additionalProperties":false,
+  "required":["$schema","schemaVersion","horizon","cases","implementationStatus"],
+  "properties":{
+    "$schema":{"const":"ubuddy-cp-rir-effect-complete-transfer-v0.schema.json"},
+    "schemaVersion":{"const":"cp-rir/effect-complete-transfer/v0"},
+    "horizon":{"type":"integer","minimum":1},
+    "cases":{"type":"array","minItems":1,"items":{"$ref":"#/$defs/case"}},
+    "implementationStatus":{"const":"prototype/unverified"}
+  },
+  "$defs":{
+    "transition":{"type":"object","additionalProperties":false,"required":["from","event","to","eventClass","effectFootprint"],"properties":{"from":{"type":"string","minLength":1},"event":{"type":"string","minLength":1},"to":{"type":"string","minLength":1},"eventClass":{"enum":["INTERNAL","MEDIATED_EFFECT","UNMEDIATED_EFFECT","REFUSED_ATTEMPT"]},"effectFootprint":{"type":"array","items":{"type":"string","minLength":1},"uniqueItems":true}}},
+    "system":{"type":"object","additionalProperties":false,"required":["stateIds","initialStateId","terminalStateIds","badStateIds","transitions"],"properties":{"stateIds":{"type":"array","minItems":1,"items":{"type":"string","minLength":1},"uniqueItems":true},"initialStateId":{"type":"string","minLength":1},"terminalStateIds":{"type":"array","items":{"type":"string","minLength":1},"uniqueItems":true},"badStateIds":{"type":"array","items":{"type":"string","minLength":1},"uniqueItems":true},"transitions":{"type":"array","items":{"$ref":"#/$defs/transition"}}}},
+    "monitor":{"type":"object","additionalProperties":false,"required":["stateIds","initialStateId","terminalStateIds","violationStateIds","rules"],"properties":{"stateIds":{"type":"array","minItems":1,"items":{"type":"string","minLength":1},"uniqueItems":true},"initialStateId":{"type":"string","minLength":1},"terminalStateIds":{"type":"array","items":{"type":"string","minLength":1},"uniqueItems":true},"violationStateIds":{"type":"array","items":{"type":"string","minLength":1},"uniqueItems":true},"rules":{"type":"array","items":{"type":"object","additionalProperties":false,"required":["from","event","to"],"properties":{"from":{"type":"string","minLength":1},"event":{"type":"string","minLength":1},"to":{"type":"string","minLength":1}}}}}},
+    "case":{"type":"object","additionalProperties":false,"required":["caseId","concreteSystem","abstractSystem","stateMap","eventMap","legalStutterEvents","monitor"],"properties":{"caseId":{"type":"string","minLength":1},"concreteSystem":{"$ref":"#/$defs/system"},"abstractSystem":{"$ref":"#/$defs/system"},"stateMap":{"type":"array","minItems":1,"items":{"type":"object","additionalProperties":false,"required":["concrete","abstract"],"properties":{"concrete":{"type":"string"},"abstract":{"type":"string"}}}},"eventMap":{"type":"array","minItems":1,"items":{"type":"object","additionalProperties":false,"required":["concrete","abstract"],"properties":{"concrete":{"type":"string"},"abstract":{"type":"string"}}}},"legalStutterEvents":{"type":"array","items":{"type":"string"},"uniqueItems":true},"monitor":{"$ref":"#/$defs/monitor"}}}
+  }
+}

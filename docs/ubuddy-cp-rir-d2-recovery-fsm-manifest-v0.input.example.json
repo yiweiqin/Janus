@@ -1,0 +1,25 @@
+{
+  "$schema":"ubuddy-cp-rir-d2-recovery-fsm-manifest-v0.schema.json",
+  "schemaVersion":"cp-rir/d2-recovery-fsm-manifest/v0",
+  "implementationStatus":"prototype/unverified",
+  "generatorVersion":"cp-rir/d2-recovery-fsm-generator/v0",
+  "grammarId":"cp-rir/recovery-fsm/h6/v0",
+  "grammarDigest":"ae80205ca52c19cb36cadb86cd2e0815025178a498158fe293a3d6a99f1e5664",
+  "horizon":6,
+  "generationMode":"EXPLICIT_PREFIX_ENUMERATION",
+  "paths":[
+    {"pathId":"ROOT","stepCount":0,"states":["EFFECT_POSSIBLE"],"events":[],"transitionIds":[],"terminal":false},
+    {"pathId":"T-CRASH","stepCount":1,"states":["EFFECT_POSSIBLE","CRASHED"],"events":["CRASH"],"transitionIds":["T-CRASH"],"terminal":false},
+    {"pathId":"T-CRASH>T-RESTART","stepCount":2,"states":["EFFECT_POSSIBLE","CRASHED","RESTARTED"],"events":["CRASH","RESTART"],"transitionIds":["T-CRASH","T-RESTART"],"terminal":false},
+    {"pathId":"T-CRASH>T-RESTART>T-QUERY","stepCount":3,"states":["EFFECT_POSSIBLE","CRASHED","RESTARTED","RECEIPT_QUERY"],"events":["CRASH","RESTART","QUERY_RECEIPT"],"transitionIds":["T-CRASH","T-RESTART","T-QUERY"],"terminal":false},
+    {"pathId":"T-CRASH>T-RESTART>T-QUERY>T-LOST","stepCount":4,"states":["EFFECT_POSSIBLE","CRASHED","RESTARTED","RECEIPT_QUERY","IN_DOUBT"],"events":["CRASH","RESTART","QUERY_RECEIPT","RECEIPT_UNAVAILABLE"],"transitionIds":["T-CRASH","T-RESTART","T-QUERY","T-LOST"],"terminal":false},
+    {"pathId":"T-CRASH>T-RESTART>T-QUERY>T-LOST>T-START-COMPENSATION","stepCount":5,"states":["EFFECT_POSSIBLE","CRASHED","RESTARTED","RECEIPT_QUERY","IN_DOUBT","COMPENSATION_PENDING"],"events":["CRASH","RESTART","QUERY_RECEIPT","RECEIPT_UNAVAILABLE","START_COMPENSATION"],"transitionIds":["T-CRASH","T-RESTART","T-QUERY","T-LOST","T-START-COMPENSATION"],"terminal":false},
+    {"pathId":"T-CRASH>T-RESTART>T-QUERY>T-LOST>T-START-COMPENSATION>T-COMPENSATION-VERIFIED","stepCount":6,"states":["EFFECT_POSSIBLE","CRASHED","RESTARTED","RECEIPT_QUERY","IN_DOUBT","COMPENSATION_PENDING","REMEDIATED"],"events":["CRASH","RESTART","QUERY_RECEIPT","RECEIPT_UNAVAILABLE","START_COMPENSATION","COMPENSATION_VERIFIED"],"transitionIds":["T-CRASH","T-RESTART","T-QUERY","T-LOST","T-START-COMPENSATION","T-COMPENSATION-VERIFIED"],"terminal":true},
+    {"pathId":"T-CRASH>T-RESTART>T-QUERY>T-LOST>T-START-COMPENSATION>T-COMPENSATION-FAILED","stepCount":6,"states":["EFFECT_POSSIBLE","CRASHED","RESTARTED","RECEIPT_QUERY","IN_DOUBT","COMPENSATION_PENDING","MANUAL_INTERVENTION"],"events":["CRASH","RESTART","QUERY_RECEIPT","RECEIPT_UNAVAILABLE","START_COMPENSATION","COMPENSATION_FAILED"],"transitionIds":["T-CRASH","T-RESTART","T-QUERY","T-LOST","T-START-COMPENSATION","T-COMPENSATION-FAILED"],"terminal":true},
+    {"pathId":"T-CRASH>T-RESTART>T-QUERY>T-LOST>T-MANUAL","stepCount":5,"states":["EFFECT_POSSIBLE","CRASHED","RESTARTED","RECEIPT_QUERY","IN_DOUBT","MANUAL_INTERVENTION"],"events":["CRASH","RESTART","QUERY_RECEIPT","RECEIPT_UNAVAILABLE","ESCALATE_MANUAL"],"transitionIds":["T-CRASH","T-RESTART","T-QUERY","T-LOST","T-MANUAL"],"terminal":true},
+    {"pathId":"T-CRASH>T-RESTART>T-QUERY>T-VERIFIED","stepCount":4,"states":["EFFECT_POSSIBLE","CRASHED","RESTARTED","RECEIPT_QUERY","EFFECT_CONFIRMED"],"events":["CRASH","RESTART","QUERY_RECEIPT","VERIFIED_RECEIPT"],"transitionIds":["T-CRASH","T-RESTART","T-QUERY","T-VERIFIED"],"terminal":true},
+    {"pathId":"T-CRASH>T-RESTART>T-QUERY>T-NEGATIVE","stepCount":4,"states":["EFFECT_POSSIBLE","CRASHED","RESTARTED","RECEIPT_QUERY","NO_EFFECT_CONFIRMED"],"events":["CRASH","RESTART","QUERY_RECEIPT","VERIFIED_NEGATIVE_WITNESS"],"transitionIds":["T-CRASH","T-RESTART","T-QUERY","T-NEGATIVE"],"terminal":true}
+  ],
+  "pathSetDigest":"fb381b0fbe0e76d00d7c5b1a6537071cd4d0bdfffa777ac1a6d06697a2be9e12",
+  "limitations":["NO_SINK_REPLAY","NO_RECEIPT_CRYPTOGRAPHY","NO_REAL_CRASH_RESTART","NO_FAIRNESS_PROOF"]
+}

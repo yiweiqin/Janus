@@ -1,0 +1,701 @@
+{
+  "$schema": "ubuddy-cp-rir-finite-input-v0.schema.json",
+  "schemaVersion": "cp-rir/finite-input-corpus/v0",
+  "semanticsVersion": "cp-rir/reference-finite-v1",
+  "status": "illustrative_v0_draft",
+  "purpose": "A1_SOFT_VALUE_INPUT_ONLY_NO_EXPECTED_VALUES",
+  "safetyInputStatus": "not_present_in_this_soft_value_fixture",
+  "numericEncoding": "reduced_rational_num_den",
+  "worldPersistence": "world_selected_at_t0_and_fixed_for_entire_policy",
+  "hardSoftSeparation": {
+    "hardSafety": "universal_over_declared_fault_traces",
+    "softValue": "nominal_kernel_only"
+  },
+  "cases": [
+    {
+      "id": "C0001",
+      "horizon": 1,
+      "thresholds": {
+        "eta": {
+          "num": 1,
+          "den": 1
+        },
+        "kappa": {
+          "num": 1,
+          "den": 2
+        },
+        "costBudget": {
+          "num": 1,
+          "den": 1
+        }
+      },
+      "stateSpace": [
+        "s0",
+        "success",
+        "failure"
+      ],
+      "initialDistribution": [
+        {
+          "state": "s0",
+          "prob": {
+            "num": 1,
+            "den": 1
+          }
+        }
+      ],
+      "terminalUtility": {
+        "success": {
+          "num": 1,
+          "den": 1
+        },
+        "failure": {
+          "num": 0,
+          "den": 1
+        }
+      },
+      "worlds": [
+        {
+          "worldId": "g00-m1",
+          "authorization": [
+            {
+              "state": "s0",
+              "proposal": "repair",
+              "decision": "ALLOW"
+            },
+            {
+              "state": "s0",
+              "proposal": "noop",
+              "decision": "ALLOW"
+            }
+          ],
+          "executability": [
+            {
+              "state": "s0",
+              "action": "repair",
+              "value": true
+            },
+            {
+              "state": "s0",
+              "action": "noop",
+              "value": true
+            }
+          ],
+          "nominalTransitions": [
+            {
+              "from": "s0",
+              "action": "repair",
+              "to": "success",
+              "prob": {
+                "num": 1,
+                "den": 1
+              }
+            },
+            {
+              "from": "s0",
+              "action": "noop",
+              "to": "failure",
+              "prob": {
+                "num": 1,
+                "den": 1
+              }
+            }
+          ]
+        }
+      ],
+      "baseline": {
+        "policyId": "pi0",
+        "at": "s0",
+        "proposal": "noop"
+      },
+      "policyClass": [
+        {
+          "policyId": "pi-repair",
+          "at": "s0",
+          "proposal": "repair",
+          "cost": {
+            "num": 1,
+            "den": 1
+          },
+          "branchDepth": 0,
+          "probeRisk": {
+            "num": 0,
+            "den": 1
+          }
+        }
+      ]
+    },
+    {
+      "id": "C0002",
+      "horizon": 1,
+      "thresholds": {
+        "eta": {
+          "num": 4,
+          "den": 5
+        },
+        "kappa": {
+          "num": 1,
+          "den": 2
+        },
+        "costBudget": {
+          "num": 1,
+          "den": 1
+        }
+      },
+      "stateSpace": [
+        "s0",
+        "success",
+        "failure"
+      ],
+      "initialDistribution": [
+        {
+          "state": "s0",
+          "prob": {
+            "num": 1,
+            "den": 1
+          }
+        }
+      ],
+      "terminalUtility": {
+        "success": {
+          "num": 1,
+          "den": 1
+        },
+        "failure": {
+          "num": 0,
+          "den": 1
+        }
+      },
+      "worlds": [
+        {
+          "worldId": "m1",
+          "authorization": [
+            {
+              "state": "s0",
+              "proposal": "repair",
+              "decision": "ALLOW"
+            },
+            {
+              "state": "s0",
+              "proposal": "noop",
+              "decision": "ALLOW"
+            }
+          ],
+          "executability": [
+            {
+              "state": "s0",
+              "action": "repair",
+              "value": true
+            },
+            {
+              "state": "s0",
+              "action": "noop",
+              "value": true
+            }
+          ],
+          "nominalTransitions": [
+            {
+              "from": "s0",
+              "action": "repair",
+              "to": "success",
+              "prob": {
+                "num": 4,
+                "den": 5
+              }
+            },
+            {
+              "from": "s0",
+              "action": "repair",
+              "to": "failure",
+              "prob": {
+                "num": 1,
+                "den": 5
+              }
+            },
+            {
+              "from": "s0",
+              "action": "noop",
+              "to": "success",
+              "prob": {
+                "num": 7,
+                "den": 10
+              }
+            },
+            {
+              "from": "s0",
+              "action": "noop",
+              "to": "failure",
+              "prob": {
+                "num": 3,
+                "den": 10
+              }
+            }
+          ]
+        },
+        {
+          "worldId": "m2",
+          "authorization": [
+            {
+              "state": "s0",
+              "proposal": "repair",
+              "decision": "ALLOW"
+            },
+            {
+              "state": "s0",
+              "proposal": "noop",
+              "decision": "ALLOW"
+            }
+          ],
+          "executability": [
+            {
+              "state": "s0",
+              "action": "repair",
+              "value": true
+            },
+            {
+              "state": "s0",
+              "action": "noop",
+              "value": true
+            }
+          ],
+          "nominalTransitions": [
+            {
+              "from": "s0",
+              "action": "repair",
+              "to": "success",
+              "prob": {
+                "num": 9,
+                "den": 10
+              }
+            },
+            {
+              "from": "s0",
+              "action": "repair",
+              "to": "failure",
+              "prob": {
+                "num": 1,
+                "den": 10
+              }
+            },
+            {
+              "from": "s0",
+              "action": "noop",
+              "to": "success",
+              "prob": {
+                "num": 1,
+                "den": 10
+              }
+            },
+            {
+              "from": "s0",
+              "action": "noop",
+              "to": "failure",
+              "prob": {
+                "num": 9,
+                "den": 10
+              }
+            }
+          ]
+        }
+      ],
+      "baseline": {
+        "policyId": "pi0",
+        "at": "s0",
+        "proposal": "noop"
+      },
+      "policyClass": [
+        {
+          "policyId": "pi-repair",
+          "at": "s0",
+          "proposal": "repair",
+          "cost": {
+            "num": 1,
+            "den": 1
+          },
+          "branchDepth": 0,
+          "probeRisk": {
+            "num": 0,
+            "den": 1
+          }
+        }
+      ]
+    },
+    {
+      "id": "C0003",
+      "horizon": 1,
+      "thresholds": {
+        "eta": {
+          "num": 1,
+          "den": 2
+        },
+        "kappa": {
+          "num": 1,
+          "den": 10
+        },
+        "costBudget": {
+          "num": 1,
+          "den": 1
+        }
+      },
+      "stateSpace": [
+        "h0",
+        "h1",
+        "terminal0",
+        "terminal1"
+      ],
+      "initialDistribution": [
+        {
+          "state": "h0",
+          "prob": {
+            "num": 1,
+            "den": 2
+          }
+        },
+        {
+          "state": "h1",
+          "prob": {
+            "num": 1,
+            "den": 2
+          }
+        }
+      ],
+      "terminalUtility": {
+        "terminal0": {
+          "num": 0,
+          "den": 1
+        },
+        "terminal1": {
+          "num": 1,
+          "den": 1
+        }
+      },
+      "worlds": [
+        {
+          "worldId": "g06-m1",
+          "authorization": [
+            {
+              "state": "h0",
+              "proposal": "repair",
+              "decision": "DENY"
+            },
+            {
+              "state": "h1",
+              "proposal": "repair",
+              "decision": "ALLOW"
+            },
+            {
+              "state": "h0",
+              "proposal": "noop",
+              "decision": "ALLOW"
+            },
+            {
+              "state": "h1",
+              "proposal": "noop",
+              "decision": "ALLOW"
+            }
+          ],
+          "executability": [
+            {
+              "state": "h0",
+              "action": "refusal",
+              "value": true
+            },
+            {
+              "state": "h1",
+              "action": "repair",
+              "value": true
+            },
+            {
+              "state": "h0",
+              "action": "noop",
+              "value": true
+            },
+            {
+              "state": "h1",
+              "action": "noop",
+              "value": true
+            }
+          ],
+          "nominalTransitions": [
+            {
+              "from": "h0",
+              "action": "refusal",
+              "to": "terminal0",
+              "prob": {
+                "num": 1,
+                "den": 1
+              }
+            },
+            {
+              "from": "h1",
+              "action": "repair",
+              "to": "terminal1",
+              "prob": {
+                "num": 1,
+                "den": 1
+              }
+            },
+            {
+              "from": "h0",
+              "action": "noop",
+              "to": "terminal0",
+              "prob": {
+                "num": 1,
+                "den": 1
+              }
+            },
+            {
+              "from": "h1",
+              "action": "noop",
+              "to": "terminal1",
+              "prob": {
+                "num": 1,
+                "den": 1
+              }
+            }
+          ]
+        }
+      ],
+      "baseline": {
+        "policyId": "pi0",
+        "atObservation": "public0",
+        "proposal": "noop"
+      },
+      "policyClass": [
+        {
+          "policyId": "pi-repair",
+          "atObservation": "public0",
+          "proposal": "repair",
+          "cost": {
+            "num": 1,
+            "den": 1
+          },
+          "branchDepth": 0,
+          "probeRisk": {
+            "num": 0,
+            "den": 1
+          }
+        }
+      ],
+      "policyObservationAlphabet": [
+        "public0"
+      ],
+      "observationProjection": {
+        "h0": "public0",
+        "h1": "public0"
+      }
+    },
+    {
+      "id": "C0004",
+      "horizon": 1,
+      "thresholds": {
+        "eta": {
+          "num": 4,
+          "den": 5
+        },
+        "kappa": {
+          "num": 1,
+          "den": 2
+        },
+        "costBudget": {
+          "num": 1,
+          "den": 1
+        }
+      },
+      "stateSpace": [
+        "s0",
+        "success",
+        "failure"
+      ],
+      "initialDistribution": [
+        {
+          "state": "s0",
+          "prob": {
+            "num": 1,
+            "den": 1
+          }
+        }
+      ],
+      "terminalUtility": {
+        "success": {
+          "num": 1,
+          "den": 1
+        },
+        "failure": {
+          "num": 0,
+          "den": 1
+        }
+      },
+      "worlds": [
+        {
+          "worldId": "m1",
+          "authorization": [
+            {
+              "state": "s0",
+              "proposal": "repair",
+              "decision": "ALLOW"
+            },
+            {
+              "state": "s0",
+              "proposal": "noop",
+              "decision": "ALLOW"
+            }
+          ],
+          "executability": [
+            {
+              "state": "s0",
+              "action": "repair",
+              "value": true
+            },
+            {
+              "state": "s0",
+              "action": "noop",
+              "value": true
+            }
+          ],
+          "nominalTransitions": [
+            {
+              "from": "s0",
+              "action": "repair",
+              "to": "success",
+              "prob": {
+                "num": 4,
+                "den": 5
+              }
+            },
+            {
+              "from": "s0",
+              "action": "repair",
+              "to": "failure",
+              "prob": {
+                "num": 1,
+                "den": 5
+              }
+            },
+            {
+              "from": "s0",
+              "action": "noop",
+              "to": "success",
+              "prob": {
+                "num": 3,
+                "den": 4
+              }
+            },
+            {
+              "from": "s0",
+              "action": "noop",
+              "to": "failure",
+              "prob": {
+                "num": 1,
+                "den": 4
+              }
+            }
+          ]
+        },
+        {
+          "worldId": "m2",
+          "authorization": [
+            {
+              "state": "s0",
+              "proposal": "repair",
+              "decision": "ALLOW"
+            },
+            {
+              "state": "s0",
+              "proposal": "noop",
+              "decision": "ALLOW"
+            }
+          ],
+          "executability": [
+            {
+              "state": "s0",
+              "action": "repair",
+              "value": true
+            },
+            {
+              "state": "s0",
+              "action": "noop",
+              "value": true
+            }
+          ],
+          "nominalTransitions": [
+            {
+              "from": "s0",
+              "action": "repair",
+              "to": "success",
+              "prob": {
+                "num": 9,
+                "den": 10
+              }
+            },
+            {
+              "from": "s0",
+              "action": "repair",
+              "to": "failure",
+              "prob": {
+                "num": 1,
+                "den": 10
+              }
+            },
+            {
+              "from": "s0",
+              "action": "noop",
+              "to": "success",
+              "prob": {
+                "num": 1,
+                "den": 5
+              }
+            },
+            {
+              "from": "s0",
+              "action": "noop",
+              "to": "failure",
+              "prob": {
+                "num": 4,
+                "den": 5
+              }
+            }
+          ]
+        }
+      ],
+      "baseline": {
+        "policyId": "pi0",
+        "at": "s0",
+        "proposal": "noop"
+      },
+      "policyClass": [
+        {
+          "policyId": "pi-repair",
+          "at": "s0",
+          "proposal": "repair",
+          "cost": {
+            "num": 1,
+            "den": 1
+          },
+          "branchDepth": 0,
+          "probeRisk": {
+            "num": 0,
+            "den": 1
+          }
+        }
+      ]
+    }
+  ],
+  "answerIsolation": {
+    "mustNotContain": [
+      "expected",
+      "precomputed verdict",
+      "selectedCandidateId"
+    ],
+    "transitiveExpectedReference": "forbidden"
+  },
+  "blindedAliasPolicy": {
+    "runnerPrivateMappingRef": "COMPARATOR_PRIVATE",
+    "publicCaseIds": [
+      "C0001",
+      "C0002",
+      "C0003",
+      "C0004"
+    ],
+    "semanticLabelsVisibleToA1A2A3": false
+  }
+}

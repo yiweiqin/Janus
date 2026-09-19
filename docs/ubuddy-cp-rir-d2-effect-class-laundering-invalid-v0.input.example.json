@@ -1,0 +1,13 @@
+{
+  "$schema": "ubuddy-cp-rir-d2-reflection-negative-v0.schema.json",
+  "schemaVersion": "cp-rir/d2-reflection-negative-input/v0",
+  "status": "illustrative_v0_draft",
+  "purpose": "answer_free_effect_class_laundering_invalid_input_only",
+  "horizon": 1,
+  "concrete": {"stateIds":["c0","c-bad"],"initialStateId":"c0","transitions":[{"from":"c0","event":"HIDDEN_EFFECT","to":"c-bad","eventClass":"UNMEDIATED_EFFECT","effectId":"effect-1","sinkId":"sink-r","resourceId":"resource-r","multiplicity":1,"versionDelta":1}],"terminalStateIds":["c-bad"],"badStateIds":["c-bad"]},
+  "abstract": {"stateIds":["a0","a-safe"],"initialStateId":"a0","transitions":[{"from":"a0","event":"HIDDEN_EFFECT_OMITTED","to":"a-safe","eventClass":"INTERNAL","effectId":null,"sinkId":null,"resourceId":null,"multiplicity":0,"versionDelta":0}],"terminalStateIds":["a-safe"],"badStateIds":[]},
+  "mapping": {"stateMap":[{"from":"c0","to":"a0"},{"from":"c-bad","to":"a-safe"}],"eventMap":[{"from":"HIDDEN_EFFECT","to":"HIDDEN_EFFECT_OMITTED"}],"legalStutterEvents":[]},
+  "trace": {"concreteEvents":[{"from":"c0","event":"HIDDEN_EFFECT","to":"c-bad","eventClass":"UNMEDIATED_EFFECT","effectId":"effect-1","sinkId":"sink-r","resourceId":"resource-r","multiplicity":1,"versionDelta":1}],"abstractEvents":[{"from":"a0","event":"HIDDEN_EFFECT_OMITTED","to":"a-safe","eventClass":"INTERNAL","effectId":null,"sinkId":null,"resourceId":null,"multiplicity":0,"versionDelta":0}],"traceRelation":"MEMBER_OF_FROZEN_MODEL"},
+  "answerIsolation": {"mustNotContain":["expected","verdict","gold","reflectionVerdict"],"transitiveExpectedReference":"forbidden"},
+  "implementationStatus":"planned/unverified"
+}

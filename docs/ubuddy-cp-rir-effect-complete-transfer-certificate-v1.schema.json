@@ -1,0 +1,21 @@
+{
+  "$schema":"https://json-schema.org/draft/2020-12/schema",
+  "$id":"https://ubuddy.invalid/schemas/cp-rir-effect-complete-transfer-certificate-v1.json",
+  "type":"object",
+  "additionalProperties":false,
+  "required":["$schema","schemaVersion","inputDigest","coverageMode","cases","implementationStatus"],
+  "properties":{
+    "$schema":{"const":"ubuddy-cp-rir-effect-complete-transfer-certificate-v1.schema.json"},
+    "schemaVersion":{"const":"cp-rir/effect-complete-transfer-certificate/v1"},
+    "inputDigest":{"type":"string","pattern":"^[a-f0-9]{64}$"},
+    "coverageMode":{"const":"EXHAUSTIVE_PRODUCT_UP_TO_H"},
+    "cases":{"type":"array","minItems":1,"items":{"$ref":"#/$defs/case"}},
+    "implementationStatus":{"const":"prototype/unverified"}
+  },
+  "$defs":{
+    "tuple":{"type":"object","additionalProperties":false,"required":["concrete","abstract","monitor"],"properties":{"concrete":{"type":"string"},"abstract":{"type":"string"},"monitor":{"type":"string"}}},
+    "terminal":{"type":"object","additionalProperties":false,"required":["depth","concrete","abstract","monitor"],"properties":{"depth":{"type":"integer","minimum":0},"concrete":{"type":"string"},"abstract":{"type":"string"},"monitor":{"type":"string"}}},
+    "edge":{"type":"object","additionalProperties":false,"required":["depth","from","event","mappedEvent","to","concreteEffectFootprint","abstractEffectFootprint"],"properties":{"depth":{"type":"integer","minimum":0},"from":{"$ref":"#/$defs/tuple"},"event":{"type":"string","minLength":1},"mappedEvent":{"type":"string","minLength":1},"to":{"$ref":"#/$defs/tuple"},"concreteEffectFootprint":{"type":"array","items":{"type":"string"}},"abstractEffectFootprint":{"type":"array","items":{"type":"string"}}}},
+    "case":{"type":"object","additionalProperties":false,"required":["caseId","caseStatus","maxDepth","reachableTupleCount","productEdges","terminalTuples"],"properties":{"caseId":{"type":"string","minLength":1},"caseStatus":{"enum":["PASS","COUNTEREXAMPLE"]},"maxDepth":{"type":"integer","minimum":0},"reachableTupleCount":{"type":"integer","minimum":0},"productEdges":{"type":"array","items":{"$ref":"#/$defs/edge"}},"terminalTuples":{"type":"array","items":{"$ref":"#/$defs/terminal"}},"counterexample":{"type":"array","items":{"type":"string","minLength":1},"minItems":1}}}
+  }
+}

@@ -1,0 +1,61 @@
+{
+  "$schema": "ubuddy-cp-rir-verdict-v1.schema.json",
+  "schemaVersion": "cp-rir/verdict/v1",
+  "artifactVerdict": {"status": "VALID", "reasonCode": null, "witnessRef": "artifact/input-closure"},
+  "planningVerdict": {
+    "input": {"status": "VALID", "reasonCode": null, "witnessRef": "G00/input"},
+    "candidateResults": [
+      {
+        "canonicalId": "pi-repair",
+        "canonicalAstHash": "TO_BE_COMPUTED",
+        "policyHash": "TO_BE_COMPUTED",
+        "baselineHash": "TO_BE_COMPUTED",
+        "comp0Hash": "TO_BE_COMPUTED",
+        "status": "PLAN_FEASIBLE",
+        "reasonCode": null,
+        "witnessRefs": ["G00/candidate", "G00/world-g00-m1"],
+        "worldResults": [
+          {
+            "worldId": "g00-m1",
+            "hardSafety": "SAFE",
+            "typedExecutability": "PASS",
+            "refinement": "PASS",
+            "policyValue": {"num": 1, "den": 1},
+            "baselineValue": {"num": 0, "den": 1},
+            "delta": {"num": 1, "den": 1},
+            "cost": {"num": 1, "den": 1}
+          }
+        ],
+        "worstCost": {"num": 1, "den": 1},
+        "rejectionComponents": [],
+        "arithmeticWitnessRef": "G00/arithmetic"
+      }
+    ],
+    "enumerationCoverage": {
+      "expectedCount": 1,
+      "visitedCount": 1,
+      "complete": true,
+      "candidateSetDigest": "TO_BE_COMPUTED",
+      "canonicalCandidateIds": ["pi-repair"],
+      "visitedCandidateIds": ["pi-repair"],
+      "unresolvedSet": [],
+      "negativeWitnessSet": []
+    },
+    "selectedCandidateId": "pi-repair",
+    "instance": {"status": "ACCEPT", "reasonCode": null, "witnessRef": "G00/instance"},
+    "optimality": {"status": "OPTIMAL_WITHIN_PI", "reasonCode": null, "witnessRef": "G00/optimality"}
+  },
+  "executionVerdict": {
+    "runtime": {"status": "NOT_RUN", "reasonCode": null, "witnessRef": null},
+    "planningSafety": {"status": "SAFE", "reasonCode": null, "witnessRef": "G00/safety"},
+    "runtimeTraceSafety": {"status": "NOT_EVALUATED", "reasonCode": null, "witnessRef": null},
+    "effectKnowledge": {"status": "NOT_EVALUATED", "reasonCode": null, "witnessRef": null},
+    "publicDisposition": {"status": "NONE", "reasonCode": null, "witnessRef": null},
+    "implementationConformance": "NOT_EVALUATED",
+    "mutationLayer": "NONE",
+    "baseInputHash": null,
+    "executionEnvelopeHash": null
+  },
+  "status": "illustrative_v0_draft",
+  "implementationStatus": "planned/unverified"
+}

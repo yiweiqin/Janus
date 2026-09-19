@@ -1,0 +1,198 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://ubuddy.invalid/schemas/cp-rir-verdict-v1.json",
+  "title": "CP-RIR layered verdict v1 (draft)",
+  "description": "Structural schema for reducer output. Semantic cross-field invariants remain checker obligations and are not implementation claims.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "artifactVerdict", "planningVerdict", "executionVerdict"],
+  "properties": {
+    "$schema": {"type": "string"},
+    "schemaVersion": {"const": "cp-rir/verdict/v1"},
+    "artifactVerdict": {"$ref": "#/$defs/artifactStatus"},
+    "planningVerdict": {"$ref": "#/$defs/planning"},
+    "executionVerdict": {"$ref": "#/$defs/execution"},
+    "status": {"enum": ["illustrative_v0_draft", "normative_draft", "executable_locked"]},
+    "implementationStatus": {"type": "string"}
+  },
+  "$defs": {
+    "reasonCode": {
+      "type": "string",
+      "pattern": "^[A-Z][A-Z0-9_]+$"
+    },
+    "statusBase": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["status", "reasonCode", "witnessRef"],
+      "properties": {
+        "status": {"type": "string", "minLength": 1},
+        "reasonCode": {"type": ["null", "string", "array"], "items": {"$ref": "#/$defs/reasonCode"}},
+        "witnessRef": {"type": ["null", "string"]}
+      }
+    },
+    "artifactStatus": {
+      "allOf": [
+        {"$ref": "#/$defs/statusBase"},
+        {"properties": {"status": {"enum": ["VALID", "INVALID", "TIMEOUT"]}}}
+      ]
+    },
+    "inputStatus": {
+      "allOf": [
+        {"$ref": "#/$defs/statusBase"},
+        {"properties": {"status": {"enum": ["VALID", "UNKNOWN"]}}}
+      ]
+    },
+    "instanceStatus": {
+      "allOf": [
+        {"$ref": "#/$defs/statusBase"},
+        {"properties": {"status": {"enum": ["ACCEPT", "INSTANCE_INFEASIBLE", "UNKNOWN", "TIMEOUT"]}}}
+      ]
+    },
+    "optimalityStatus": {
+      "allOf": [
+        {"$ref": "#/$defs/statusBase"},
+        {"properties": {"status": {"enum": ["OPTIMAL_WITHIN_PI", "FEASIBLE_NOT_PROVEN_OPTIMAL", "NOT_APPLICABLE"]}}}
+      ]
+    },
+    "runtimeStatus": {
+      "allOf": [
+        {"$ref": "#/$defs/statusBase"},
+        {"properties": {"status": {"enum": ["NOT_RUN", "ABORTED", "STALE_REJECTED", "COMMITTED", "IN_DOUBT", "FINALIZED"]}}}
+      ]
+    },
+    "safetyStatus": {
+      "allOf": [
+        {"$ref": "#/$defs/statusBase"},
+        {"properties": {"status": {"enum": ["SAFE", "HARD_VIOLATION", "HISTORICAL_VIOLATION", "NOT_EVALUATED", "UNKNOWN"]}}}
+      ]
+    },
+    "effectStatus": {
+      "allOf": [
+        {"$ref": "#/$defs/statusBase"},
+        {"properties": {"status": {"enum": ["NO_EFFECT_CONFIRMED", "EFFECT_CONFIRMED", "POSSIBLE_EFFECT", "NOT_EVALUATED", "UNKNOWN"]}}}
+      ]
+    },
+    "dispositionStatus": {
+      "allOf": [
+        {"$ref": "#/$defs/statusBase"},
+        {"properties": {"status": {"enum": ["NONE", "MODEL_INPUT_INVALID", "NEEDS_OWNER_CONFIRMATION", "POSSIBLE_EFFECT_DO_NOT_RETRY"]}}}
+      ]
+    },
+    "candidateResult": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["canonicalId", "canonicalAstHash", "policyHash", "baselineHash", "comp0Hash", "status", "reasonCode", "witnessRefs", "worldResults", "worstCost", "rejectionComponents", "arithmeticWitnessRef"],
+      "properties": {
+        "canonicalId": {"type": "string", "minLength": 1},
+        "canonicalAstHash": {"type": "string", "minLength": 1},
+        "policyHash": {"type": "string", "minLength": 1},
+        "baselineHash": {"type": "string", "minLength": 1},
+        "comp0Hash": {"type": "string", "minLength": 1},
+        "status": {"enum": ["PLAN_FEASIBLE", "PLAN_REJECT", "UNRESOLVED", "NOT_RUN"]},
+        "reasonCode": {"type": ["null", "string", "array"], "items": {"$ref": "#/$defs/reasonCode"}},
+        "witnessRefs": {"type": "array", "items": {"type": "string"}, "uniqueItems": true},
+        "worldResults": {"type": "array", "minItems": 1, "items": {"$ref": "#/$defs/worldResult"}},
+        "worstCost": {"$ref": "#/$defs/nonNegativeRationalOrNull"},
+        "rejectionComponents": {"type": "array", "items": {"$ref": "#/$defs/reasonCode"}, "uniqueItems": true},
+        "arithmeticWitnessRef": {"type": ["null", "string"]}
+      }
+    },
+    "worldResult": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["worldId", "hardSafety", "typedExecutability", "refinement", "policyValue", "baselineValue", "delta", "cost"],
+      "properties": {
+        "worldId": {"type": "string"},
+        "hardSafety": {"enum": ["SAFE", "HARD_VIOLATION", "UNKNOWN"]},
+        "typedExecutability": {"enum": ["PASS", "FAIL", "UNKNOWN"]},
+        "refinement": {"enum": ["PASS", "FAIL", "UNKNOWN"]},
+        "policyValue": {"$ref": "#/$defs/rationalOrNull"},
+        "baselineValue": {"$ref": "#/$defs/rationalOrNull"},
+        "delta": {"$ref": "#/$defs/rationalOrNull"},
+        "cost": {"$ref": "#/$defs/nonNegativeRationalOrNull"}
+      }
+    },
+    "rational": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["num", "den"],
+      "properties": {"num": {"type": "integer"}, "den": {"type": "integer", "exclusiveMinimum": 0}}
+    },
+    "rationalOrNull": {"oneOf": [{"$ref": "#/$defs/rational"}, {"type": "null"}]},
+    "nonNegativeRational": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["num", "den"],
+      "properties": {"num": {"type": "integer", "minimum": 0}, "den": {"type": "integer", "exclusiveMinimum": 0}}
+    },
+    "nonNegativeRationalOrNull": {"oneOf": [{"$ref": "#/$defs/nonNegativeRational"}, {"type": "null"}]},
+    "coverage": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["expectedCount", "visitedCount", "complete", "candidateSetDigest", "canonicalCandidateIds", "visitedCandidateIds", "unresolvedSet", "negativeWitnessSet"],
+      "properties": {
+        "expectedCount": {"type": "integer", "minimum": 0},
+        "visitedCount": {"type": "integer", "minimum": 0},
+        "complete": {"type": "boolean"},
+        "candidateSetDigest": {"type": "string"},
+        "canonicalCandidateIds": {"type": "array", "items": {"type": "string"}, "uniqueItems": true},
+        "visitedCandidateIds": {"type": "array", "items": {"type": "string"}, "uniqueItems": true},
+        "unresolvedSet": {"type": "array", "items": {"type": "string"}, "uniqueItems": true},
+        "negativeWitnessSet": {"type": "array", "items": {"type": "string"}, "uniqueItems": true}
+      }
+    },
+    "planning": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["input", "candidateResults", "enumerationCoverage", "selectedCandidateId", "instance", "optimality"],
+      "properties": {
+        "input": {"$ref": "#/$defs/inputStatus"},
+        "candidateResults": {"type": "array", "items": {"$ref": "#/$defs/candidateResult"}},
+        "enumerationCoverage": {"$ref": "#/$defs/coverage"},
+        "selectedCandidateId": {"type": ["null", "string"]},
+        "instance": {"$ref": "#/$defs/instanceStatus"},
+        "optimality": {"$ref": "#/$defs/optimalityStatus"}
+      },
+      "allOf": [
+        {
+          "if": {"properties": {"input": {"properties": {"status": {"const": "UNKNOWN"}}}}},
+          "then": {"properties": {"candidateResults": {"maxItems": 0}, "selectedCandidateId": {"type": "null"}, "instance": {"properties": {"status": {"const": "UNKNOWN"}}}, "optimality": {"properties": {"status": {"const": "NOT_APPLICABLE"}}}}}
+        },
+        {
+          "if": {"properties": {"instance": {"properties": {"status": {"const": "INSTANCE_INFEASIBLE"}}}}},
+          "then": {"properties": {"selectedCandidateId": {"type": "null"}, "enumerationCoverage": {"properties": {"complete": {"const": true}, "unresolvedSet": {"maxItems": 0}}}, "candidateResults": {"items": {"properties": {"status": {"const": "PLAN_REJECT"}}}}}}
+        },
+        {
+          "if": {"properties": {"optimality": {"properties": {"status": {"const": "OPTIMAL_WITHIN_PI"}}}}},
+          "then": {"properties": {"selectedCandidateId": {"type": "string", "minLength": 1}, "enumerationCoverage": {"properties": {"complete": {"const": true}, "unresolvedSet": {"maxItems": 0}}}}}
+        }
+      ]
+    },
+    "execution": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["runtime", "planningSafety", "runtimeTraceSafety", "effectKnowledge", "publicDisposition", "implementationConformance", "mutationLayer", "baseInputHash", "executionEnvelopeHash"],
+      "properties": {
+        "runtime": {"$ref": "#/$defs/runtimeStatus"},
+        "planningSafety": {"$ref": "#/$defs/safetyStatus"},
+        "runtimeTraceSafety": {"$ref": "#/$defs/safetyStatus"},
+        "effectKnowledge": {"$ref": "#/$defs/effectStatus"},
+        "publicDisposition": {"$ref": "#/$defs/dispositionStatus"},
+        "implementationConformance": {"enum": ["PASSED", "FAILED", "UNKNOWN", "NOT_EVALUATED"]},
+        "mutationLayer": {"enum": ["NONE", "PREFLIGHT", "CONCRETE_MODEL", "DEPLOYED_RUNTIME"]},
+        "baseInputHash": {"type": ["null", "string"]},
+        "executionEnvelopeHash": {"type": ["null", "string"]}
+      },
+      "allOf": [
+        {
+          "if": {"properties": {"runtime": {"properties": {"status": {"const": "IN_DOUBT"}}}}},
+          "then": {"properties": {"publicDisposition": {"properties": {"status": {"const": "POSSIBLE_EFFECT_DO_NOT_RETRY"}}}, "effectKnowledge": {"not": {"properties": {"status": {"const": "NO_EFFECT_CONFIRMED"}}}}}}
+        },
+        {
+          "if": {"properties": {"mutationLayer": {"const": "DEPLOYED_RUNTIME"}, "runtimeTraceSafety": {"properties": {"status": {"const": "HARD_VIOLATION"}}}}},
+          "then": {"properties": {"implementationConformance": {"const": "FAILED"}}}
+        }
+      ]
+    }
+  }
+}

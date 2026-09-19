@@ -1,0 +1,214 @@
+{
+  "$schema": "ubuddy-cpir-web-pbes-v1.schema.json",
+  "schemaVersion": "cpir-web/pbes/v1",
+  "status": "illustrative_multistep_draft",
+  "worldSetLockedBeforeSearch": true,
+  "contractRegistryLockedBeforeSearch": true,
+  "supportTableLockedBeforeSearch": true,
+  "cases": [
+    {
+      "caseId": "multistep-oauth-receipt",
+      "scenario": "Browser success page while CRM effect is unresolved across identity, webhook, and receipt layers",
+      "availableScopes": ["identity.read", "receipt.read", "sink.version.read", "crm.write"],
+      "riskBudget": 0.5,
+      "maxProbeDepth": 2,
+      "utilityLowerBound": 0.5,
+      "hardContract": {
+        "contractId": "crm-contact-create-once",
+        "tenantBinding": "tenant-a",
+        "requiredEffects": ["CRM_CONTACT_PRESENT"],
+        "forbiddenEffects": ["CROSS_TENANT_WRITE", "DUPLICATE_CONTACT"],
+        "versionFence": "crm-api-v2",
+        "idempotenceKeyRule": "reuse-original-key-only"
+      },
+      "worlds": [
+        {
+          "worldId": "w-subject-mismatch",
+          "publicObservation": "UI_SUCCESS_API_UNKNOWN",
+          "hiddenCause": "OAUTH_SUBJECT_WRONG_TENANT",
+          "browserProfile": "profile-a", "sessionEpoch": "e7", "oauthSubject": "subject-b",
+          "tenant": "tenant-a", "oauthScopes": ["identity.read", "crm.write"],
+          "apiVersion": "v2", "etag": "unknown", "webhookState": "PENDING",
+          "sinkVersion": "41", "receiptState": "ABSENT", "effectReality": "ABSENT_UNVERIFIED"
+        },
+        {
+          "worldId": "w-webhook-delayed",
+          "publicObservation": "UI_SUCCESS_API_UNKNOWN",
+          "hiddenCause": "WEBHOOK_DELAY_AFTER_COMMIT",
+          "browserProfile": "profile-a", "sessionEpoch": "e7", "oauthSubject": "subject-a",
+          "tenant": "tenant-a", "oauthScopes": ["identity.read", "receipt.read"],
+          "apiVersion": "v2", "etag": "e41", "webhookState": "DELAYED",
+          "sinkVersion": "42", "receiptState": "PRESENT", "effectReality": "APPLIED_UNVERIFIED"
+        },
+        {
+          "worldId": "w-receipt-lost",
+          "publicObservation": "UI_SUCCESS_API_UNKNOWN",
+          "hiddenCause": "RECEIPT_LOST_AFTER_COMMIT",
+          "browserProfile": "profile-a", "sessionEpoch": "e7", "oauthSubject": "subject-a",
+          "tenant": "tenant-a", "oauthScopes": ["identity.read", "receipt.read", "sink.version.read"],
+          "apiVersion": "v2", "etag": "e41", "webhookState": "DROPPED",
+          "sinkVersion": "42", "receiptState": "MISSING_AFTER_COMMIT", "effectReality": "APPLIED_UNVERIFIED"
+        }
+      ],
+      "probes": [
+        {
+          "probeId": "probe-bound-subject",
+          "ownerId": "identity-adapter", "requiredScopes": ["identity.read"], "requiredObservations": [],
+          "riskCost": 0.1, "actionCost": 0.2, "effectClass": "READ_ONLY", "irreversibleEffect": false,
+          "observationByWorld": {
+            "w-subject-mismatch": "SUBJECT_MISMATCH",
+            "w-webhook-delayed": "SUBJECT_OK",
+            "w-receipt-lost": "SUBJECT_OK"
+          }
+        },
+        {
+          "probeId": "probe-receipt-and-sink-version",
+          "ownerId": "receipt-adapter", "requiredScopes": ["receipt.read", "sink.version.read"],
+          "requiredObservations": ["SUBJECT_OK"],
+          "riskCost": 0.2, "actionCost": 0.4, "effectClass": "READ_ONLY", "irreversibleEffect": false,
+          "observationByWorld": {
+            "w-subject-mismatch": "PROBE_NOT_APPLICABLE",
+            "w-webhook-delayed": "RECEIPT_PRESENT",
+            "w-receipt-lost": "SINK_ADVANCED_RECEIPT_MISSING"
+          }
+        }
+      ],
+      "repairs": [
+        {
+          "repairId": "reauthorize-and-submit-original-key",
+          "ownerId": "tenant-owner", "requiredScopes": ["crm.write"], "requiredObservations": ["SUBJECT_MISMATCH"],
+          "actionCost": 3, "effectClass": "IRREVERSIBLE_EXTERNAL",
+          "safeByWorld": {"w-subject-mismatch": true, "w-webhook-delayed": false, "w-receipt-lost": false},
+          "utilityByWorld": {"w-subject-mismatch": 0.8, "w-webhook-delayed": -1, "w-receipt-lost": -1}
+        },
+        {
+          "repairId": "wait-and-reconcile-webhook",
+          "ownerId": "tenant-owner", "requiredScopes": ["receipt.read"], "requiredObservations": ["RECEIPT_PRESENT"],
+          "actionCost": 1, "effectClass": "REVERSIBLE_METADATA",
+          "safeByWorld": {"w-subject-mismatch": false, "w-webhook-delayed": true, "w-receipt-lost": false},
+          "utilityByWorld": {"w-subject-mismatch": 0, "w-webhook-delayed": 0.7, "w-receipt-lost": 0}
+        },
+        {
+          "repairId": "recover-receipt-without-resubmit",
+          "ownerId": "tenant-owner", "requiredScopes": ["receipt.read", "sink.version.read"],
+          "requiredObservations": ["SINK_ADVANCED_RECEIPT_MISSING"],
+          "actionCost": 1.5, "effectClass": "REVERSIBLE_METADATA",
+          "safeByWorld": {"w-subject-mismatch": false, "w-webhook-delayed": false, "w-receipt-lost": true},
+          "utilityByWorld": {"w-subject-mismatch": 0, "w-webhook-delayed": 0, "w-receipt-lost": 0.65}
+        }
+      ]
+    },
+    {
+      "caseId": "budget-limited-checkout",
+      "scenario": "Checkout timeout where the first probe resolves version drift but the receipt probe exceeds remaining risk budget",
+      "availableScopes": ["version.read", "receipt.read", "order.write"],
+      "riskBudget": 0.25,
+      "maxProbeDepth": 2,
+      "utilityLowerBound": 0.5,
+      "hardContract": {
+        "contractId": "order-create-once",
+        "tenantBinding": "shop-a",
+        "requiredEffects": ["ORDER_PRESENT_OR_EXPLICIT_FAILURE"],
+        "forbiddenEffects": ["DUPLICATE_CHARGE", "DUPLICATE_ORDER"],
+        "versionFence": "checkout-v3",
+        "idempotenceKeyRule": "single-stable-order-key"
+      },
+      "worlds": [
+        {
+          "worldId": "w-version-drift", "publicObservation": "TIMEOUT_ORDER_UNKNOWN", "hiddenCause": "API_VERSION_DRIFT",
+          "browserProfile": "buyer-a", "sessionEpoch": "e3", "oauthSubject": "buyer-a", "tenant": "shop-a",
+          "oauthScopes": ["version.read", "order.write"], "apiVersion": "v2-stale", "etag": "old",
+          "webhookState": "NONE", "sinkVersion": "18", "receiptState": "ABSENT", "effectReality": "ABSENT_UNVERIFIED"
+        },
+        {
+          "worldId": "w-committed-no-receipt", "publicObservation": "TIMEOUT_ORDER_UNKNOWN", "hiddenCause": "COMMIT_RECEIPT_LOST",
+          "browserProfile": "buyer-a", "sessionEpoch": "e3", "oauthSubject": "buyer-a", "tenant": "shop-a",
+          "oauthScopes": ["receipt.read"], "apiVersion": "v3", "etag": "e19",
+          "webhookState": "DROPPED", "sinkVersion": "19", "receiptState": "MISSING_AFTER_COMMIT", "effectReality": "APPLIED_UNVERIFIED"
+        },
+        {
+          "worldId": "w-auth-expired-before-commit", "publicObservation": "TIMEOUT_ORDER_UNKNOWN", "hiddenCause": "TOKEN_EXPIRED_PRE_COMMIT",
+          "browserProfile": "buyer-a", "sessionEpoch": "e2-expired", "oauthSubject": "buyer-a", "tenant": "shop-a",
+          "oauthScopes": [], "apiVersion": "v3", "etag": "e18",
+          "webhookState": "NONE", "sinkVersion": "18", "receiptState": "ABSENT", "effectReality": "ABSENT_UNVERIFIED"
+        }
+      ],
+      "probes": [
+        {
+          "probeId": "probe-version-fence", "ownerId": "api-adapter", "requiredScopes": ["version.read"], "requiredObservations": [],
+          "riskCost": 0.1, "actionCost": 0.2, "effectClass": "READ_ONLY", "irreversibleEffect": false,
+          "observationByWorld": {"w-version-drift": "VERSION_STALE", "w-committed-no-receipt": "VERSION_CURRENT_STATUS_UNKNOWN", "w-auth-expired-before-commit": "VERSION_CURRENT_STATUS_UNKNOWN"}
+        },
+        {
+          "probeId": "probe-authoritative-order-receipt", "ownerId": "receipt-adapter", "requiredScopes": ["receipt.read"],
+          "requiredObservations": ["VERSION_CURRENT_STATUS_UNKNOWN"],
+          "riskCost": 0.2, "actionCost": 0.4, "effectClass": "READ_ONLY", "irreversibleEffect": false,
+          "observationByWorld": {"w-version-drift": "NO_RECEIPT", "w-committed-no-receipt": "SINK_COMMIT_FOUND", "w-auth-expired-before-commit": "NO_COMMIT_FOUND"}
+        }
+      ],
+      "repairs": [
+        {
+          "repairId": "upgrade-request-and-submit-once", "ownerId": "shop-owner", "requiredScopes": ["order.write"],
+          "requiredObservations": ["VERSION_STALE"], "actionCost": 2, "effectClass": "IRREVERSIBLE_EXTERNAL",
+          "safeByWorld": {"w-version-drift": true, "w-committed-no-receipt": false, "w-auth-expired-before-commit": false},
+          "utilityByWorld": {"w-version-drift": 0.8, "w-committed-no-receipt": -2, "w-auth-expired-before-commit": -1}
+        },
+        {
+          "repairId": "reconcile-existing-order", "ownerId": "shop-owner", "requiredScopes": ["receipt.read"],
+          "requiredObservations": ["SINK_COMMIT_FOUND"], "actionCost": 1, "effectClass": "REVERSIBLE_METADATA",
+          "safeByWorld": {"w-version-drift": false, "w-committed-no-receipt": true, "w-auth-expired-before-commit": false},
+          "utilityByWorld": {"w-version-drift": 0, "w-committed-no-receipt": 0.7, "w-auth-expired-before-commit": 0}
+        }
+      ]
+    },
+    {
+      "caseId": "indistinguishable-payment",
+      "scenario": "Payment submit timeout where every declared low-risk probe returns the same observation",
+      "availableScopes": ["payment.status.read", "payment.write"],
+      "riskBudget": 0.5,
+      "maxProbeDepth": 2,
+      "utilityLowerBound": 0.5,
+      "hardContract": {
+        "contractId": "charge-once", "tenantBinding": "merchant-a",
+        "requiredEffects": ["ONE_CHARGE_OR_EXPLICIT_FAILURE"], "forbiddenEffects": ["DUPLICATE_CHARGE"],
+        "versionFence": "payment-v1", "idempotenceKeyRule": "reuse-original-payment-key-only"
+      },
+      "worlds": [
+        {
+          "worldId": "w-payment-absent", "publicObservation": "PAYMENT_TIMEOUT_UNKNOWN", "hiddenCause": "REQUEST_DROPPED_PRE_COMMIT",
+          "browserProfile": "buyer-a", "sessionEpoch": "e9", "oauthSubject": "buyer-a", "tenant": "merchant-a",
+          "oauthScopes": ["payment.status.read", "payment.write"], "apiVersion": "v1", "etag": "unknown",
+          "webhookState": "NONE", "sinkVersion": "70", "receiptState": "ABSENT", "effectReality": "ABSENT_UNVERIFIED"
+        },
+        {
+          "worldId": "w-payment-committed", "publicObservation": "PAYMENT_TIMEOUT_UNKNOWN", "hiddenCause": "COMMIT_AND_STATUS_LAG",
+          "browserProfile": "buyer-a", "sessionEpoch": "e9", "oauthSubject": "buyer-a", "tenant": "merchant-a",
+          "oauthScopes": ["payment.status.read"], "apiVersion": "v1", "etag": "unknown",
+          "webhookState": "DELAYED", "sinkVersion": "71", "receiptState": "NOT_YET_VISIBLE", "effectReality": "APPLIED_UNVERIFIED"
+        }
+      ],
+      "probes": [
+        {
+          "probeId": "probe-public-payment-status", "ownerId": "payment-adapter", "requiredScopes": ["payment.status.read"], "requiredObservations": [],
+          "riskCost": 0.1, "actionCost": 0.1, "effectClass": "READ_ONLY", "irreversibleEffect": false,
+          "observationByWorld": {"w-payment-absent": "STATUS_PENDING_UNKNOWN", "w-payment-committed": "STATUS_PENDING_UNKNOWN"}
+        }
+      ],
+      "repairs": [
+        {
+          "repairId": "resubmit-payment", "ownerId": "merchant-owner", "requiredScopes": ["payment.write"],
+          "requiredObservations": ["STATUS_PENDING_UNKNOWN"], "actionCost": 2, "effectClass": "IRREVERSIBLE_EXTERNAL",
+          "safeByWorld": {"w-payment-absent": true, "w-payment-committed": false},
+          "utilityByWorld": {"w-payment-absent": 0.8, "w-payment-committed": -3}
+        },
+        {
+          "repairId": "mark-payment-complete", "ownerId": "merchant-owner", "requiredScopes": ["payment.status.read"],
+          "requiredObservations": ["STATUS_PENDING_UNKNOWN"], "actionCost": 1, "effectClass": "REVERSIBLE_METADATA",
+          "safeByWorld": {"w-payment-absent": false, "w-payment-committed": true},
+          "utilityByWorld": {"w-payment-absent": -1, "w-payment-committed": 0.6}
+        }
+      ]
+    }
+  ],
+  "implementationStatus": "prototype/unverified"
+}

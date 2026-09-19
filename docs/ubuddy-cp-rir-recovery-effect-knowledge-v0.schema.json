@@ -1,0 +1,19 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://ubuddy.invalid/schemas/cp-rir-recovery-effect-knowledge-v0.json",
+  "title": "CP-RIR recovery/effect-knowledge truth table (draft)",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["$schema", "schemaVersion", "status", "purpose", "states", "productStateModel", "transitions", "invariants", "implementationStatus"],
+  "properties": {
+    "$schema": {"const": "ubuddy-cp-rir-recovery-effect-knowledge-v0.schema.json"},
+    "schemaVersion": {"const": "cp-rir/recovery-effect-knowledge-input/v0"},
+    "status": {"const": "illustrative_v0_draft"},
+    "purpose": {"const": "answer_free_recovery_effect_knowledge_semantics"},
+    "states": {"type": "array", "items": {"type": "string", "enum": ["PRE_EFFECT", "EFFECT_POSSIBLE", "EFFECT_CONFIRMED", "NO_EFFECT_CONFIRMED", "IN_DOUBT", "REMEDIATED", "HARD_VIOLATION", "MANUAL_INTERVENTION"]}, "uniqueItems": true},
+      "productStateModel": {"type":"object","additionalProperties":false,"required":["dimensions","initial","perSinkFields","globalSafetyDomain","recoveryPhaseDomain","publicDispositionDomain","allowedActionDomain"],"properties":{"dimensions":{"const":["effectReality","effectKnowledge","globalSafety","recoveryPhase","publicDisposition","allowedActions"]},"initial":{"type":"object","additionalProperties":false,"required":["globalSafety","recoveryPhase","publicDisposition","allowedActions","sinks"],"properties":{"globalSafety":{"type":"string"},"recoveryPhase":{"type":"string"},"publicDisposition":{"type":"string"},"allowedActions":{"type":"array","items":{"type":"string"}},"sinks":{"type":"array","items":{"type":"object","additionalProperties":false,"required":["sinkId","effectReality","effectKnowledge","dedupState","receiptState","version"],"properties":{"sinkId":{"type":"string"},"effectReality":{"enum":["NOT_APPLIED","POSSIBLE_APPLIED","CONFIRMED_APPLIED"]},"effectKnowledge":{"enum":["NO_EFFECT_CONFIRMED","EFFECT_POSSIBLE","IN_DOUBT","EFFECT_CONFIRMED"]},"dedupState":{"enum":["NONE","UNIQUE","DUPLICATE","UNKNOWN"]},"receiptState":{"enum":["ABSENT","LOST","PRESENT_UNVERIFIED","PRESENT_VERIFIED","DUPLICATE","MALFORMED"]},"version":{"type":"integer","minimum":0}}}}}},"perSinkFields":{"const":["sinkId","effectReality","effectKnowledge","dedupState","receiptState","version"]},"globalSafetyDomain":{"const":["SAFE","HARD_VIOLATION","UNKNOWN"]},"recoveryPhaseDomain":{"const":["IDLE","RECONCILING","FORWARD_COMPLETING","COMPENSATING","REMEDIATED","MANUAL_INTERVENTION"]},"publicDispositionDomain":{"const":["NONE","IN_DOUBT","DO_NOT_RETRY","AUDIT_ONLY","REMEDIATION_REQUIRED"]},"allowedActionDomain":{"const":["QUERY_RECEIPT","RESUME_IDEMPOTENT_TX","RETRY_SAME_EFFECT","COMPLETE_FORWARD","COMPENSATE","MANUAL"]}}},
+    "transitions": {"type": "array", "items": {"type": "object", "additionalProperties": false, "required": ["from", "event", "to", "retryDisposition"], "properties": {"from": {"type": "string"}, "event": {"type": "string"}, "to": {"type": "string"}, "retryDisposition": {"enum": ["RETRY_ALLOWED", "DO_NOT_RETRY", "CONDITIONAL_RECONCILE"]}}}},
+    "invariants": {"type": "array", "items": {"type": "object", "additionalProperties": false, "required": ["id", "rule"], "properties": {"id": {"type": "string"}, "rule": {"type": "string"}}}},
+    "implementationStatus": {"const": "planned/unverified"}
+  }
+}

@@ -1,0 +1,71 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://ubuddy.invalid/schemas/cp-rir-finite-input-v0.json",
+  "title": "CP-RIR finite soft-value input v0 (draft)",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["$schema", "schemaVersion", "semanticsVersion", "status", "purpose", "safetyInputStatus", "numericEncoding", "worldPersistence", "hardSoftSeparation", "cases", "blindedAliasPolicy", "answerIsolation"],
+  "properties": {
+    "$schema": {"const": "ubuddy-cp-rir-finite-input-v0.schema.json"},
+    "schemaVersion": {"const": "cp-rir/finite-input-corpus/v0"},
+    "semanticsVersion": {"const": "cp-rir/reference-finite-v1"},
+    "status": {"const": "illustrative_v0_draft"},
+    "purpose": {"const": "A1_SOFT_VALUE_INPUT_ONLY_NO_EXPECTED_VALUES"},
+    "safetyInputStatus": {"const": "not_present_in_this_soft_value_fixture"},
+    "numericEncoding": {"const": "reduced_rational_num_den"},
+    "worldPersistence": {"const": "world_selected_at_t0_and_fixed_for_entire_policy"},
+    "hardSoftSeparation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["hardSafety", "softValue"],
+      "properties": {"hardSafety": {"type": "string"}, "softValue": {"const": "nominal_kernel_only"}}
+    },
+    "cases": {"type": "array", "minItems": 4, "items": {"$ref": "#/$defs/case"}},
+    "blindedAliasPolicy": {
+      "type": "object", "additionalProperties": false,
+      "required": ["runnerPrivateMappingRef", "publicCaseIds", "semanticLabelsVisibleToA1A2A3"],
+      "properties": {
+        "runnerPrivateMappingRef": {"const": "COMPARATOR_PRIVATE"},
+        "publicCaseIds": {"type": "array", "items": {"type": "string"}, "uniqueItems": true},
+        "semanticLabelsVisibleToA1A2A3": {"const": false}
+      }
+    },
+    "answerIsolation": {
+      "type": "object", "additionalProperties": false,
+      "required": ["mustNotContain", "transitiveExpectedReference"],
+      "properties": {
+        "mustNotContain": {"type": "array", "items": {"type": "string"}},
+        "transitiveExpectedReference": {"const": "forbidden"}
+      }
+    }
+  },
+  "$defs": {
+    "rational": {"type": "object", "additionalProperties": false, "required": ["num", "den"], "properties": {"num": {"type": "integer"}, "den": {"type": "integer", "exclusiveMinimum": 0}}},
+    "thresholds": {"type": "object", "additionalProperties": false, "required": ["eta", "kappa", "costBudget"], "properties": {"eta": {"$ref": "#/$defs/rational"}, "kappa": {"$ref": "#/$defs/rational"}, "costBudget": {"$ref": "#/$defs/rational"}}},
+    "initial": {"type": "object", "additionalProperties": false, "required": ["state", "prob"], "properties": {"state": {"type": "string"}, "prob": {"$ref": "#/$defs/rational"}}},
+    "authorization": {"type": "object", "additionalProperties": false, "required": ["state", "proposal", "decision"], "properties": {"state": {"type": "string"}, "proposal": {"type": "string"}, "decision": {"enum": ["ALLOW", "DENY"]}}},
+    "executability": {"type": "object", "additionalProperties": false, "required": ["state", "action", "value"], "properties": {"state": {"type": "string"}, "action": {"type": "string"}, "value": {"type": "boolean"}}},
+    "transition": {"type": "object", "additionalProperties": false, "required": ["from", "action", "to", "prob"], "properties": {"from": {"type": "string"}, "action": {"type": "string"}, "to": {"type": "string"}, "prob": {"$ref": "#/$defs/rational"}}},
+    "world": {"type": "object", "additionalProperties": false, "required": ["worldId", "authorization", "executability", "nominalTransitions"], "properties": {"worldId": {"type": "string"}, "authorization": {"type": "array", "items": {"$ref": "#/$defs/authorization"}}, "executability": {"type": "array", "items": {"$ref": "#/$defs/executability"}}, "nominalTransitions": {"type": "array", "items": {"$ref": "#/$defs/transition"}}}},
+    "rule": {"type": "object", "additionalProperties": false, "required": ["at", "proposal"], "properties": {"at": {"type": "string"}, "proposal": {"type": "string"}}},
+    "baseline": {"type": "object", "additionalProperties": false, "required": ["policyId", "proposal"], "properties": {"policyId": {"type": "string"}, "at": {"type": "string"}, "atObservation": {"type": "string"}, "proposal": {"type": "string"}, "rules": {"type": "array", "items": {"$ref": "#/$defs/rule"}}}},
+    "policy": {"type": "object", "additionalProperties": false, "required": ["policyId", "cost", "branchDepth", "probeRisk"], "properties": {"policyId": {"type": "string"}, "at": {"type": "string"}, "atObservation": {"type": "string"}, "proposal": {"type": "string"}, "rules": {"type": "array", "items": {"$ref": "#/$defs/rule"}}, "cost": {"$ref": "#/$defs/rational"}, "branchDepth": {"type": "integer", "minimum": 0}, "probeRisk": {"$ref": "#/$defs/rational"}}},
+    "case": {
+      "type": "object", "additionalProperties": false,
+      "required": ["id", "horizon", "thresholds", "stateSpace", "initialDistribution", "terminalUtility", "worlds", "baseline", "policyClass"],
+      "properties": {
+        "id": {"pattern": "^C[0-9]{4}$", "type": "string"},
+        "horizon": {"type": "integer", "minimum": 0},
+        "thresholds": {"$ref": "#/$defs/thresholds"},
+        "stateSpace": {"type": "array", "items": {"type": "string"}, "uniqueItems": true},
+        "initialDistribution": {"type": "array", "items": {"$ref": "#/$defs/initial"}},
+        "terminalUtility": {"type": "object", "additionalProperties": {"$ref": "#/$defs/rational"}},
+        "worlds": {"type": "array", "minItems": 1, "items": {"$ref": "#/$defs/world"}},
+        "baseline": {"$ref": "#/$defs/baseline"},
+        "policyClass": {"type": "array", "minItems": 1, "items": {"$ref": "#/$defs/policy"}},
+        "policyObservationAlphabet": {"type": "array", "items": {"type": "string"}, "uniqueItems": true},
+        "observationProjection": {"type": "object", "additionalProperties": {"type": "string"}}
+      }
+    }
+  }
+}

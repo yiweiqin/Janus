@@ -1,0 +1,370 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "schemaVersion": "cp-rir/runtime-input/v0",
+  "status": "illustrative_v0_draft",
+  "purpose": "A2_RUNTIME_INPUT_ONLY_NO_EXPECTED_VALUES",
+  "claimBoundary": "This file is an input-only runtime mutation payload. It contains no planning verdict and is not evidence that D2 has been implemented or checked.",
+  "sealedBaseInputBinding": {
+    "baseInstanceInputRef": "ubuddy-cp-rir-gate-a-v1.instance-input-payload.example.json",
+    "baseInstanceInputHash": "TO_BE_COMPUTED",
+    "basePolicyInputHash": "TO_BE_COMPUTED"
+  },
+  "comparatorJoinPolicy": "join execution result with sealed A1/A3 result only inside comparator-private namespace",
+  "completionBinding": "candidate-independent",
+  "mediationCoverage": "complete-and-attested",
+  "universe": {
+    "resources": [
+      {
+        "resourceId": "resource-r",
+        "sinkId": "sink-r",
+        "version": 2
+      },
+      {
+        "resourceId": "resource-ledger",
+        "sinkId": "sink-ledger",
+        "version": 9
+      }
+    ],
+    "crossSinkInvariant": {
+      "invariantId": "all-or-none-r-ledger-v1",
+      "sinkIds": [
+        "sink-r",
+        "sink-ledger"
+      ],
+      "resourceIds": [
+        "resource-r",
+        "resource-ledger"
+      ],
+      "mode": "SERIALIZABLE_DECOMPOSITION",
+      "predicate": "both committed with the same transactionGroupId and generation, or neither committed",
+      "checkerId": "PLANNED-A2-CROSS-SINK-CHECKER",
+      "checkerVersion": "TO_BE_PINNED"
+    }
+  },
+  "tokenTemplate": {
+    "schemaVersion": "cp-rir/token/v0-draft",
+    "tokenId": "token-gold-v1",
+    "instanceHash": "INSTANCE-HASH",
+    "cutHash": "CUT-HASH",
+    "contractHash": "CONTRACT-HASH",
+    "dslHash": "DSL-HASH",
+    "evaluatorHash": "EVALUATOR-HASH",
+    "gammaHash": null,
+    "policyHash": "POLICY-HASH",
+    "candidateHash": "CANDIDATE-HASH",
+    "worldCommitVectorHash": "WORLD-COMMIT-VECTOR-HASH",
+    "transactionGroupId": "tx-gold-v1",
+    "sinkIds": [
+      "sink-r",
+      "sink-ledger"
+    ],
+    "resourceIds": [
+      "resource-r",
+      "resource-ledger"
+    ],
+    "expectedEpochVector": {
+      "owner-a": 2,
+      "owner-b": 4
+    },
+    "expectedVersionVector": {
+      "resource-r": 2,
+      "resource-ledger": 9
+    },
+    "preStateHashVector": {
+      "resource-r": "PRE-R",
+      "resource-ledger": "PRE-LEDGER"
+    },
+    "repairId": "repair-gold-v1",
+    "generation": 3,
+    "parentGeneration": 2,
+    "dedupKey": "dedup-gold-v1",
+    "effectHash": "EFFECT-HASH",
+    "changeSetHash": "CHANGESET-HASH",
+    "transitiveFootprintHash": "FOOTPRINT-HASH",
+    "crossSinkProofHash": "CROSS-SINK-PROOF-HASH",
+    "receiptSchemaHash": "RECEIPT-SCHEMA-HASH",
+    "issuerSequence": 21,
+    "nonce": "NONCE-GOLD-V1",
+    "issuedAt": "T0",
+    "expiry": "T4",
+    "issuerSet": [
+      "owner-a",
+      "owner-b"
+    ],
+    "quorum": 2,
+    "signatures": [
+      "SIG-A-PLACEHOLDER",
+      "SIG-B-PLACEHOLDER"
+    ],
+    "nonEquivocationProofHash": "NON-EQUIVOCATION-HASH",
+    "oneShot": true,
+    "tombstoneRef": "generation-2-revoked"
+  },
+  "receiptTemplate": {
+    "receiptSchemaVersion": "cp-rir/receipt/v0-draft",
+    "tokenId": "token-gold-v1",
+    "repairId": "repair-gold-v1",
+    "generation": 3,
+    "dedupKey": "dedup-gold-v1",
+    "transactionGroupId": "tx-gold-v1",
+    "effectHash": "EFFECT-HASH",
+    "changeSetHash": "CHANGESET-HASH",
+    "commitStatus": "COMMITTED",
+    "durable": true,
+    "signer": "SINK-SIGNER-PLACEHOLDER",
+    "signature": "RECEIPT-SIGNATURE-PLACEHOLDER"
+  },
+  "cases": [
+    {
+      "variants": [
+        {
+          "inputPatch": [
+            {
+              "op": "replace",
+              "path": "/completionBinding",
+              "value": "candidate-dependent"
+            }
+          ],
+          "inputId": "R001"
+        }
+      ]
+    },
+    {
+      "variants": [
+        {
+          "inputPatch": [
+            {
+              "op": "remove",
+              "path": "/tokenTemplate/receiptSchemaHash"
+            }
+          ],
+          "inputId": "R002"
+        },
+        {
+          "sinkEvents": [
+            "TOKEN_CHECK",
+            "PREPARE",
+            "GLOBAL_DECISION_COMMIT",
+            "EFFECT_WRITE",
+            "DEDUP_WRITE",
+            "RECEIPT_WRITE",
+            "RESPONSE_LOSS"
+          ],
+          "inputId": "R003"
+        }
+      ]
+    },
+    {
+      "variants": [
+        {
+          "inputPatch": [
+            {
+              "op": "remove",
+              "path": "/universe/crossSinkInvariant/checkerVersion"
+            }
+          ],
+          "inputId": "R004"
+        },
+        {
+          "faultTrace": [
+            {
+              "sinkId": "sink-r",
+              "events": [
+                "EFFECT_WRITE",
+                "DEDUP_WRITE",
+                "RECEIPT_WRITE"
+              ]
+            },
+            {
+              "sinkId": "sink-ledger",
+              "events": [
+                "PREPARE",
+                "CRASH_BEFORE_EFFECT"
+              ]
+            }
+          ],
+          "inputId": "R005"
+        },
+        {
+          "inputId": "R006",
+          "faultTrace": [
+            {
+              "actor": "sink-r",
+              "event": "EFFECT_WRITE"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "variants": [
+        {
+          "inputPatch": [
+            {
+              "op": "replace",
+              "path": "/mediationCoverage",
+              "value": "unproven"
+            }
+          ],
+          "inputId": "R007"
+        },
+        {
+          "faultTrace": [
+            {
+              "actor": "unmediated-writer",
+              "event": "HIDDEN_EFFECT",
+              "resourceId": "resource-r"
+            }
+          ],
+          "inputId": "R008"
+        },
+        {
+          "inputId": "R009",
+          "faultTrace": [
+            {
+              "actor": "unmediated-writer",
+              "event": "EFFECT_WRITE"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "variants": [
+        {
+          "inputPatch": [
+            {
+              "op": "replace",
+              "path": "/tokenTemplate/expectedVersionVector/resource-r",
+              "value": "UNKNOWN"
+            }
+          ],
+          "inputId": "R010"
+        },
+        {
+          "faultTrace": [
+            {
+              "event": "RESOURCE_VERSION_ADVANCE",
+              "from": 2,
+              "to": 3
+            },
+            {
+              "event": "COMPARE_AND_FENCE_REJECT"
+            }
+          ],
+          "inputId": "R011"
+        },
+        {
+          "faultTrace": [
+            {
+              "event": "RESOURCE_VERSION_ADVANCE",
+              "from": 2,
+              "to": 3
+            },
+            {
+              "event": "STALE_EFFECT_WRITE"
+            }
+          ],
+          "inputId": "R012"
+        }
+      ]
+    },
+    {
+      "variants": [
+        {
+          "inputPatch": [
+            {
+              "op": "replace",
+              "path": "/tokenTemplate/expectedEpochVector/owner-a",
+              "value": 1
+            }
+          ],
+          "inputId": "R013"
+        },
+        {
+          "inputId": "R014",
+          "faultTrace": [
+            {
+              "actor": "owner-a",
+              "event": "EFFECT_WRITE"
+            }
+          ]
+        },
+        {
+          "inputPatch": [
+            {
+              "op": "replace",
+              "path": "/tokenTemplate/generation",
+              "value": 2
+            }
+          ],
+          "inputId": "R015"
+        },
+        {
+          "inputId": "R016",
+          "faultTrace": [
+            {
+              "actor": "owner-a",
+              "event": "EFFECT_WRITE"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "variants": [
+        {
+          "faultTrace": [
+            {
+              "time": "H+1",
+              "event": "LEAVE_SAFE_CLOSED"
+            }
+          ],
+          "inputId": "R017"
+        },
+        {
+          "faultTrace": [
+            {
+              "time": "H+1",
+              "event": "UNMODELLED_DELAYED_EFFECT"
+            }
+          ],
+          "inputId": "R018"
+        }
+      ]
+    }
+  ],
+  "answerIsolation": {
+    "mustNotContain": [
+      "expected",
+      "countInD3ConfusionMatrix",
+      "planningAxes"
+    ],
+    "transitiveExpectedReference": "forbidden"
+  },
+  "blindedInputPolicy": {
+    "publicInputIds": [
+      "R001",
+      "R002",
+      "R003",
+      "R004",
+      "R005",
+      "R006",
+      "R007",
+      "R008",
+      "R009",
+      "R010",
+      "R011",
+      "R012",
+      "R013",
+      "R014",
+      "R015",
+      "R016",
+      "R017",
+      "R018"
+    ],
+    "semanticMutationLabelsVisibleToA2": false,
+    "mutationLayerHeldBy": "comparator-private"
+  }
+}
+

@@ -1,0 +1,8 @@
+{
+  "$schema":"ubuddy-cp-rir-d2-recovery-evidence-v0.schema.json","schemaVersion":"cp-rir/d2-recovery-evidence/v0","status":"illustrative_v0_draft","caseAlias":"7Q2P9K4M",
+  "claims":[
+    {"claimId":"receipt-e1","kind":"RECEIPT","effectId":"e1","sinkId":"s1","verificationStatus":"NOT_IMPLEMENTED","checks":{"authority":"NOT_IMPLEMENTED","integrity":"NOT_IMPLEMENTED","atomicity":"NOT_IMPLEMENTED","linearization":"NOT_IMPLEMENTED","dedup":"NOT_IMPLEMENTED","fencing":"NOT_IMPLEMENTED","prePostHash":"NOT_IMPLEMENTED"}},
+    {"claimId":"negative-e1","kind":"NEGATIVE_WITNESS","effectId":"e1","sinkId":"s1","verificationStatus":"NOT_IMPLEMENTED","checks":{"authority":"NOT_IMPLEMENTED","integrity":"NOT_IMPLEMENTED","atomicity":"NOT_IMPLEMENTED","linearization":"NOT_IMPLEMENTED","dedup":"NOT_IMPLEMENTED","fencing":"NOT_IMPLEMENTED","prePostHash":"NOT_IMPLEMENTED"}},
+    {"claimId":"compensation-e1","kind":"COMPENSATION","effectId":"e1","sinkId":"s1","verificationStatus":"NOT_IMPLEMENTED","checks":{"authority":"NOT_IMPLEMENTED","integrity":"NOT_IMPLEMENTED","atomicity":"NOT_IMPLEMENTED","linearization":"NOT_IMPLEMENTED","dedup":"NOT_IMPLEMENTED","fencing":"NOT_IMPLEMENTED","prePostHash":"NOT_IMPLEMENTED"}}
+  ],"implementationStatus":"prototype/unverified"
+}

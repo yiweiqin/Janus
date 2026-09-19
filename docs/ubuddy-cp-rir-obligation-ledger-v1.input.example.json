@@ -1,0 +1,285 @@
+{
+  "$schema": "ubuddy-cp-rir-obligation-ledger-v1.schema.json",
+  "schemaVersion": "cp-rir/obligation-ledger/v1",
+  "normativeRegistry": {
+    "sourceId": "req-registry-2026-09-01",
+    "issuerId": "normative-authority-A",
+    "independentFromCandidate": true,
+    "lockedBeforeCandidate": true,
+    "rootAlgorithm": "sha256-canonical-json-v1",
+    "registryRoot": "bc3059b55019860c6faa9c91e953183b6d10453aa7d16de0b321448dabbb657e",
+    "signatureStatus": "NOT_IMPLEMENTED",
+    "obligations": [
+      {
+        "id": "o1",
+        "kind": "HARD",
+        "required": true,
+        "multiplicity": 1,
+        "cancelable": false,
+        "trigger": {
+          "eventType": "PAYMENT_COMMITTED",
+          "predicateId": "pred-payment-v1"
+        },
+        "scope": {
+          "organizationId": "org-A",
+          "resourceClass": "payment"
+        },
+        "deadline": {
+          "basis": "TRACE_STEP",
+          "maxSteps": 2
+        },
+        "discharge": {
+          "effectType": "AUDIT_RECORDED",
+          "sinkId": "audit-sink-A",
+          "issuerId": "sink-authority-A",
+          "receiptRequired": true
+        },
+        "compensation": {
+          "allowed": true,
+          "oneTokenPerViolation": true
+        }
+      },
+      {
+        "id": "o2",
+        "kind": "HARD",
+        "required": true,
+        "multiplicity": 1,
+        "cancelable": false,
+        "trigger": {
+          "eventType": "HANDOFF_ACCEPTED",
+          "predicateId": "pred-handoff-v1"
+        },
+        "scope": {
+          "organizationId": "org-B",
+          "resourceClass": "handoff"
+        },
+        "deadline": {
+          "basis": "TRACE_STEP",
+          "maxSteps": 2
+        },
+        "discharge": {
+          "effectType": "ACK_RECORDED",
+          "sinkId": "ack-sink-B",
+          "issuerId": "sink-authority-B",
+          "receiptRequired": true
+        },
+        "compensation": {
+          "allowed": false,
+          "oneTokenPerViolation": true
+        }
+      }
+    ]
+  },
+  "contractBefore": {
+    "rootAlgorithm": "sha256-canonical-json-v1",
+    "contractRoot": "b8b8f59a7634f5c599ddecae9ad62cef895b0f332af947658d42bdea0db38109",
+    "obligations": [
+      {
+        "id": "o1",
+        "kind": "HARD",
+        "required": true,
+        "multiplicity": 1,
+        "cancelable": false,
+        "trigger": {
+          "eventType": "PAYMENT_COMMITTED",
+          "predicateId": "pred-payment-v1"
+        },
+        "scope": {
+          "organizationId": "org-A",
+          "resourceClass": "payment"
+        },
+        "deadline": {
+          "basis": "TRACE_STEP",
+          "maxSteps": 2
+        },
+        "discharge": {
+          "effectType": "AUDIT_RECORDED",
+          "sinkId": "audit-sink-A",
+          "issuerId": "sink-authority-A",
+          "receiptRequired": true
+        },
+        "compensation": {
+          "allowed": true,
+          "oneTokenPerViolation": true
+        }
+      },
+      {
+        "id": "o2",
+        "kind": "HARD",
+        "required": true,
+        "multiplicity": 1,
+        "cancelable": false,
+        "trigger": {
+          "eventType": "HANDOFF_ACCEPTED",
+          "predicateId": "pred-handoff-v1"
+        },
+        "scope": {
+          "organizationId": "org-B",
+          "resourceClass": "handoff"
+        },
+        "deadline": {
+          "basis": "TRACE_STEP",
+          "maxSteps": 2
+        },
+        "discharge": {
+          "effectType": "ACK_RECORDED",
+          "sinkId": "ack-sink-B",
+          "issuerId": "sink-authority-B",
+          "receiptRequired": true
+        },
+        "compensation": {
+          "allowed": false,
+          "oneTokenPerViolation": true
+        }
+      }
+    ]
+  },
+  "contractAfter": {
+    "rootAlgorithm": "sha256-canonical-json-v1",
+    "contractRoot": "b8b8f59a7634f5c599ddecae9ad62cef895b0f332af947658d42bdea0db38109",
+    "obligations": [
+      {
+        "id": "o1",
+        "kind": "HARD",
+        "required": true,
+        "multiplicity": 1,
+        "cancelable": false,
+        "trigger": {
+          "eventType": "PAYMENT_COMMITTED",
+          "predicateId": "pred-payment-v1"
+        },
+        "scope": {
+          "organizationId": "org-A",
+          "resourceClass": "payment"
+        },
+        "deadline": {
+          "basis": "TRACE_STEP",
+          "maxSteps": 2
+        },
+        "discharge": {
+          "effectType": "AUDIT_RECORDED",
+          "sinkId": "audit-sink-A",
+          "issuerId": "sink-authority-A",
+          "receiptRequired": true
+        },
+        "compensation": {
+          "allowed": true,
+          "oneTokenPerViolation": true
+        }
+      },
+      {
+        "id": "o2",
+        "kind": "HARD",
+        "required": true,
+        "multiplicity": 1,
+        "cancelable": false,
+        "trigger": {
+          "eventType": "HANDOFF_ACCEPTED",
+          "predicateId": "pred-handoff-v1"
+        },
+        "scope": {
+          "organizationId": "org-B",
+          "resourceClass": "handoff"
+        },
+        "deadline": {
+          "basis": "TRACE_STEP",
+          "maxSteps": 2
+        },
+        "discharge": {
+          "effectType": "ACK_RECORDED",
+          "sinkId": "ack-sink-B",
+          "issuerId": "sink-authority-B",
+          "receiptRequired": true
+        },
+        "compensation": {
+          "allowed": false,
+          "oneTokenPerViolation": true
+        }
+      }
+    ]
+  },
+  "traceEnvelope": {
+    "traceId": "trace-example-v1",
+    "traceStartStep": 0,
+    "previousLedgerRoot": "0000000000000000000000000000000000000000000000000000000000000000",
+    "previousRootStatus": "SUPPLIED_UNAUTHENTICATED",
+    "triggerStreamStatus": "SUPPLIED_UNAUTHENTICATED",
+    "effectStreamStatus": "SUPPLIED_UNAUTHENTICATED",
+    "coverageClaims": [
+      {
+        "obligationId": "o1",
+        "status": "UNKNOWN_NOT_AUTHENTICATED"
+      },
+      {
+        "obligationId": "o2",
+        "status": "UNKNOWN_NOT_AUTHENTICATED"
+      }
+    ]
+  },
+  "prefixes": [
+    {
+      "stepIndex": 0,
+      "event": {
+        "kind": "TRIGGER",
+        "eventId": "e0",
+        "obligationId": "o1",
+        "instanceId": "o1-i1",
+        "observedEventType": "PAYMENT_COMMITTED"
+      }
+    },
+    {
+      "stepIndex": 1,
+      "event": {
+        "kind": "DISCHARGE",
+        "eventId": "e1",
+        "obligationId": "o1",
+        "instanceId": "o1-i1",
+        "witness": {
+          "witnessId": "w1",
+          "obligationId": "o1",
+          "instanceId": "o1-i1",
+          "receiptId": "r1",
+          "effectType": "AUDIT_RECORDED",
+          "sinkId": "audit-sink-A",
+          "issuerId": "sink-authority-A",
+          "nonce": "n1",
+          "version": 1,
+          "receiptStatus": "SUPPLIED_UNVERIFIED"
+        }
+      }
+    },
+    {
+      "stepIndex": 2,
+      "event": {
+        "kind": "TRIGGER",
+        "eventId": "e2",
+        "obligationId": "o2",
+        "instanceId": "o2-i1",
+        "observedEventType": "HANDOFF_ACCEPTED"
+      }
+    },
+    {
+      "stepIndex": 3,
+      "event": {
+        "kind": "DISCHARGE",
+        "eventId": "e3",
+        "obligationId": "o2",
+        "instanceId": "o2-i1",
+        "witness": {
+          "witnessId": "w2",
+          "obligationId": "o2",
+          "instanceId": "o2-i1",
+          "receiptId": "r2",
+          "effectType": "ACK_RECORDED",
+          "sinkId": "ack-sink-B",
+          "issuerId": "sink-authority-B",
+          "nonce": "n2",
+          "version": 1,
+          "receiptStatus": "SUPPLIED_UNVERIFIED"
+        }
+      }
+    }
+  ],
+  "finalDisposition": "UNKNOWN",
+  "implementationStatus": "planned/unverified"
+}

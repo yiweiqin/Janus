@@ -1,0 +1,32 @@
+{
+  "$schema": "ubuddy-cp-rir-recovery-effect-knowledge-v0.schema.json",
+  "schemaVersion": "cp-rir/recovery-effect-knowledge-input/v0",
+  "status": "illustrative_v0_draft",
+  "purpose": "answer_free_recovery_effect_knowledge_semantics",
+  "states": ["PRE_EFFECT", "EFFECT_POSSIBLE", "EFFECT_CONFIRMED", "NO_EFFECT_CONFIRMED", "IN_DOUBT", "REMEDIATED", "HARD_VIOLATION", "MANUAL_INTERVENTION"],
+  "productStateModel": {
+    "dimensions": ["effectReality", "effectKnowledge", "globalSafety", "recoveryPhase", "publicDisposition", "allowedActions"],
+    "initial": {"globalSafety":"HARD_VIOLATION","recoveryPhase":"RECONCILING","publicDisposition":"IN_DOUBT","allowedActions":["QUERY_RECEIPT","COMPLETE_FORWARD","COMPENSATE","MANUAL"],"sinks":[{"sinkId":"sink-r","effectReality":"CONFIRMED_APPLIED","effectKnowledge":"EFFECT_CONFIRMED","dedupState":"UNIQUE","receiptState":"PRESENT_VERIFIED","version":3},{"sinkId":"sink-ledger","effectReality":"POSSIBLE_APPLIED","effectKnowledge":"IN_DOUBT","dedupState":"UNKNOWN","receiptState":"LOST","version":10}]},
+    "perSinkFields": ["sinkId","effectReality","effectKnowledge","dedupState","receiptState","version"],
+    "globalSafetyDomain": ["SAFE","HARD_VIOLATION","UNKNOWN"],
+    "recoveryPhaseDomain": ["IDLE","RECONCILING","FORWARD_COMPLETING","COMPENSATING","REMEDIATED","MANUAL_INTERVENTION"],
+    "publicDispositionDomain": ["NONE","IN_DOUBT","DO_NOT_RETRY","AUDIT_ONLY","REMEDIATION_REQUIRED"],
+    "allowedActionDomain": ["QUERY_RECEIPT","RESUME_IDEMPOTENT_TX","RETRY_SAME_EFFECT","COMPLETE_FORWARD","COMPENSATE","MANUAL"]
+  },
+  "transitions": [
+    {"from":"PRE_EFFECT","event":"CRASH_BEFORE_EFFECT","to":"EFFECT_POSSIBLE","retryDisposition":"CONDITIONAL_RECONCILE"},
+    {"from":"PRE_EFFECT","event":"CRASH_AFTER_UNKNOWN_COMMIT","to":"IN_DOUBT","retryDisposition":"DO_NOT_RETRY"},
+    {"from":"IN_DOUBT","event":"RECEIPT_QUERY_UNAVAILABLE","to":"IN_DOUBT","retryDisposition":"DO_NOT_RETRY"},
+    {"from":"IN_DOUBT","event":"VALID_RECEIPT_FOUND","to":"EFFECT_CONFIRMED","retryDisposition":"CONDITIONAL_RECONCILE"},
+    {"from":"EFFECT_CONFIRMED","event":"COMPENSATION_SUCCESS","to":"REMEDIATED","retryDisposition":"CONDITIONAL_RECONCILE"},
+    {"from":"EFFECT_CONFIRMED","event":"COMPENSATION_FAILURE","to":"MANUAL_INTERVENTION","retryDisposition":"DO_NOT_RETRY"},
+    {"from":"EFFECT_POSSIBLE","event":"CONFIRMED_HALF_COMMIT","to":"HARD_VIOLATION","retryDisposition":"DO_NOT_RETRY"}
+  ],
+  "invariants": [
+    {"id":"RK01","rule":"IN_DOUBT implies POSSIBLE_EFFECT_DO_NOT_RETRY and must not co-occur with NO_EFFECT_CONFIRMED"},
+    {"id":"RK02","rule":"receipt loss alone cannot imply NO_EFFECT_CONFIRMED or SAFE"},
+    {"id":"RK03","rule":"effect witness proves delivery/knowledge only, not utility improvement or causal benefit"},
+    {"id":"RK04","rule":"confirmed half-commit may carry HARD_VIOLATION and IN_DOUBT for the remaining sink"}
+  ],
+  "implementationStatus": "planned/unverified"
+}

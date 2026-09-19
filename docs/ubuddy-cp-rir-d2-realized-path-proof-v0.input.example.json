@@ -1,0 +1,6 @@
+{
+  "$schema":"ubuddy-cp-rir-d2-realized-path-proof-v0.schema.json","schemaVersion":"cp-rir/d2-realized-path-proof/v0","status":"illustrative_v0_draft","caseAlias":"7Q2P9K4M","pathId":"T-CRASH>T-RESTART>T-QUERY>T-VERIFIED","proofKind":"SIGNED_RUNTIME_PATH_ATTESTATION","issuer":"sink-verifier-planned",
+  "sources":{"runtimeCatalog":"ubuddy-cp-rir-d2-runtime-sink-transcript-v0.input.example.json","canonicalSuite":"ubuddy-cp-rir-d2-canonical-suite-v0.input.example.json","externalWitness":"ubuddy-cp-rir-d2-external-branch-witness-v0.input.example.json","recoveryManifest":"ubuddy-cp-rir-d2-recovery-fsm-manifest-v0.input.example.json"},
+  "payload":{"caseAlias":"7Q2P9K4M","branchId":"B-CRASH","pathId":"T-CRASH>T-RESTART>T-QUERY>T-VERIFIED","stepIndex":4,"transitionId":"T-VERIFIED","nonce":"nonce-placeholder-01","sequence":0,"transcriptDigest":"19ce78a692245ecedec678861126c0dc83186ab8ee9116bbffebfa214eccdeb2"},
+  "signedPayloadDigest":"2d13a8af5beb556f7755372cf00e4e4002fa0d0553ecfa5fe2c72ebd47e6198e","signature":"NOT_IMPLEMENTED","verificationStatus":"NOT_IMPLEMENTED","implementationStatus":"planned/unverified"
+}

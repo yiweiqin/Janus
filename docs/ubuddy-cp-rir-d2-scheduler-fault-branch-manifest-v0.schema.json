@@ -1,0 +1,24 @@
+{
+  "$schema":"https://json-schema.org/draft/2020-12/schema",
+  "$id":"https://ubuddy.invalid/schemas/cp-rir-d2-scheduler-fault-branch-manifest-v0.json",
+  "type":"object",
+  "additionalProperties":false,
+  "required":["$schema","schemaVersion","implementationStatus","generatorVersion","grammarId","grammarDigest","horizon","generationMode","branches","branchSetDigest","limitations"],
+  "properties":{
+    "$schema":{"const":"ubuddy-cp-rir-d2-scheduler-fault-branch-manifest-v0.schema.json"},
+    "schemaVersion":{"const":"cp-rir/d2-scheduler-fault-branch-manifest/v0"},
+    "implementationStatus":{"const":"prototype/unverified"},
+    "generatorVersion":{"const":"cp-rir/d2-rule-enumerator/v0"},
+    "grammarId":{"type":"string"},
+    "grammarDigest":{"$ref":"#/$defs/digest"},
+    "horizon":{"const":1},
+    "generationMode":{"const":"EXTERNAL_RULE_ENUMERATION_ONLY"},
+    "branches":{"type":"array","minItems":1,"items":{"$ref":"#/$defs/branch"}},
+    "branchSetDigest":{"$ref":"#/$defs/digest"},
+    "limitations":{"const":["NO_MACHINE_CHECKED_REACHABILITY","NO_ALL_PREFIX_CLOSURE","NO_REAL_SCHEDULER_REPLAY"]}
+  },
+  "$defs":{
+    "digest":{"type":"string","pattern":"^[a-f0-9]{64}$"},
+    "branch":{"type":"object","additionalProperties":false,"required":["branchKey","ruleId","schedulerChoice","faultEvent","branchSemantic"],"properties":{"branchKey":{"type":"string"},"ruleId":{"type":"string"},"schedulerChoice":{"enum":["DELIVER_RECEIPT","DROP_RECEIPT","CRASH_AFTER_EFFECT"]},"faultEvent":{"enum":["NONE","RECEIPT_DROP","CRASH_RESTART"]},"branchSemantic":{"enum":["RECEIPT_PRESENT_UNVERIFIED","RECEIPT_LOST_EFFECT_DECLARED_APPLIED","CRASHED_EFFECT_POSSIBLE"]}}}
+  }
+}

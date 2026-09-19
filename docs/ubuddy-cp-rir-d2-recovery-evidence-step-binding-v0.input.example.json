@@ -1,0 +1,10 @@
+{
+  "$schema":"ubuddy-cp-rir-d2-recovery-evidence-step-binding-v0.schema.json","schemaVersion":"cp-rir/d2-recovery-evidence-step-binding/v0","status":"illustrative_v0_draft","caseAlias":"7Q2P9K4M",
+  "sources":{"recoveryEvidence":"ubuddy-cp-rir-d2-recovery-evidence-v0.input.example.json","recoveryGrammar":"ubuddy-cp-rir-d2-recovery-fsm-grammar-v0.input.example.json","recoveryManifest":"ubuddy-cp-rir-d2-recovery-fsm-manifest-v0.input.example.json"},
+  "expected":{"evidenceDigest":"4122213490c35618805a77ff7b62fb833d106f15fe5206d72cb1fdff4ba201fc","grammarDigest":"ae80205ca52c19cb36cadb86cd2e0815025178a498158fe293a3d6a99f1e5664","pathSetDigest":"fb381b0fbe0e76d00d7c5b1a6537071cd4d0bdfffa777ac1a6d06697a2be9e12"},
+  "bindings":[
+    {"claimId":"receipt-e1","kind":"RECEIPT","effectId":"e1","sinkId":"s1","pathId":"T-CRASH>T-RESTART>T-QUERY>T-VERIFIED","stepIndex":4,"transitionId":"T-VERIFIED","event":"VERIFIED_RECEIPT","from":"RECEIPT_QUERY","to":"EFFECT_CONFIRMED"},
+    {"claimId":"negative-e1","kind":"NEGATIVE_WITNESS","effectId":"e1","sinkId":"s1","pathId":"T-CRASH>T-RESTART>T-QUERY>T-NEGATIVE","stepIndex":4,"transitionId":"T-NEGATIVE","event":"VERIFIED_NEGATIVE_WITNESS","from":"RECEIPT_QUERY","to":"NO_EFFECT_CONFIRMED"},
+    {"claimId":"compensation-e1","kind":"COMPENSATION","effectId":"e1","sinkId":"s1","pathId":"T-CRASH>T-RESTART>T-QUERY>T-LOST>T-START-COMPENSATION>T-COMPENSATION-VERIFIED","stepIndex":6,"transitionId":"T-COMPENSATION-VERIFIED","event":"COMPENSATION_VERIFIED","from":"COMPENSATION_PENDING","to":"REMEDIATED"}
+  ],"implementationStatus":"prototype/unverified"
+}

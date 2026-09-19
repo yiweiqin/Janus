@@ -1,0 +1,23 @@
+{
+  "$schema":"ubuddy-cp-rir-d2-recovery-fsm-grammar-v0.schema.json",
+  "schemaVersion":"cp-rir/d2-recovery-fsm-grammar/v0",
+  "status":"illustrative_v0_draft",
+  "grammarId":"cp-rir/recovery-fsm/h6/v0",
+  "horizon":6,
+  "initialState":"EFFECT_POSSIBLE",
+  "states":["EFFECT_POSSIBLE","CRASHED","RESTARTED","RECEIPT_QUERY","IN_DOUBT","EFFECT_CONFIRMED","NO_EFFECT_CONFIRMED","COMPENSATION_PENDING","REMEDIATED","MANUAL_INTERVENTION"],
+  "transitions":[
+    {"transitionId":"T-CRASH","from":"EFFECT_POSSIBLE","event":"CRASH","to":"CRASHED"},
+    {"transitionId":"T-RESTART","from":"CRASHED","event":"RESTART","to":"RESTARTED"},
+    {"transitionId":"T-QUERY","from":"RESTARTED","event":"QUERY_RECEIPT","to":"RECEIPT_QUERY"},
+    {"transitionId":"T-LOST","from":"RECEIPT_QUERY","event":"RECEIPT_UNAVAILABLE","to":"IN_DOUBT"},
+    {"transitionId":"T-VERIFIED","from":"RECEIPT_QUERY","event":"VERIFIED_RECEIPT","to":"EFFECT_CONFIRMED"},
+    {"transitionId":"T-NEGATIVE","from":"RECEIPT_QUERY","event":"VERIFIED_NEGATIVE_WITNESS","to":"NO_EFFECT_CONFIRMED"},
+    {"transitionId":"T-START-COMPENSATION","from":"IN_DOUBT","event":"START_COMPENSATION","to":"COMPENSATION_PENDING"},
+    {"transitionId":"T-COMPENSATION-VERIFIED","from":"COMPENSATION_PENDING","event":"COMPENSATION_VERIFIED","to":"REMEDIATED"},
+    {"transitionId":"T-COMPENSATION-FAILED","from":"COMPENSATION_PENDING","event":"COMPENSATION_FAILED","to":"MANUAL_INTERVENTION"},
+    {"transitionId":"T-MANUAL","from":"IN_DOUBT","event":"ESCALATE_MANUAL","to":"MANUAL_INTERVENTION"}
+  ],
+  "terminalStates":["EFFECT_CONFIRMED","NO_EFFECT_CONFIRMED","REMEDIATED","MANUAL_INTERVENTION"],
+  "implementationStatus":"prototype/unverified"
+}

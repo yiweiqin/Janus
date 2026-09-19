@@ -1,0 +1,28 @@
+{
+  "$schema":"https://json-schema.org/draft/2020-12/schema",
+  "$id":"https://ubuddy.invalid/schemas/cp-rir-d2-recovery-branch-closure-v2.json",
+  "title":"CP-RIR D2 bounded recovery branch closure (research draft)",
+  "type":"object",
+  "additionalProperties":false,
+  "required":["$schema","schemaVersion","status","purpose","sharedBinding","observerContract","kernel","cases","implementationStatus"],
+  "properties":{
+    "$schema":{"const":"ubuddy-cp-rir-d2-recovery-branch-closure-v2.schema.json"},
+    "schemaVersion":{"const":"cp-rir/d2-recovery-branch-closure-input/v2"},
+    "status":{"const":"illustrative_v2_draft"},
+    "purpose":{"const":"answer_free_bounded_recovery_branch_closure_input_only"},
+    "observerContract":{"type":"object","additionalProperties":false,"required":["solverVisible","auditOnly","processNamespaceIsolation"],"properties":{"solverVisible":{"const":["freshAlias","coarseDispositionBucket","fixedLengthCommitment"]},"auditOnly":{"const":["canonicalFact","sinkAuthority","receiptClaim","branchLabels"]},"processNamespaceIsolation":{"const":"NOT_IMPLEMENTED"}}},
+    "sharedBinding":{"type":"object","additionalProperties":false,"required":["candidateDigest","worldDigest","contractDigest","faultDigest","recoveryDigest"],"properties":{"candidateDigest":{"$ref":"#/$defs/digest"},"worldDigest":{"$ref":"#/$defs/digest"},"contractDigest":{"$ref":"#/$defs/digest"},"faultDigest":{"$ref":"#/$defs/digest"},"recoveryDigest":{"$ref":"#/$defs/digest"}}},
+    "kernel":{"type":"object","additionalProperties":false,"required":["horizon","allowedBranches"],"properties":{"horizon":{"const":1},"allowedBranches":{"type":"array","minItems":3,"uniqueItems":true,"items":{"type":"object","additionalProperties":false,"required":["schedulerChoice","faultEvent"],"properties":{"schedulerChoice":{"enum":["DELIVER_RECEIPT","DROP_RECEIPT","CRASH_AFTER_EFFECT"]},"faultEvent":{"enum":["NONE","RECEIPT_DROP","CRASH_RESTART"]}}}}}},
+    "cases":{"type":"array","minItems":1,"items":{"$ref":"#/$defs/case"}},
+    "implementationStatus":{"const":"prototype/unverified"}
+  },
+  "$defs":{
+    "digest":{"type":"string","pattern":"^[a-f0-9]{64}$"},
+    "sinkAuthority":{"type":"object","additionalProperties":false,"required":["sinkId","resourceId","ownerId","writerId","epoch","generation","versionBefore"],"properties":{"sinkId":{"type":"string"},"resourceId":{"type":"string"},"ownerId":{"type":"string"},"writerId":{"type":"string"},"epoch":{"type":"integer","minimum":0},"generation":{"type":"integer","minimum":0},"versionBefore":{"type":"integer","minimum":0}}},
+    "canonicalFact":{"type":"object","additionalProperties":false,"required":["canonicalStepIndex","event","eventClass","effectId","sinkId","resourceId","multiplicity","versionDelta"],"properties":{"canonicalStepIndex":{"const":0},"event":{"type":"string"},"eventClass":{"enum":["MEDIATED_EFFECT","UNMEDIATED_EFFECT"]},"effectId":{"type":"string"},"sinkId":{"type":"string"},"resourceId":{"type":"string"},"multiplicity":{"type":"integer","minimum":1},"versionDelta":{"type":"integer","minimum":1}}},
+    "receiptClaim":{"type":"object","additionalProperties":false,"required":["state","receiptId","nonce","issuerSequence","atomicReplay"],"properties":{"state":{"enum":["PRESENT_UNVERIFIED","LOST","ABSENT"]},"receiptId":{"type":["string","null"]},"nonce":{"type":["string","null"]},"issuerSequence":{"type":["integer","null"],"minimum":0},"atomicReplay":{"const":"NOT_IMPLEMENTED"}}},
+    "sinkAfter":{"type":"object","additionalProperties":false,"required":["sinkId","declaredEffectReality","verifiedEffectReality","effectKnowledge","dedupState","versionAfter"],"properties":{"sinkId":{"type":"string"},"declaredEffectReality":{"enum":["POSSIBLE_APPLIED","CONFIRMED_APPLIED"]},"verifiedEffectReality":{"const":"UNKNOWN_UNVERIFIED"},"effectKnowledge":{"enum":["EFFECT_POSSIBLE","IN_DOUBT","EFFECT_CONFIRMED"]},"dedupState":{"enum":["UNIQUE","UNKNOWN"]},"versionAfter":{"type":"integer","minimum":0}}},
+    "branch":{"type":"object","additionalProperties":false,"required":["branchId","schedulerChoice","faultEvent","canonicalFact","authorityRef","receiptClaim","sinkAfter","runtimeStatus","publicDisposition","allowedActions","utilityStatus","causalScope"],"properties":{"branchId":{"type":"string"},"schedulerChoice":{"enum":["DELIVER_RECEIPT","DROP_RECEIPT","CRASH_AFTER_EFFECT"]},"faultEvent":{"enum":["NONE","RECEIPT_DROP","CRASH_RESTART"]},"canonicalFact":{"$ref":"#/$defs/canonicalFact"},"authorityRef":{"type":"string"},"receiptClaim":{"$ref":"#/$defs/receiptClaim"},"sinkAfter":{"$ref":"#/$defs/sinkAfter"},"runtimeStatus":{"enum":["UNKNOWN","IN_DOUBT","HARD_VIOLATION"]},"publicDisposition":{"enum":["AUDIT_ONLY","DO_NOT_RETRY","REMEDIATION_REQUIRED"]},"allowedActions":{"type":"array","items":{"enum":["QUERY_RECEIPT","COMPLETE_FORWARD","COMPENSATE","MANUAL"]},"uniqueItems":true},"utilityStatus":{"const":"NOT_EVALUATED"},"causalScope":{"const":"NOT_EVALUATED"}}},
+    "case":{"type":"object","additionalProperties":false,"required":["caseAlias","canonicalCaseDigest","authoritativeSinks","branches","evidence"],"properties":{"caseAlias":{"type":"string","pattern":"^[A-Z0-9]{8}$"},"canonicalCaseDigest":{"$ref":"#/$defs/digest"},"authoritativeSinks":{"type":"array","minItems":1,"items":{"$ref":"#/$defs/sinkAuthority"}},"branches":{"type":"array","minItems":3,"items":{"$ref":"#/$defs/branch"}},"evidence":{"type":"object","additionalProperties":false,"required":["sinkReplay","receiptReplay","faultSchedulerReplay","escrowReplay"],"properties":{"sinkReplay":{"const":"NOT_IMPLEMENTED"},"receiptReplay":{"const":"NOT_IMPLEMENTED"},"faultSchedulerReplay":{"const":"BOUNDED_FIXTURE_ONLY"},"escrowReplay":{"const":"NOT_IMPLEMENTED"}}}}}
+  }
+}

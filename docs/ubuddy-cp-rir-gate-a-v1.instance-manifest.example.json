@@ -1,0 +1,59 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "schemaVersion": "cp-rir/instance-manifest/v0",
+  "status": "illustrative_v0_draft",
+  "purpose": "A1_A2_A3_input_only_no_expected_answers",
+  "accessRegime": "central_full",
+  "inputBoundary": {
+    "contains": ["finite_world_soft_transition_payload", "authorization_payload", "baseline_policy", "explicit_policy_list"],
+    "mustNotContain": ["expected_verdict", "worldValues", "robustDelta", "selectedCandidateId", "negativeWitnessSet"],
+    "consumer": ["A1_reference_semantics_only"]
+  },
+  "referenceClosurePolicy": {
+    "allowedFiles": [
+      "ubuddy-cp-rir-gate-a-v1.instance-input-payload.example.json",
+      "ubuddy-cp-rir-gate-a-v1.runtime-input.example.json",
+      "ubuddy-cp-rir-gate-a-v1.baseline-variant-input.example.json"
+    ],
+    "forbiddenTransitiveReferences": [
+      "ubuddy-cp-rir-gate-a-v1.manifest.example.json",
+      "ubuddy-cp-rir-gate-a-v1.reference-payload.example.json",
+      "ubuddy-cp-rir-gate-a-v1.runtime-gold.example.json",
+      "ubuddy-cp-rir-gate-a-v1.locked-expected-corpus.example.json"
+    ],
+    "caseAliasMode": "runner_randomized_blinded_alias",
+    "caseOrderMode": "runner_randomized",
+    "unknownCaseHoldoutRequired": true
+  },
+  "processIsolationPolicy": {
+    "inputNamespace": "A1_A2_A3_INPUT_ONLY",
+    "expectedNamespace": "COMPARATOR_PRIVATE",
+    "expectedCorpusMount": "DENY_TO_A1_A2_A3",
+    "expectedCorpusHashExposure": "DENY_TO_A1_A2_A3",
+    "crossNamespaceChannel": "ONLY_CANONICAL_OUTPUT_AFTER_SEAL",
+    "errorTimingAndResourcePadding": "REQUIRED_FOR_GATE_B_ONLY",
+    "aclEvidence": "TO_BE_CAPTURED_AS_SIGNED_RUNNER_ATTESTATION"
+  },
+  "finiteModelPayloadRefs": [
+    "ubuddy-cp-rir-gate-a-v1.instance-input-payload.example.json",
+    "ubuddy-cp-rir-gate-a-v1.runtime-input.example.json",
+    "ubuddy-cp-rir-gate-a-v1.baseline-variant-input.example.json"
+  ],
+  "consumerVisibility": {
+    "A1_reference_semantics": ["ubuddy-cp-rir-gate-a-v1.instance-input-payload.example.json", "ubuddy-cp-rir-gate-a-v1.baseline-variant-input.example.json"],
+    "A2_transfer_checker": ["ubuddy-cp-rir-gate-a-v1.runtime-input.example.json", "TO_BE_PROVIDED_CONTRACT_EFFECT_SIMULATION_PAYLOAD"],
+    "A3_solver": ["TO_BE_PROVIDED_COMPLETE_POLICY_GRAMMAR_AND_SAFETY_PAYLOAD"]
+  },
+  "runtimePlanningBindingPolicy": "runtime variants inherit planning axes only from comparator-private sealed output; no planning verdict is present in runtime input",
+  "policyGrammarRef": "TO_BE_PROVIDED_AS_CANONICAL_PAYLOAD",
+  "contractPayloadRef": "TO_BE_PROVIDED_AS_CANONICAL_PAYLOAD",
+  "faultAutomatonRef": "TO_BE_PROVIDED_AS_CANONICAL_PAYLOAD",
+  "inputHash": "TO_BE_COMPUTED",
+  "referencedPayloadHashes": {
+    "ubuddy-cp-rir-gate-a-v1.instance-input-payload.example.json": "TO_BE_COMPUTED",
+    "ubuddy-cp-rir-gate-a-v1.runtime-input.example.json": "TO_BE_COMPUTED",
+    "ubuddy-cp-rir-gate-a-v1.baseline-variant-input.example.json": "TO_BE_COMPUTED"
+  },
+  "hashPurpose": "integrity_only",
+  "implementationStatus": "planned/unverified"
+}

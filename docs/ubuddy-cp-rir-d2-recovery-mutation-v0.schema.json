@@ -1,0 +1,22 @@
+{
+  "$schema":"https://json-schema.org/draft/2020-12/schema",
+  "$id":"https://ubuddy.invalid/schemas/cp-rir-d2-recovery-mutation-v0.json",
+  "title":"CP-RIR D2 recovery mutation matrix (draft)",
+  "type":"object",
+  "additionalProperties":false,
+  "required":["$schema","schemaVersion","status","purpose","runnerRole","observerContract","cases","implementationStatus"],
+  "properties":{
+    "$schema":{"const":"ubuddy-cp-rir-d2-recovery-mutation-v0.schema.json"},
+    "schemaVersion":{"const":"cp-rir/d2-recovery-mutation-input/v0"},
+    "status":{"const":"illustrative_v0_draft"},
+    "purpose":{"const":"answer_free_recovery_mutation_input_only"},
+    "runnerRole":{"const":"AUDIT_ONLY_REDUCER"},
+    "observerContract":{"type":"object","additionalProperties":false,"required":["solverVisible","auditOnly"],"properties":{"solverVisible":{"const":["caseAlias","coarsePublicDisposition"]},"auditOnly":{"const":["eventTrace","signedReceipt","negativeWitness","sinkPrivateState"]}}},
+    "cases":{"type":"array","minItems":6,"items":{"$ref":"#/$defs/case"}},
+    "implementationStatus":{"const":"prototype/unverified"}
+  },
+  "$defs":{
+    "sink":{"type":"object","additionalProperties":false,"required":["sinkId","effectReality","effectKnowledge","receiptState","dedupState","version"],"properties":{"sinkId":{"type":"string"},"effectReality":{"enum":["NOT_APPLIED","POSSIBLE_APPLIED","CONFIRMED_APPLIED"]},"effectKnowledge":{"enum":["NO_EFFECT_CONFIRMED","EFFECT_POSSIBLE","IN_DOUBT","EFFECT_CONFIRMED"]},"receiptState":{"enum":["ABSENT","LOST","PRESENT_UNVERIFIED","PRESENT_VERIFIED","DUPLICATE","MALFORMED"]},"dedupState":{"enum":["NONE","UNIQUE","DUPLICATE","UNKNOWN"]},"version":{"type":"integer","minimum":0}}},
+    "case":{"type":"object","additionalProperties":false,"required":["caseAlias","mutation","events","sinks","evidence"],"properties":{"caseAlias":{"type":"string","pattern":"^[A-F0-9]{32}$"},"mutation":{"enum":["PRE_EFFECT_CRASH","POST_EFFECT_RECEIPT_LOSS","LATE_VALID_RECEIPT","HALF_COMMIT","DUPLICATE_RECEIPT","COMPENSATION_FAILURE"]},"events":{"type":"array","minItems":1,"items":{"type":"string"}},"sinks":{"type":"array","minItems":1,"items":{"$ref":"#/$defs/sink"}},"evidence":{"type":"object","additionalProperties":false,"required":["negativeWitness","receiptCrypto","sinkAtomicity","recoveryToken"],"properties":{"negativeWitness":{"enum":["PRESENT","ABSENT","UNVERIFIED"]},"receiptCrypto":{"enum":["VERIFIED","UNVERIFIED","ABSENT"]},"sinkAtomicity":{"enum":["VERIFIED","UNVERIFIED","VIOLATED"]},"recoveryToken":{"enum":["FRESH","STALE","ABSENT"]}}}}}
+  }
+}

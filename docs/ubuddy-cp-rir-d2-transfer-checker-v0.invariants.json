@@ -1,0 +1,61 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "schemaVersion": "cp-rir/d2-transfer-checker-invariants/v0",
+  "status": "illustrative_v0_draft",
+  "purpose": "machine_readable_checker_obligations_only_no_expected_verdict",
+  "implementationStatus": "planned/unverified",
+  "checkerBoundary": {
+    "reads": ["d2TransferInput", "materializedWitnesses"],
+    "mustNotRead": ["lockedExpectedCorpus", "planningGold", "runtimeGold"],
+    "onMissingWitness": "UNKNOWN_INPUT_NOT_PROVEN",
+    "onMalformedInput": "INPUT_INVALID",
+    "onMalformedWitness": "WITNESS_INVALID",
+    "onCounterexample": "MODEL_COUNTEREXAMPLE"
+  },
+  "verdictTaxonomy": {
+    "INPUT_INVALID": "schema-valid JSON that fails semantic closure, typing or frozen-binding checks",
+    "WITNESS_INVALID": "a supplied trace or proof object is malformed, unreachable, mismatched or not replayable",
+    "UNKNOWN_INPUT_NOT_PROVEN": "required evidence is absent or not independently checkable",
+    "MODEL_COUNTEREXAMPLE": "a valid reachable member of the frozen model reaches BadConcrete or falsifies safety reflection",
+    "D2_SOUND": "all bounded product obligations pass; unavailable while any required witness is draft, opaque or missing"
+  },
+  "productSemantics": {
+    "concreteProduct": "ConcreteLTS x FrozenFaultAutomaton x ContractMonitor",
+    "abstractProduct": "AbstractLTS x ContractMonitor",
+    "monitorInputLayer": "ABSTRACT_AFTER_ALPHA",
+    "normalNonFaultEventSemantics": "SELF_LOOP_IN_FAULT_AUTOMATON",
+    "requiredPredicates": ["InitConcrete", "InitAbstract", "BadConcrete", "BadAbstract", "TerminalClosureConcrete", "TerminalClosureAbstract"],
+    "boundedHorizonField": "horizon",
+    "faultLanguageSemantics": "finite-prefix-acceptance-with-explicit-bound",
+    "abstractSafetyRule": "no reachable BadAbstract state up to H",
+    "reflectionRule": "every reachable BadConcrete state up to H projects to BadAbstract"
+  },
+  "invariants": [
+    {"id":"D2-R01","name":"unique-id-sets","obligation":"organizationId/resourceId/sinkId/ownerId/stateId/eventId sets are unique","failure":"INPUT_INVALID"},
+    {"id":"D2-R02","name":"binding-closure","obligation":"every resource binding resolves to exactly one organization, owner, authoritative sink and sink ACL","failure":"INPUT_INVALID"},
+    {"id":"D2-R03","name":"lts-closure","obligation":"initial/terminal/bad states and every transition endpoint/event resolve in the declared LTS","failure":"INPUT_INVALID"},
+    {"id":"D2-R04","name":"alpha-total-functional","obligation":"alpha state/event maps are total and functional on every concrete state/event reachable within horizon","failure":"INPUT_INVALID"},
+    {"id":"D2-R05","name":"fault-membership","obligation":"derive fault automaton state from its explicit transition table by replaying concrete fault events and normal-event self loops; never trust supplied faultRun","failure":"WITNESS_INVALID"},
+    {"id":"D2-R06","name":"trace-reachability","obligation":"replay every supplied concrete trace edge from its declared base state; dangling, reordered or ambiguous witness edges are not model counterexamples","failure":"WITNESS_INVALID"},
+    {"id":"D2-R07","name":"projection-equality","obligation":"derive alpha(concreteTrace), remove only declared legal stutter events, and compare with declared abstractTrace; a supplied mismatch invalidates the witness","failure":"WITNESS_INVALID"},
+    {"id":"D2-R08A","name":"effect-map-well-formedness","obligation":"every declared external effect has an explicit non-stutter abstract event and preserves identity/multiplicity fields required by the abstraction contract","failure":"INPUT_INVALID"},
+    {"id":"D2-R08B","name":"effect-completeness-counterexample","obligation":"after input and witness validation, any reachable frozen-model concrete effect omitted or misreflected by alpha is a semantic counterexample","failure":"MODEL_COUNTEREXAMPLE"},
+    {"id":"D2-R09","name":"bad-state-reflection","obligation":"for every reachable concrete product state in the frozen model, BadConcrete implies BadAbstract(alpha(state))","failure":"MODEL_COUNTEREXAMPLE"},
+    {"id":"D2-R10","name":"terminal-closure","obligation":"all valid reachable frozen-model paths closed at H satisfy terminal closure or expose a mapped abstract violation","failure":"MODEL_COUNTEREXAMPLE"},
+    {"id":"D2-R11","name":"receipt-replay","obligation":"per-sink receipt content, effect/dedup key, transaction group, linearization index and pre/post hashes replay against the sink trace","failure":"UNKNOWN_INPUT_NOT_PROVEN"},
+    {"id":"D2-R12","name":"cross-sink-atomicity","obligation":"serializable decomposition is accepted only with explicit crash/recovery and all-or-none witness; serializability alone is insufficient","failure":"UNKNOWN_INPUT_NOT_PROVEN"},
+    {"id":"D2-R13","name":"sealed-base-inheritance","obligation":"each runtime variant inherits immutable base manifest/planning snapshot; mutation allowlist cannot alter planning axes","failure":"UNKNOWN_INPUT_NOT_PROVEN"},
+    {"id":"D2-R14","name":"model-runtime-separation","obligation":"modelled faults are checked against the frozen fault automaton; deployed-runtime faults never rewrite planning verdict and require conformance status","failure":"UNKNOWN_INPUT_NOT_PROVEN"},
+    {"id":"D2-R15","name":"fail-closed-positive-claim","obligation":"positive D2_SOUND requires complete mediation, complete maps, accepted fault semantics, replayable witnesses and no reachable counterexample","failure":"UNKNOWN_INPUT_NOT_PROVEN"}
+  ],
+  "requiredOutputs": [
+    "status",
+    "shortestConcreteCounterexample",
+    "projectedAbstractTrace",
+    "faultAutomatonRun",
+    "bindingCheckDigest",
+    "receiptReplayDigest",
+    "reflectionCheckDigest",
+    "coverageUnknownReasons"
+  ]
+}

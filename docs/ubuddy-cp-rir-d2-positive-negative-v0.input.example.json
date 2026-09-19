@@ -1,0 +1,85 @@
+{
+  "$schema": "ubuddy-cp-rir-d2-positive-negative-v0.schema.json",
+  "schemaVersion": "cp-rir/d2-positive-negative-input/v0",
+  "status": "illustrative_v0_draft",
+  "purpose": "answer_free_d2_transfer_pair_input_only",
+  "horizon": 3,
+  "sharedBinding": {
+    "kernelDigest": "K-D2-POSNEG-DRAFT",
+    "contractDigest": "CONTRACT-D2-POSNEG-DRAFT",
+    "evaluatorDigest": "EVAL-D2-POSNEG-DRAFT",
+    "faultDigest": "FAULT-D2-POSNEG-DRAFT",
+    "organizationBindingDigest": "ORG-BINDING-D2-POSNEG-DRAFT",
+    "writerUniverseDigest": "WRITER-UNIVERSE-D2-POSNEG-DRAFT"
+  },
+  "cases": [
+    {
+      "caseId": "P001",
+      "coverageMode": "EXHAUSTIVE_UP_TO_H",
+      "concreteSystem": {
+        "stateIds": ["c0", "c-prepared", "c-r-committed", "c-safe", "c-refused"],
+        "initialStateId": "c0",
+        "eventAlphabet": ["PREPARE_R", "COMMIT_R", "COMMIT_LEDGER", "BYPASS_ATTEMPT", "STALE_ATTEMPT"],
+        "transitions": [
+          {"from":"c0","event":"PREPARE_R","to":"c-prepared","eventClass":"INTERNAL","sinkId":null,"resourceId":null,"ownerId":"owner-a","writerId":"gateway-r","versionBefore":2,"versionAfter":2,"receiptRef":null},
+          {"from":"c-prepared","event":"COMMIT_R","to":"c-r-committed","eventClass":"MEDIATED_EFFECT","sinkId":"sink-r","resourceId":"resource-r","ownerId":"owner-a","writerId":"gateway-r","versionBefore":2,"versionAfter":3,"receiptRef":"rec-r"},
+          {"from":"c-r-committed","event":"COMMIT_LEDGER","to":"c-safe","eventClass":"MEDIATED_EFFECT","sinkId":"sink-ledger","resourceId":"resource-ledger","ownerId":"owner-b","writerId":"gateway-ledger","versionBefore":9,"versionAfter":10,"receiptRef":"rec-ledger"},
+          {"from":"c-prepared","event":"BYPASS_ATTEMPT","to":"c-refused","eventClass":"REFUSED_ATTEMPT","sinkId":"sink-ledger","resourceId":"resource-ledger","ownerId":null,"writerId":"legacy-writer","versionBefore":9,"versionAfter":9,"receiptRef":null},
+          {"from":"c-prepared","event":"STALE_ATTEMPT","to":"c-refused","eventClass":"REFUSED_ATTEMPT","sinkId":"sink-r","resourceId":"resource-r","ownerId":"owner-a","writerId":"old-owner","versionBefore":2,"versionAfter":2,"receiptRef":null}
+        ],
+        "terminalStateIds": ["c-safe", "c-refused"],
+        "badStateIds": []
+      },
+      "abstractSystem": {
+        "stateIds": ["a0", "a-prepared", "a-r-committed", "a-safe", "a-refused"],
+        "initialStateId": "a0",
+        "eventAlphabet": ["PREPARE", "COMMIT_RESOURCE", "COMMIT", "REFUSAL_SAFE"],
+        "transitions": [
+          {"from":"a0","event":"PREPARE","to":"a-prepared","eventClass":"INTERNAL","sinkId":null,"resourceId":null,"ownerId":"","writerId":"","versionBefore":0,"versionAfter":0,"receiptRef":null},
+          {"from":"a-prepared","event":"COMMIT_RESOURCE","to":"a-r-committed","eventClass":"MEDIATED_EFFECT","sinkId":null,"resourceId":null,"ownerId":"","writerId":"","versionBefore":0,"versionAfter":0,"receiptRef":null},
+          {"from":"a-r-committed","event":"COMMIT","to":"a-safe","eventClass":"MEDIATED_EFFECT","sinkId":null,"resourceId":null,"ownerId":"","writerId":"","versionBefore":0,"versionAfter":0,"receiptRef":null},
+          {"from":"a-prepared","event":"REFUSAL_SAFE","to":"a-refused","eventClass":"REFUSAL_SAFE","sinkId":null,"resourceId":null,"ownerId":"","writerId":"","versionBefore":0,"versionAfter":0,"receiptRef":null}
+        ],
+        "terminalStateIds": ["a-safe", "a-refused"],
+        "badStateIds": []
+      },
+      "abstraction": {
+        "stateMap": [{"concrete":"c0","abstract":"a0"},{"concrete":"c-prepared","abstract":"a-prepared"},{"concrete":"c-r-committed","abstract":"a-r-committed"},{"concrete":"c-safe","abstract":"a-safe"},{"concrete":"c-refused","abstract":"a-refused"}],
+        "eventMap": [{"concrete":"PREPARE_R","abstract":"PREPARE"},{"concrete":"COMMIT_R","abstract":"COMMIT_RESOURCE"},{"concrete":"COMMIT_LEDGER","abstract":"COMMIT"},{"concrete":"BYPASS_ATTEMPT","abstract":"REFUSAL_SAFE"},{"concrete":"STALE_ATTEMPT","abstract":"REFUSAL_SAFE"}],
+        "legalStutterEvents": [],
+        "badConcretePredicate": "reachable eventClass=UNMEDIATED_EFFECT",
+        "badAbstractStateIds": []
+      },
+      "monitor": {"inputLayer":"ABSTRACT_AFTER_ALPHA","stateIds":["m0","m-prepared","m-r","m-safe","m-refused","m-violation"],"initialStateId":"m0","violationStateIds":["m-violation"],"rules":[{"from":"m0","event":"PREPARE","to":"m-prepared"},{"from":"m-prepared","event":"COMMIT_RESOURCE","to":"m-r"},{"from":"m-r","event":"COMMIT","to":"m-safe"},{"from":"m-prepared","event":"REFUSAL_SAFE","to":"m-refused"}],"terminalClosureStateIds":["m-safe","m-refused"]},
+      "faultAutomaton": {"stateIds":["f0","f-violation"],"initialStateId":"f0","faultEventIds":["BYPASS_APPLIED","STALE_APPLIED"],"normalEventPolicy":"SELF_LOOP","prefixAcceptance":"EVERY_DEFINED_PREFIX","transitions":[{"from":"f0","event":"BYPASS_APPLIED","to":"f-violation"},{"from":"f0","event":"STALE_APPLIED","to":"f-violation"}]},
+      "mediationEvidence": {
+        "completeMediationClaim": true,
+        "writerUniverse":{"closed":true,"writers":[{"writerId":"gateway-r","organizationId":"org-a","credentialDomain":"cred-a"},{"writerId":"gateway-ledger","organizationId":"org-b","credentialDomain":"cred-b"},{"writerId":"legacy-writer","organizationId":"external-adversary","credentialDomain":"untrusted-legacy"},{"writerId":"old-owner","organizationId":"org-a-former","credentialDomain":"cred-a-revoked"}]},
+        "sinkEnforcement":[
+          {"sinkId":"sink-r","authoritative":true,"aclDigest":"ACL-R-POS","acceptedWriterIds":["gateway-r"],"rejectedWriterIds":["legacy-writer","old-owner"],"enforcementTranscript":[{"attemptId":"attempt-stale","writerId":"old-owner","decision":"REJECT","nonce":"n-stale","epoch":2,"generation":3}]},
+          {"sinkId":"sink-ledger","authoritative":true,"aclDigest":"ACL-LEDGER-POS","acceptedWriterIds":["gateway-ledger"],"rejectedWriterIds":["legacy-writer"],"enforcementTranscript":[{"attemptId":"attempt-bypass","writerId":"legacy-writer","decision":"REJECT","nonce":"n-bypass","epoch":4,"generation":3}]}
+        ],
+        "credentialAttestations":[{"credentialDomain":"cred-a","organizationId":"org-a","ownerId":"owner-a","sinkId":"sink-r","nonce":"att-r","bindingDigest":"BIND-R-POS","issuerSequence":7},{"credentialDomain":"cred-b","organizationId":"org-b","ownerId":"owner-b","sinkId":"sink-ledger","nonce":"att-ledger","bindingDigest":"BIND-LEDGER-POS","issuerSequence":11}],
+        "crossSinkMode":"ESCROW"
+      },
+      "reachableTraces":[
+        {"concreteEvents":[{"from":"c0","event":"PREPARE_R","to":"c-prepared","eventClass":"INTERNAL","sinkId":null,"resourceId":null,"ownerId":"owner-a","writerId":"gateway-r","versionBefore":2,"versionAfter":2,"receiptRef":null},{"from":"c-prepared","event":"COMMIT_R","to":"c-r-committed","eventClass":"MEDIATED_EFFECT","sinkId":"sink-r","resourceId":"resource-r","ownerId":"owner-a","writerId":"gateway-r","versionBefore":2,"versionAfter":3,"receiptRef":"rec-r"},{"from":"c-r-committed","event":"COMMIT_LEDGER","to":"c-safe","eventClass":"MEDIATED_EFFECT","sinkId":"sink-ledger","resourceId":"resource-ledger","ownerId":"owner-b","writerId":"gateway-ledger","versionBefore":9,"versionAfter":10,"receiptRef":"rec-ledger"}],"abstractEvents":[{"from":"a0","event":"PREPARE","to":"a-prepared","eventClass":"INTERNAL"},{"from":"a-prepared","event":"COMMIT_RESOURCE","to":"a-r-committed","eventClass":"MEDIATED_EFFECT"},{"from":"a-r-committed","event":"COMMIT","to":"a-safe","eventClass":"MEDIATED_EFFECT"}],"terminalState":"c-safe","faultRun":["f0","f0","f0"],"effectWitnesses":[{"event":"COMMIT_R","sinkId":"sink-r","resourceId":"resource-r","ownerId":"owner-a","writerId":"gateway-r","effectKey":"tx1-r","dedupKey":"dedup-r","versionBefore":2,"versionAfter":3,"receiptId":"rec-r","receiptNonce":"nr","issuerSequence":1,"preStateDigest":"pre-r","postStateDigest":"post-r","linearizationIndex":2},{"event":"COMMIT_LEDGER","sinkId":"sink-ledger","resourceId":"resource-ledger","ownerId":"owner-b","writerId":"gateway-ledger","effectKey":"tx1-ledger","dedupKey":"dedup-ledger","versionBefore":9,"versionAfter":10,"receiptId":"rec-ledger","receiptNonce":"nl","issuerSequence":1,"preStateDigest":"pre-ledger","postStateDigest":"post-ledger","linearizationIndex":3}]},
+        {"concreteEvents":[{"from":"c0","event":"PREPARE_R","to":"c-prepared","eventClass":"INTERNAL","sinkId":null,"resourceId":null,"ownerId":"owner-a","writerId":"gateway-r","versionBefore":2,"versionAfter":2,"receiptRef":null},{"from":"c-prepared","event":"BYPASS_ATTEMPT","to":"c-refused","eventClass":"REFUSED_ATTEMPT","sinkId":"sink-ledger","resourceId":"resource-ledger","ownerId":null,"writerId":"legacy-writer","versionBefore":9,"versionAfter":9,"receiptRef":null}],"abstractEvents":[{"from":"a0","event":"PREPARE","to":"a-prepared","eventClass":"INTERNAL"},{"from":"a-prepared","event":"REFUSAL_SAFE","to":"a-refused","eventClass":"REFUSAL_SAFE"}],"terminalState":"c-refused","faultRun":["f0","f0"],"effectWitnesses":[]},
+        {"concreteEvents":[{"from":"c0","event":"PREPARE_R","to":"c-prepared","eventClass":"INTERNAL","sinkId":null,"resourceId":null,"ownerId":"owner-a","writerId":"gateway-r","versionBefore":2,"versionAfter":2,"receiptRef":null},{"from":"c-prepared","event":"STALE_ATTEMPT","to":"c-refused","eventClass":"REFUSED_ATTEMPT","sinkId":"sink-r","resourceId":"resource-r","ownerId":"owner-a","writerId":"old-owner","versionBefore":2,"versionAfter":2,"receiptRef":null}],"abstractEvents":[{"from":"a0","event":"PREPARE","to":"a-prepared","eventClass":"INTERNAL"},{"from":"a-prepared","event":"REFUSAL_SAFE","to":"a-refused","eventClass":"REFUSAL_SAFE"}],"terminalState":"c-refused","faultRun":["f0","f0"],"effectWitnesses":[]}
+      ]
+    },
+    {
+      "caseId": "P002",
+      "coverageMode": "COUNTEREXAMPLE_WITNESS_ONLY",
+      "concreteSystem": {"stateIds":["c0","c-prepared","c-violation"],"initialStateId":"c0","eventAlphabet":["PREPARE_R","BYPASS_APPLIED"],"transitions":[{"from":"c0","event":"PREPARE_R","to":"c-prepared","eventClass":"INTERNAL","sinkId":null,"resourceId":null,"ownerId":"owner-a","writerId":"gateway-r","versionBefore":2,"versionAfter":2,"receiptRef":null},{"from":"c-prepared","event":"BYPASS_APPLIED","to":"c-violation","eventClass":"UNMEDIATED_EFFECT","sinkId":"sink-ledger","resourceId":"resource-ledger","ownerId":null,"writerId":"legacy-writer","versionBefore":9,"versionAfter":10,"receiptRef":null}],"terminalStateIds":["c-violation"],"badStateIds":["c-violation"]},
+      "abstractSystem": {"stateIds":["a0","a-prepared","a-violation"],"initialStateId":"a0","eventAlphabet":["PREPARE","UNMEDIATED_EFFECT"],"transitions":[{"from":"a0","event":"PREPARE","to":"a-prepared","eventClass":"INTERNAL","sinkId":null,"resourceId":null,"ownerId":"","writerId":"","versionBefore":0,"versionAfter":0,"receiptRef":null},{"from":"a-prepared","event":"UNMEDIATED_EFFECT","to":"a-violation","eventClass":"UNMEDIATED_EFFECT","sinkId":null,"resourceId":null,"ownerId":"","writerId":"","versionBefore":0,"versionAfter":0,"receiptRef":null}],"terminalStateIds":["a-violation"],"badStateIds":["a-violation"]},
+      "abstraction":{"stateMap":[{"concrete":"c0","abstract":"a0"},{"concrete":"c-prepared","abstract":"a-prepared"},{"concrete":"c-violation","abstract":"a-violation"}],"eventMap":[{"concrete":"PREPARE_R","abstract":"PREPARE"},{"concrete":"BYPASS_APPLIED","abstract":"UNMEDIATED_EFFECT"}],"legalStutterEvents":[],"badConcretePredicate":"reachable eventClass=UNMEDIATED_EFFECT","badAbstractStateIds":["a-violation"]},
+      "monitor":{"inputLayer":"ABSTRACT_AFTER_ALPHA","stateIds":["m0","m-prepared","m-violation"],"initialStateId":"m0","violationStateIds":["m-violation"],"rules":[{"from":"m0","event":"PREPARE","to":"m-prepared"},{"from":"m-prepared","event":"UNMEDIATED_EFFECT","to":"m-violation"}],"terminalClosureStateIds":[]},
+      "faultAutomaton":{"stateIds":["f0","f-violation"],"initialStateId":"f0","faultEventIds":["BYPASS_APPLIED"],"normalEventPolicy":"SELF_LOOP","prefixAcceptance":"EVERY_DEFINED_PREFIX","transitions":[{"from":"f0","event":"BYPASS_APPLIED","to":"f-violation"}]},
+      "mediationEvidence":{"completeMediationClaim":false,"writerUniverse":{"closed":true,"writers":[{"writerId":"gateway-r","organizationId":"org-a","credentialDomain":"cred-a"},{"writerId":"gateway-ledger","organizationId":"org-b","credentialDomain":"cred-b"},{"writerId":"legacy-writer","organizationId":"external-adversary","credentialDomain":"untrusted-legacy"}]},"sinkEnforcement":[{"sinkId":"sink-r","authoritative":true,"aclDigest":"ACL-R-NEG","acceptedWriterIds":["gateway-r"],"rejectedWriterIds":["legacy-writer"],"enforcementTranscript":[]},{"sinkId":"sink-ledger","authoritative":true,"aclDigest":"ACL-LEDGER-NEG","acceptedWriterIds":["gateway-ledger"],"rejectedWriterIds":[],"enforcementTranscript":[]}],"credentialAttestations":[{"credentialDomain":"cred-a","organizationId":"org-a","ownerId":"owner-a","sinkId":"sink-r","nonce":"att-r-neg","bindingDigest":"BIND-R-NEG","issuerSequence":7},{"credentialDomain":"cred-b","organizationId":"org-b","ownerId":"owner-b","sinkId":"sink-ledger","nonce":"att-ledger-neg","bindingDigest":"BIND-LEDGER-NEG","issuerSequence":11}],"crossSinkMode":"ESCROW"},
+      "reachableTraces":[{"concreteEvents":[{"from":"c0","event":"PREPARE_R","to":"c-prepared","eventClass":"INTERNAL","sinkId":null,"resourceId":null,"ownerId":"owner-a","writerId":"gateway-r","versionBefore":2,"versionAfter":2,"receiptRef":null},{"from":"c-prepared","event":"BYPASS_APPLIED","to":"c-violation","eventClass":"UNMEDIATED_EFFECT","sinkId":"sink-ledger","resourceId":"resource-ledger","ownerId":null,"writerId":"legacy-writer","versionBefore":9,"versionAfter":10,"receiptRef":null}],"abstractEvents":[{"from":"a0","event":"PREPARE","to":"a-prepared","eventClass":"INTERNAL"},{"from":"a-prepared","event":"UNMEDIATED_EFFECT","to":"a-violation","eventClass":"UNMEDIATED_EFFECT"}],"terminalState":"c-violation","faultRun":["f0","f-violation"],"effectWitnesses":[]}]
+    }
+  ],
+  "answerIsolation": {"mustNotContain":["expected","verdict","robustDelta","selectedCandidateId","lockedExpectedCorpus","planningGold","runtimeGold"],"transitiveExpectedReference":"forbidden"},
+  "implementationStatus": "planned/unverified"
+}

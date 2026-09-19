@@ -1,0 +1,19 @@
+{
+  "$schema":"https://json-schema.org/draft/2020-12/schema",
+  "$id":"https://ubuddy.invalid/schemas/cp-rir-obligation-ledger-v0.json",
+  "type":"object","additionalProperties":false,
+  "required":["$schema","schemaVersion","normativeRegistry","contractBefore","contractAfter","prefixes","finalDisposition","implementationStatus"],
+  "properties":{
+    "$schema":{"const":"ubuddy-cp-rir-obligation-ledger-v0.schema.json"},
+    "schemaVersion":{"const":"cp-rir/obligation-ledger/v0"},
+    "normativeRegistry":{"type":"object","additionalProperties":false,"required":["registryDigest","independentFromCandidate","lockedBeforeCandidate","obligations"],"properties":{"registryDigest":{"type":"string","pattern":"^[a-f0-9]{64}$"},"independentFromCandidate":{"const":true},"lockedBeforeCandidate":{"const":true},"obligations":{"type":"array","minItems":1,"items":{"$ref":"#/$defs/registryObligation"}}}},
+    "contractBefore":{"$ref":"#/$defs/contract"},"contractAfter":{"$ref":"#/$defs/contract"},
+    "prefixes":{"type":"array","minItems":1,"items":{"type":"object","additionalProperties":false,"required":["stepIndex","event"],"properties":{"stepIndex":{"type":"integer","minimum":0},"event":{"type":"object","additionalProperties":false,"required":["kind"],"properties":{"kind":{"enum":["TRIGGER","DISCHARGE","VIOLATE","CANCEL","COMPENSATE","ACCEPT","OBSERVE_EFFECT"]},"obligationId":{"type":"string","minLength":1},"instanceId":{"type":"string","minLength":1},"witnessId":{"type":"string","minLength":1},"eraseViolation":{"type":"boolean"},"projectedAway":{"type":"boolean"}}}}}},
+    "finalDisposition":{"enum":["ACCEPT","REMEDIATION","UNKNOWN"]},
+    "implementationStatus":{"const":"planned/unverified"}
+  },
+  "$defs":{
+    "registryObligation":{"type":"object","additionalProperties":false,"required":["id","kind","required","multiplicity","cancelable"],"properties":{"id":{"type":"string","minLength":1},"kind":{"enum":["HARD","SOFT","EXCEPTION","MANUAL"]},"required":{"type":"boolean"},"multiplicity":{"type":"integer","minimum":1},"cancelable":{"type":"boolean"}}},
+    "contract":{"type":"object","additionalProperties":false,"required":["obligationIds","contractDigest"],"properties":{"obligationIds":{"type":"array","minItems":1,"items":{"type":"string","minLength":1},"uniqueItems":true},"contractDigest":{"type":"string","pattern":"^[a-f0-9]{64}$"}}}
+  }
+}

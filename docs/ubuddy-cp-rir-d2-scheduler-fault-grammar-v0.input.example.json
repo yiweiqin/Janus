@@ -1,0 +1,24 @@
+{
+  "$schema":"ubuddy-cp-rir-d2-scheduler-fault-grammar-v0.schema.json",
+  "schemaVersion":"cp-rir/d2-scheduler-fault-grammar/v0",
+  "status":"illustrative_v0_draft",
+  "grammarId":"cp-rir/recovery-scheduler-fault/h1/v0",
+  "horizon":1,
+  "schedulerAlphabet":[
+    {"id":"DELIVER_RECEIPT","semantic":"make the unverified receipt claim visible"},
+    {"id":"DROP_RECEIPT","semantic":"drop the receipt observation after the declared effect"},
+    {"id":"CRASH_AFTER_EFFECT","semantic":"crash after the effect may have occurred, then restart"}
+  ],
+  "faultAlphabet":[
+    {"id":"NONE","semantic":"no injected fault in this bounded branch"},
+    {"id":"RECEIPT_DROP","semantic":"receipt observation is lost"},
+    {"id":"CRASH_RESTART","semantic":"process crashes and restarts after possible effect"}
+  ],
+  "generationRules":[
+    {"ruleId":"R-DELIVER","schedulerChoice":"DELIVER_RECEIPT","faultEvents":["NONE"],"branchSemantic":"RECEIPT_PRESENT_UNVERIFIED"},
+    {"ruleId":"R-DROP","schedulerChoice":"DROP_RECEIPT","faultEvents":["RECEIPT_DROP"],"branchSemantic":"RECEIPT_LOST_EFFECT_DECLARED_APPLIED"},
+    {"ruleId":"R-CRASH","schedulerChoice":"CRASH_AFTER_EFFECT","faultEvents":["CRASH_RESTART"],"branchSemantic":"CRASHED_EFFECT_POSSIBLE"}
+  ],
+  "closureContract":{"schedulerChoiceCardinality":"EXACTLY_ONE_PER_BRANCH","faultEventCardinality":"EXACTLY_ONE_PER_BRANCH","prefixClosure":"NOT_IMPLEMENTED_HORIZON_ONE_ONLY","reachabilitySemantics":"RULE_ENUMERATION_ONLY_UNVERIFIED"},
+  "implementationStatus":"prototype/unverified"
+}

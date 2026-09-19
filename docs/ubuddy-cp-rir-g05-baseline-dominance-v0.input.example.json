@@ -1,0 +1,80 @@
+{
+  "$schema": "ubuddy-cp-rir-g05-baseline-dominance-v0.schema.json",
+  "schemaVersion": "cp-rir/g05-baseline-dominance-input/v0",
+  "status": "illustrative_v0_draft",
+  "purpose": "answer_free_input_for_strict_baseline_dominance_pair",
+  "baselineVariantId": "B0001",
+  "fixedBindings": {
+    "kernelAlias": "K05",
+    "authorizationExecKernel": "K05",
+    "contract": "K05",
+    "evaluator": "K05",
+    "faultModel": "K05",
+    "worldSet": "K05",
+    "horizon": 1,
+    "kernelDigest": "K05-KERNEL-DIGEST-DRAFT",
+    "authDigest": "K05-AUTH-DIGEST-DRAFT",
+    "execDigest": "K05-EXEC-DIGEST-DRAFT",
+    "contractDigest": "K05-CONTRACT-DIGEST-DRAFT",
+    "evaluatorDigest": "K05-EVALUATOR-DIGEST-DRAFT",
+    "faultDigest": "K05-FAULT-DIGEST-DRAFT"
+  },
+  "kernel": {
+    "kernelAlias": "K05",
+    "stateSpace": ["s0", "success", "failure"],
+    "initialState": "s0",
+    "terminalUtility": {
+      "success": {"num": 1, "den": 1},
+      "failure": {"num": 0, "den": 1}
+    },
+    "actions": ["repair", "noop", "incumbent_recovery"],
+    "worlds": [
+      {"worldId": "m1", "authorization": {"repair": "ALLOW", "noop": "ALLOW", "incumbent_recovery": "ALLOW"}, "executability": {"repair": true, "noop": true, "incumbent_recovery": true}, "transitionRowMass": {"repair": {"num": 1, "den": 1}, "noop": {"num": 1, "den": 1}, "incumbent_recovery": {"num": 1, "den": 1}}, "transitionRows": {"repair": [{"from":"s0","to":"success","prob":{"num":4,"den":5}},{"from":"s0","to":"failure","prob":{"num":1,"den":5}}], "noop": [{"from":"s0","to":"success","prob":{"num":7,"den":10}},{"from":"s0","to":"failure","prob":{"num":3,"den":10}}], "incumbent_recovery": [{"from":"s0","to":"success","prob":{"num":79,"den":100}},{"from":"s0","to":"failure","prob":{"num":21,"den":100}}]}, "successProbability": {"repair": {"num": 4, "den": 5}, "noop": {"num": 7, "den": 10}, "incumbent_recovery": {"num": 79, "den": 100}}},
+      {"worldId": "m2", "authorization": {"repair": "ALLOW", "noop": "ALLOW", "incumbent_recovery": "ALLOW"}, "executability": {"repair": true, "noop": true, "incumbent_recovery": true}, "transitionRowMass": {"repair": {"num": 1, "den": 1}, "noop": {"num": 1, "den": 1}, "incumbent_recovery": {"num": 1, "den": 1}}, "transitionRows": {"repair": [{"from":"s0","to":"success","prob":{"num":9,"den":10}},{"from":"s0","to":"failure","prob":{"num":1,"den":10}}], "noop": [{"from":"s0","to":"success","prob":{"num":1,"den":10}},{"from":"s0","to":"failure","prob":{"num":9,"den":10}}], "incumbent_recovery": [{"from":"s0","to":"success","prob":{"num":41,"den":50}},{"from":"s0","to":"failure","prob":{"num":9,"den":50}}]}, "successProbability": {"repair": {"num": 9, "den": 10}, "noop": {"num": 1, "den": 10}, "incumbent_recovery": {"num": 41, "den": 50}}}
+    ]
+  },
+  "candidatePolicy": {
+    "policyId": "pi-repair",
+    "proposal": "repair",
+    "canonicalPolicyHash": "45033f443e14c3694ee3eb7b0c104e117936ecae849557cede529af75b2b4574",
+    "canonicalAst": "(at s0;proposal repair)",
+    "grammarDigest": "POLICY-GRAMMAR-K05",
+    "cost": {"num": 1, "den": 1},
+    "role": "candidate"
+  },
+  "baseBaselinePolicy": {
+    "policyId": "pi0-noop",
+    "proposal": "noop",
+    "canonicalPolicyHash": "b52f847212ea76be03fd6e779007141c95716604730900faa91f87f9bdbbc41f",
+    "canonicalAst": "(at s0;proposal noop)",
+    "grammarDigest": "POLICY-GRAMMAR-K05",
+    "cost": {"num": 0, "den": 1},
+    "role": "baseline"
+  },
+  "variantBaselinePolicy": {
+    "policyId": "pi0-incumbent-recovery",
+    "proposal": "incumbent_recovery",
+    "canonicalPolicyHash": "3f0a456f9e4999c26321e9b2a252b3b2b7087b08ce06029fce40daf3b43e415c",
+    "canonicalAst": "(at s0;proposal incumbent_recovery)",
+    "grammarDigest": "POLICY-GRAMMAR-K05",
+    "cost": {"num": 1, "den": 1},
+    "role": "baseline"
+  },
+  "thresholds": {
+    "eta": {"num": 4, "den": 5},
+    "kappa": {"num": 1, "den": 20},
+    "costBudget": {"num": 1, "den": 1}
+  },
+  "pairDiff": {
+    "allowedChangedPath": "/variantBaselinePolicy",
+    "observationallyFixedPaths": ["/fixedBindings", "/kernel", "/candidatePolicy", "/baseBaselinePolicy", "/thresholds"],
+    "candidateUnchanged": true,
+    "hardSafetyUnchanged": true
+  },
+  "answerIsolation": {
+    "mustNotContain": ["expected", "worldValues", "robustDelta", "deltaWitness", "verdict", "dominanceWitness", "baseInputHash", "variantInputHash"],
+    "transitiveExpectedReference": "forbidden"
+  },
+  "inputHash": "TO_BE_COMPUTED",
+  "implementationStatus": "planned/unverified"
+}

@@ -1,0 +1,35 @@
+{
+  "$schema":"ubuddy-cp-rir-effect-complete-transfer-v0.schema.json",
+  "schemaVersion":"cp-rir/effect-complete-transfer/v0",
+  "horizon":3,
+  "cases":[
+    {
+      "caseId":"TRANSFER_SAFE",
+      "concreteSystem":{"stateIds":["c0","c1","c-safe","c-refused"],"initialStateId":"c0","terminalStateIds":["c-safe","c-refused"],"badStateIds":[],"transitions":[{"from":"c0","event":"C_PREPARE","to":"c1","eventClass":"INTERNAL","effectFootprint":[]},{"from":"c1","event":"C_COMMIT","to":"c-safe","eventClass":"MEDIATED_EFFECT","effectFootprint":["sink-a/resource-x"]},{"from":"c1","event":"C_REJECT","to":"c-refused","eventClass":"REFUSED_ATTEMPT","effectFootprint":[]}]},
+      "abstractSystem":{"stateIds":["a0","a1","a-safe","a-refused"],"initialStateId":"a0","terminalStateIds":["a-safe","a-refused"],"badStateIds":[],"transitions":[{"from":"a0","event":"PREPARE","to":"a1","eventClass":"INTERNAL","effectFootprint":[]},{"from":"a1","event":"COMMIT","to":"a-safe","eventClass":"MEDIATED_EFFECT","effectFootprint":["sink-a/resource-x"]},{"from":"a1","event":"REFUSAL","to":"a-refused","eventClass":"REFUSED_ATTEMPT","effectFootprint":[]}]},
+      "stateMap":[{"concrete":"c0","abstract":"a0"},{"concrete":"c1","abstract":"a1"},{"concrete":"c-safe","abstract":"a-safe"},{"concrete":"c-refused","abstract":"a-refused"}],
+      "eventMap":[{"concrete":"C_PREPARE","abstract":"PREPARE"},{"concrete":"C_COMMIT","abstract":"COMMIT"},{"concrete":"C_REJECT","abstract":"REFUSAL"}],
+      "legalStutterEvents":[],
+      "monitor":{"stateIds":["m0","m1","m-safe","m-refused","m-bad"],"initialStateId":"m0","terminalStateIds":["m-safe","m-refused"],"violationStateIds":["m-bad"],"rules":[{"from":"m0","event":"PREPARE","to":"m1"},{"from":"m1","event":"COMMIT","to":"m-safe"},{"from":"m1","event":"REFUSAL","to":"m-refused"}]}
+    },
+    {
+      "caseId":"MULTI_EFFECT_ORDERED",
+      "concreteSystem":{"stateIds":["c0","c1","c2","c-safe"],"initialStateId":"c0","terminalStateIds":["c-safe"],"badStateIds":[],"transitions":[{"from":"c0","event":"C_PREPARE","to":"c1","eventClass":"INTERNAL","effectFootprint":[]},{"from":"c1","event":"C_COMMIT_A","to":"c2","eventClass":"MEDIATED_EFFECT","effectFootprint":["sink-a/resource-x"]},{"from":"c2","event":"C_COMMIT_B","to":"c-safe","eventClass":"MEDIATED_EFFECT","effectFootprint":["sink-b/resource-y"]}]},
+      "abstractSystem":{"stateIds":["a0","a1","a2","a-safe"],"initialStateId":"a0","terminalStateIds":["a-safe"],"badStateIds":[],"transitions":[{"from":"a0","event":"PREPARE","to":"a1","eventClass":"INTERNAL","effectFootprint":[]},{"from":"a1","event":"COMMIT_A","to":"a2","eventClass":"MEDIATED_EFFECT","effectFootprint":["sink-a/resource-x"]},{"from":"a2","event":"COMMIT_B","to":"a-safe","eventClass":"MEDIATED_EFFECT","effectFootprint":["sink-b/resource-y"]}]},
+      "stateMap":[{"concrete":"c0","abstract":"a0"},{"concrete":"c1","abstract":"a1"},{"concrete":"c2","abstract":"a2"},{"concrete":"c-safe","abstract":"a-safe"}],
+      "eventMap":[{"concrete":"C_PREPARE","abstract":"PREPARE"},{"concrete":"C_COMMIT_A","abstract":"COMMIT_A"},{"concrete":"C_COMMIT_B","abstract":"COMMIT_B"}],
+      "legalStutterEvents":[],
+      "monitor":{"stateIds":["m0","m1","m2","m-safe","m-bad"],"initialStateId":"m0","terminalStateIds":["m-safe"],"violationStateIds":["m-bad"],"rules":[{"from":"m0","event":"PREPARE","to":"m1"},{"from":"m1","event":"COMMIT_A","to":"m2"},{"from":"m2","event":"COMMIT_B","to":"m-safe"}]}
+    },
+    {
+      "caseId":"COMPOSITION_SEPARATION_HIDDEN_EFFECT",
+      "concreteSystem":{"stateIds":["c0","c1","c-safe","c-hidden-bad"],"initialStateId":"c0","terminalStateIds":["c-safe","c-hidden-bad"],"badStateIds":["c-hidden-bad"],"transitions":[{"from":"c0","event":"C_PREPARE","to":"c1","eventClass":"INTERNAL","effectFootprint":[]},{"from":"c1","event":"C_COMMIT","to":"c-safe","eventClass":"MEDIATED_EFFECT","effectFootprint":["sink-a/resource-x"]},{"from":"c1","event":"C_HIDDEN_WRITE","to":"c-hidden-bad","eventClass":"UNMEDIATED_EFFECT","effectFootprint":["sink-b/resource-y"]}]},
+      "abstractSystem":{"stateIds":["a0","a1","a-safe"],"initialStateId":"a0","terminalStateIds":["a-safe"],"badStateIds":[],"transitions":[{"from":"a0","event":"PREPARE","to":"a1","eventClass":"INTERNAL","effectFootprint":[]},{"from":"a1","event":"COMMIT","to":"a-safe","eventClass":"MEDIATED_EFFECT","effectFootprint":["sink-a/resource-x"]}]},
+      "stateMap":[{"concrete":"c0","abstract":"a0"},{"concrete":"c1","abstract":"a1"},{"concrete":"c-safe","abstract":"a-safe"},{"concrete":"c-hidden-bad","abstract":"a1"}],
+      "eventMap":[{"concrete":"C_PREPARE","abstract":"PREPARE"},{"concrete":"C_COMMIT","abstract":"COMMIT"},{"concrete":"C_HIDDEN_WRITE","abstract":"STUTTER"}],
+      "legalStutterEvents":["C_HIDDEN_WRITE"],
+      "monitor":{"stateIds":["m0","m1","m-safe","m-bad"],"initialStateId":"m0","terminalStateIds":["m-safe"],"violationStateIds":["m-bad"],"rules":[{"from":"m0","event":"PREPARE","to":"m1"},{"from":"m1","event":"COMMIT","to":"m-safe"}]}
+    }
+  ],
+  "implementationStatus":"prototype/unverified"
+}

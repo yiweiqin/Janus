@@ -1,0 +1,20 @@
+{
+  "$schema":"ubuddy-cp-rir-d2-external-branch-witness-v0.schema.json",
+  "schemaVersion":"cp-rir/d2-external-branch-witness/v0",
+  "status":"illustrative_v0_draft",
+  "purpose":"recovery_witness_without_self_declared_branch_universe",
+  "sharedBinding":{"candidateDigest":"1111111111111111111111111111111111111111111111111111111111111111","worldDigest":"2222222222222222222222222222222222222222222222222222222222222222","contractDigest":"3333333333333333333333333333333333333333333333333333333333333333","faultDigest":"4444444444444444444444444444444444444444444444444444444444444444","recoveryDigest":"6666666666666666666666666666666666666666666666666666666666666666"},
+  "observerContract":{"solverVisible":["freshAlias","coarseDispositionBucket","fixedLengthCommitment"],"auditOnly":["canonicalFact","sinkAuthority","receiptClaim","branchLabels"],"processNamespaceIsolation":"NOT_IMPLEMENTED"},
+  "cases":[{
+    "caseAlias":"7Q2P9K4M",
+    "canonicalCaseDigest":"42ebd20134bd2f57d0b3489209b1f6da4abb120df7feb770dd6837b1acf8ccb9",
+    "authoritativeSinks":[{"sinkId":"s1","resourceId":"r1","ownerId":"owner-a","writerId":"gateway-a","epoch":1,"generation":1,"versionBefore":0}],
+    "branches":[
+      {"branchId":"B-DELIVER","schedulerChoice":"DELIVER_RECEIPT","faultEvent":"NONE","canonicalFact":{"canonicalStepIndex":0,"event":"E1","eventClass":"MEDIATED_EFFECT","effectId":"e1","sinkId":"s1","resourceId":"r1","multiplicity":1,"versionDelta":1},"authorityRef":"s1","receiptClaim":{"state":"PRESENT_UNVERIFIED","receiptId":"rec-e1","nonce":"nonce-e1","issuerSequence":1,"atomicReplay":"NOT_IMPLEMENTED"},"sinkAfter":{"sinkId":"s1","declaredEffectReality":"CONFIRMED_APPLIED","verifiedEffectReality":"UNKNOWN_UNVERIFIED","effectKnowledge":"EFFECT_POSSIBLE","dedupState":"UNIQUE","versionAfter":1},"runtimeStatus":"UNKNOWN","publicDisposition":"AUDIT_ONLY","allowedActions":["QUERY_RECEIPT","MANUAL"],"utilityStatus":"NOT_EVALUATED","causalScope":"NOT_EVALUATED"},
+      {"branchId":"B-DROP","schedulerChoice":"DROP_RECEIPT","faultEvent":"RECEIPT_DROP","canonicalFact":{"canonicalStepIndex":0,"event":"E1","eventClass":"MEDIATED_EFFECT","effectId":"e1","sinkId":"s1","resourceId":"r1","multiplicity":1,"versionDelta":1},"authorityRef":"s1","receiptClaim":{"state":"LOST","receiptId":null,"nonce":null,"issuerSequence":null,"atomicReplay":"NOT_IMPLEMENTED"},"sinkAfter":{"sinkId":"s1","declaredEffectReality":"CONFIRMED_APPLIED","verifiedEffectReality":"UNKNOWN_UNVERIFIED","effectKnowledge":"IN_DOUBT","dedupState":"UNIQUE","versionAfter":1},"runtimeStatus":"IN_DOUBT","publicDisposition":"DO_NOT_RETRY","allowedActions":["QUERY_RECEIPT","MANUAL"],"utilityStatus":"NOT_EVALUATED","causalScope":"NOT_EVALUATED"},
+      {"branchId":"B-CRASH","schedulerChoice":"CRASH_AFTER_EFFECT","faultEvent":"CRASH_RESTART","canonicalFact":{"canonicalStepIndex":0,"event":"E1","eventClass":"MEDIATED_EFFECT","effectId":"e1","sinkId":"s1","resourceId":"r1","multiplicity":1,"versionDelta":1},"authorityRef":"s1","receiptClaim":{"state":"ABSENT","receiptId":null,"nonce":null,"issuerSequence":null,"atomicReplay":"NOT_IMPLEMENTED"},"sinkAfter":{"sinkId":"s1","declaredEffectReality":"POSSIBLE_APPLIED","verifiedEffectReality":"UNKNOWN_UNVERIFIED","effectKnowledge":"IN_DOUBT","dedupState":"UNKNOWN","versionAfter":1},"runtimeStatus":"IN_DOUBT","publicDisposition":"DO_NOT_RETRY","allowedActions":["QUERY_RECEIPT","MANUAL"],"utilityStatus":"NOT_EVALUATED","causalScope":"NOT_EVALUATED"}
+    ],
+    "evidence":{"sinkReplay":"NOT_IMPLEMENTED","receiptReplay":"NOT_IMPLEMENTED","faultSchedulerReplay":"BOUNDED_FIXTURE_ONLY","escrowReplay":"NOT_IMPLEMENTED"}
+  }],
+  "implementationStatus":"prototype/unverified"
+}

@@ -1,0 +1,15 @@
+{
+  "$schema":"https://json-schema.org/draft/2020-12/schema",
+  "$id":"https://ubuddy.invalid/schemas/cpir-web-pbes-v0.json",
+  "type":"object","additionalProperties":false,
+  "required":["$schema","schemaVersion","status","worldSetLockedBeforeSearch","cases","implementationStatus"],
+  "properties":{
+    "$schema":{"const":"ubuddy-cpir-web-pbes-v0.schema.json"},"schemaVersion":{"const":"cpir-web/pbes/v0"},"status":{"const":"illustrative_v0_draft"},"worldSetLockedBeforeSearch":{"const":true},"cases":{"type":"array","minItems":2,"items":{"$ref":"#/$defs/case"}},"implementationStatus":{"const":"prototype/unverified"}
+  },
+  "$defs":{
+    "world":{"type":"object","additionalProperties":false,"required":["worldId","publicObservation","hiddenCause","tenant","oauthSubject","apiVersion","webhookState","effectReality"],"properties":{"worldId":{"type":"string"},"publicObservation":{"type":"string"},"hiddenCause":{"type":"string"},"tenant":{"type":"string"},"oauthSubject":{"type":"string"},"apiVersion":{"type":"string"},"webhookState":{"type":"string"},"effectReality":{"type":"string"}}},
+    "probe":{"type":"object","additionalProperties":false,"required":["probeId","ownerId","requiredScopes","risk","irreversibleEffect","observationByWorld"],"properties":{"probeId":{"type":"string"},"ownerId":{"type":"string"},"requiredScopes":{"type":"array","items":{"type":"string"}},"risk":{"type":"number","minimum":0},"irreversibleEffect":{"type":"boolean"},"observationByWorld":{"type":"object","minProperties":1,"additionalProperties":{"type":"string"}}}},
+    "repair":{"type":"object","additionalProperties":false,"required":["repairId","ownerId","requiredScopes","cost","irreversibleEffect","safeByWorld","utilityByWorld"],"properties":{"repairId":{"type":"string"},"ownerId":{"type":"string"},"requiredScopes":{"type":"array","items":{"type":"string"}},"cost":{"type":"number","exclusiveMinimum":0},"irreversibleEffect":{"type":"boolean"},"safeByWorld":{"type":"object","minProperties":1,"additionalProperties":{"type":"boolean"}},"utilityByWorld":{"type":"object","minProperties":1,"additionalProperties":{"type":"number"}}}},
+    "case":{"type":"object","additionalProperties":false,"required":["caseId","scenario","availableScopes","riskBudget","utilityLowerBound","worlds","probes","repairs"],"properties":{"caseId":{"type":"string"},"scenario":{"type":"string"},"availableScopes":{"type":"array","items":{"type":"string"},"uniqueItems":true},"riskBudget":{"type":"number","minimum":0},"utilityLowerBound":{"type":"number"},"worlds":{"type":"array","minItems":2,"items":{"$ref":"#/$defs/world"}},"probes":{"type":"array","minItems":1,"items":{"$ref":"#/$defs/probe"}},"repairs":{"type":"array","minItems":1,"items":{"$ref":"#/$defs/repair"}}}}
+  }
+}

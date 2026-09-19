@@ -1,0 +1,124 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://ubuddy.invalid/schemas/cpir-web-pbes-v1.json",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "$schema",
+    "schemaVersion",
+    "status",
+    "worldSetLockedBeforeSearch",
+    "contractRegistryLockedBeforeSearch",
+    "supportTableLockedBeforeSearch",
+    "cases",
+    "implementationStatus"
+  ],
+  "properties": {
+    "$schema": {"const": "ubuddy-cpir-web-pbes-v1.schema.json"},
+    "schemaVersion": {"const": "cpir-web/pbes/v1"},
+    "status": {"const": "illustrative_multistep_draft"},
+    "worldSetLockedBeforeSearch": {"const": true},
+    "contractRegistryLockedBeforeSearch": {"const": true},
+    "supportTableLockedBeforeSearch": {"const": true},
+    "cases": {"type": "array", "minItems": 3, "items": {"$ref": "#/$defs/case"}},
+    "implementationStatus": {"const": "prototype/unverified"}
+  },
+  "$defs": {
+    "world": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "worldId", "publicObservation", "hiddenCause", "browserProfile",
+        "sessionEpoch", "oauthSubject", "tenant", "oauthScopes", "apiVersion",
+        "etag", "webhookState", "sinkVersion", "receiptState", "effectReality"
+      ],
+      "properties": {
+        "worldId": {"type": "string", "minLength": 1},
+        "publicObservation": {"type": "string", "minLength": 1},
+        "hiddenCause": {"type": "string", "minLength": 1},
+        "browserProfile": {"type": "string", "minLength": 1},
+        "sessionEpoch": {"type": "string", "minLength": 1},
+        "oauthSubject": {"type": "string", "minLength": 1},
+        "tenant": {"type": "string", "minLength": 1},
+        "oauthScopes": {"type": "array", "items": {"type": "string"}, "uniqueItems": true},
+        "apiVersion": {"type": "string", "minLength": 1},
+        "etag": {"type": "string", "minLength": 1},
+        "webhookState": {"type": "string", "minLength": 1},
+        "sinkVersion": {"type": "string", "minLength": 1},
+        "receiptState": {"type": "string", "minLength": 1},
+        "effectReality": {"type": "string", "minLength": 1}
+      }
+    },
+    "probe": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "probeId", "ownerId", "requiredScopes", "requiredObservations",
+        "riskCost", "actionCost", "effectClass", "irreversibleEffect",
+        "observationByWorld"
+      ],
+      "properties": {
+        "probeId": {"type": "string", "minLength": 1},
+        "ownerId": {"type": "string", "minLength": 1},
+        "requiredScopes": {"type": "array", "items": {"type": "string"}, "uniqueItems": true},
+        "requiredObservations": {"type": "array", "items": {"type": "string"}, "uniqueItems": true},
+        "riskCost": {"type": "number", "minimum": 0},
+        "actionCost": {"type": "number", "minimum": 0},
+        "effectClass": {"const": "READ_ONLY"},
+        "irreversibleEffect": {"const": false},
+        "observationByWorld": {"type": "object", "minProperties": 1, "additionalProperties": {"type": "string", "minLength": 1}}
+      }
+    },
+    "repair": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "repairId", "ownerId", "requiredScopes", "requiredObservations",
+        "actionCost", "effectClass", "safeByWorld", "utilityByWorld"
+      ],
+      "properties": {
+        "repairId": {"type": "string", "minLength": 1},
+        "ownerId": {"type": "string", "minLength": 1},
+        "requiredScopes": {"type": "array", "items": {"type": "string"}, "uniqueItems": true},
+        "requiredObservations": {"type": "array", "items": {"type": "string"}, "uniqueItems": true},
+        "actionCost": {"type": "number", "exclusiveMinimum": 0},
+        "effectClass": {"enum": ["REVERSIBLE_METADATA", "IRREVERSIBLE_EXTERNAL", "ABSTAIN_ONLY"]},
+        "safeByWorld": {"type": "object", "minProperties": 1, "additionalProperties": {"type": "boolean"}},
+        "utilityByWorld": {"type": "object", "minProperties": 1, "additionalProperties": {"type": "number"}}
+      }
+    },
+    "hardContract": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["contractId", "tenantBinding", "requiredEffects", "forbiddenEffects", "versionFence", "idempotenceKeyRule"],
+      "properties": {
+        "contractId": {"type": "string", "minLength": 1},
+        "tenantBinding": {"type": "string", "minLength": 1},
+        "requiredEffects": {"type": "array", "items": {"type": "string"}, "uniqueItems": true},
+        "forbiddenEffects": {"type": "array", "items": {"type": "string"}, "uniqueItems": true},
+        "versionFence": {"type": "string", "minLength": 1},
+        "idempotenceKeyRule": {"type": "string", "minLength": 1}
+      }
+    },
+    "case": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "caseId", "scenario", "availableScopes", "riskBudget", "maxProbeDepth",
+        "utilityLowerBound", "hardContract", "worlds", "probes", "repairs"
+      ],
+      "properties": {
+        "caseId": {"type": "string", "minLength": 1},
+        "scenario": {"type": "string", "minLength": 1},
+        "availableScopes": {"type": "array", "items": {"type": "string"}, "uniqueItems": true},
+        "riskBudget": {"type": "number", "minimum": 0},
+        "maxProbeDepth": {"type": "integer", "minimum": 1, "maximum": 6},
+        "utilityLowerBound": {"type": "number"},
+        "hardContract": {"$ref": "#/$defs/hardContract"},
+        "worlds": {"type": "array", "minItems": 2, "items": {"$ref": "#/$defs/world"}},
+        "probes": {"type": "array", "minItems": 1, "items": {"$ref": "#/$defs/probe"}},
+        "repairs": {"type": "array", "minItems": 1, "items": {"$ref": "#/$defs/repair"}}
+      }
+    }
+  }
+}

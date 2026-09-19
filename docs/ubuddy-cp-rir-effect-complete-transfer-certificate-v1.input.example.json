@@ -1,0 +1,20 @@
+{
+  "$schema":"ubuddy-cp-rir-effect-complete-transfer-certificate-v1.schema.json",
+  "schemaVersion":"cp-rir/effect-complete-transfer-certificate/v1",
+  "inputDigest":"24b69db886dc4fa70d74f0a43c1037e600d3a3f49ac6505a4937a5625d16fc06",
+  "coverageMode":"EXHAUSTIVE_PRODUCT_UP_TO_H",
+  "cases":[
+    {"caseId":"TRANSFER_SAFE","caseStatus":"PASS","maxDepth":3,"reachableTupleCount":4,"productEdges":[
+      {"depth":0,"from":{"concrete":"c0","abstract":"a0","monitor":"m0"},"event":"C_PREPARE","mappedEvent":"PREPARE","to":{"concrete":"c1","abstract":"a1","monitor":"m1"},"concreteEffectFootprint":[],"abstractEffectFootprint":[]},
+      {"depth":1,"from":{"concrete":"c1","abstract":"a1","monitor":"m1"},"event":"C_COMMIT","mappedEvent":"COMMIT","to":{"concrete":"c-safe","abstract":"a-safe","monitor":"m-safe"},"concreteEffectFootprint":["sink-a/resource-x"],"abstractEffectFootprint":["sink-a/resource-x"]},
+      {"depth":1,"from":{"concrete":"c1","abstract":"a1","monitor":"m1"},"event":"C_REJECT","mappedEvent":"REFUSAL","to":{"concrete":"c-refused","abstract":"a-refused","monitor":"m-refused"},"concreteEffectFootprint":[],"abstractEffectFootprint":[]}
+    ],"terminalTuples":[{"depth":2,"concrete":"c-safe","abstract":"a-safe","monitor":"m-safe"},{"depth":2,"concrete":"c-refused","abstract":"a-refused","monitor":"m-refused"}]},
+    {"caseId":"MULTI_EFFECT_ORDERED","caseStatus":"PASS","maxDepth":3,"reachableTupleCount":4,"productEdges":[
+      {"depth":0,"from":{"concrete":"c0","abstract":"a0","monitor":"m0"},"event":"C_PREPARE","mappedEvent":"PREPARE","to":{"concrete":"c1","abstract":"a1","monitor":"m1"},"concreteEffectFootprint":[],"abstractEffectFootprint":[]},
+      {"depth":1,"from":{"concrete":"c1","abstract":"a1","monitor":"m1"},"event":"C_COMMIT_A","mappedEvent":"COMMIT_A","to":{"concrete":"c2","abstract":"a2","monitor":"m2"},"concreteEffectFootprint":["sink-a/resource-x"],"abstractEffectFootprint":["sink-a/resource-x"]},
+      {"depth":2,"from":{"concrete":"c2","abstract":"a2","monitor":"m2"},"event":"C_COMMIT_B","mappedEvent":"COMMIT_B","to":{"concrete":"c-safe","abstract":"a-safe","monitor":"m-safe"},"concreteEffectFootprint":["sink-b/resource-y"],"abstractEffectFootprint":["sink-b/resource-y"]}
+    ],"terminalTuples":[{"depth":3,"concrete":"c-safe","abstract":"a-safe","monitor":"m-safe"}]},
+    {"caseId":"COMPOSITION_SEPARATION_HIDDEN_EFFECT","caseStatus":"COUNTEREXAMPLE","maxDepth":3,"reachableTupleCount":0,"productEdges":[],"terminalTuples":[],"counterexample":["C_PREPARE","C_HIDDEN_WRITE"]}
+  ],
+  "implementationStatus":"prototype/unverified"
+}

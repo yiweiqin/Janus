@@ -1,0 +1,132 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://ubuddy.invalid/schemas/cp-rir-d2-positive-negative-v0.json",
+  "title": "CP-RIR D2 positive/negative transfer fixture pair (draft)",
+  "description": "Answer-free research fixture. The positive case rejects unauthorized attempts; the negative case applies an unmediated effect. Neither case carries an expected verdict.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["$schema", "schemaVersion", "status", "purpose", "horizon", "sharedBinding", "cases", "answerIsolation", "implementationStatus"],
+  "properties": {
+    "$schema": {"const": "ubuddy-cp-rir-d2-positive-negative-v0.schema.json"},
+    "schemaVersion": {"const": "cp-rir/d2-positive-negative-input/v0"},
+    "status": {"const": "illustrative_v0_draft"},
+    "purpose": {"const": "answer_free_d2_transfer_pair_input_only"},
+    "horizon": {"const": 3},
+    "sharedBinding": {"$ref": "#/$defs/sharedBinding"},
+    "cases": {"type": "array", "minItems": 2, "maxItems": 2, "items": {"$ref": "#/$defs/case"}},
+    "answerIsolation": {
+      "type": "object", "additionalProperties": false,
+      "required": ["mustNotContain", "transitiveExpectedReference"],
+      "properties": {
+        "mustNotContain": {"type": "array", "items": {"type": "string"}, "uniqueItems": true},
+        "transitiveExpectedReference": {"const": "forbidden"}
+      }
+    },
+    "implementationStatus": {"const": "planned/unverified"}
+  },
+  "$defs": {
+    "sharedBinding": {
+      "type": "object", "additionalProperties": false,
+      "required": ["kernelDigest", "contractDigest", "evaluatorDigest", "faultDigest", "organizationBindingDigest", "writerUniverseDigest"],
+      "properties": {
+        "kernelDigest": {"type": "string"},
+        "contractDigest": {"type": "string"},
+        "evaluatorDigest": {"type": "string"},
+        "faultDigest": {"type": "string"},
+        "organizationBindingDigest": {"type": "string"},
+        "writerUniverseDigest": {"type": "string"}
+      }
+    },
+    "transition": {
+      "type": "object", "additionalProperties": false,
+      "required": ["from", "event", "to", "eventClass", "sinkId", "resourceId", "ownerId", "writerId", "versionBefore", "versionAfter", "receiptRef"],
+      "properties": {
+        "from": {"type": "string"}, "event": {"type": "string"}, "to": {"type": "string"},
+        "eventClass": {"enum": ["INTERNAL", "MEDIATED_EFFECT", "REFUSED_ATTEMPT", "REFUSAL_SAFE", "UNMEDIATED_EFFECT"]},
+        "sinkId": {"type": ["null", "string"]}, "resourceId": {"type": ["null", "string"]}, "ownerId": {"type": ["null", "string"]}, "writerId": {"type": ["null", "string"]},
+        "versionBefore": {"type": "integer", "minimum": 0}, "versionAfter": {"type": "integer", "minimum": 0}, "receiptRef": {"type": ["null", "string"]}
+      }
+    },
+    "abstractTransition": {
+      "type": "object", "additionalProperties": false,
+      "required": ["from", "event", "to", "eventClass"],
+      "properties": {
+        "from": {"type": "string"}, "event": {"type": "string"}, "to": {"type": "string"},
+        "eventClass": {"enum": ["INTERNAL", "MEDIATED_EFFECT", "REFUSAL_SAFE", "UNMEDIATED_EFFECT"]}
+      }
+    },
+    "trace": {
+      "type": "object", "additionalProperties": false,
+      "required": ["concreteEvents", "abstractEvents", "terminalState", "faultRun", "effectWitnesses"],
+      "properties": {
+        "concreteEvents": {"type": "array", "minItems": 1, "items": {"$ref": "#/$defs/transition"}},
+        "abstractEvents": {"type": "array", "minItems": 1, "items": {"$ref": "#/$defs/abstractTransition"}},
+        "terminalState": {"type": "string"},
+        "terminalClosure": {"type": "object", "additionalProperties": false, "required": ["closed", "horizonStep", "closureKind"], "properties": {"closed": {"const": true}, "horizonStep": {"type": "integer", "minimum": 0}, "closureKind": {"enum": ["SAFE_TERMINAL", "REFUSAL_TERMINAL", "VIOLATION_TERMINAL"]}}},
+        "faultRun": {"type": "array", "items": {"type": "string"}},
+        "effectWitnesses": {"type": "array", "items": {"$ref": "#/$defs/effectWitness"}}
+      }
+    },
+    "effectWitness": {
+      "type": "object", "additionalProperties": false,
+      "required": ["event", "sinkId", "resourceId", "ownerId", "writerId", "effectKey", "dedupKey", "versionBefore", "versionAfter", "receiptId", "receiptNonce", "issuerSequence", "preStateDigest", "postStateDigest", "linearizationIndex"],
+      "properties": {
+        "event": {"type": "string"}, "sinkId": {"type": "string"}, "resourceId": {"type": "string"}, "ownerId": {"type": "string"}, "writerId": {"type": "string"},
+        "effectKey": {"type": "string"}, "dedupKey": {"type": "string"}, "versionBefore": {"type": "integer", "minimum": 0}, "versionAfter": {"type": "integer", "minimum": 0},
+        "receiptId": {"type": "string"}, "receiptNonce": {"type": "string"}, "issuerSequence": {"type": "integer", "minimum": 0}, "preStateDigest": {"type": "string"}, "postStateDigest": {"type": "string"}, "linearizationIndex": {"type": "integer", "minimum": 0}
+      }
+    },
+    "case": {
+      "type": "object", "additionalProperties": false,
+      "required": ["caseId", "coverageMode", "concreteSystem", "abstractSystem", "abstraction", "monitor", "faultAutomaton", "mediationEvidence", "reachableTraces"],
+      "properties": {
+        "caseId": {"type": "string"},
+        "coverageMode": {"enum": ["EXHAUSTIVE_UP_TO_H", "COUNTEREXAMPLE_WITNESS_ONLY"]},
+        "concreteSystem": {"$ref": "#/$defs/system"},
+        "abstractSystem": {"$ref": "#/$defs/system"},
+        "abstraction": {"$ref": "#/$defs/abstraction"},
+        "monitor": {"$ref": "#/$defs/monitor"},
+        "faultAutomaton": {"$ref": "#/$defs/faultAutomaton"},
+        "mediationEvidence": {"$ref": "#/$defs/mediation"},
+        "reachableTraces": {"type": "array", "minItems": 1, "items": {"$ref": "#/$defs/trace"}}
+      }
+    },
+    "system": {
+      "type": "object", "additionalProperties": false,
+      "required": ["stateIds", "initialStateId", "eventAlphabet", "transitions", "terminalStateIds", "badStateIds"],
+      "properties": {
+        "stateIds": {"type": "array", "minItems": 2, "items": {"type": "string"}, "uniqueItems": true}, "initialStateId": {"type": "string"},
+        "eventAlphabet": {"type": "array", "minItems": 1, "items": {"type": "string"}, "uniqueItems": true},
+        "transitions": {"type": "array", "minItems": 1, "items": {"$ref": "#/$defs/transition"}},
+        "terminalStateIds": {"type": "array", "minItems": 1, "items": {"type": "string"}, "uniqueItems": true}, "badStateIds": {"type": "array", "items": {"type": "string"}, "uniqueItems": true}
+      }
+    },
+    "abstraction": {
+      "type": "object", "additionalProperties": false,
+      "required": ["stateMap", "eventMap", "legalStutterEvents", "badConcretePredicate", "badAbstractStateIds"],
+      "properties": {
+        "stateMap": {"type": "array", "items": {"type": "object", "additionalProperties": false, "required": ["concrete", "abstract"], "properties": {"concrete": {"type": "string"}, "abstract": {"type": "string"}}}},
+        "eventMap": {"type": "array", "items": {"type": "object", "additionalProperties": false, "required": ["concrete", "abstract"], "properties": {"concrete": {"type": "string"}, "abstract": {"type": "string"}}}},
+        "legalStutterEvents": {"type": "array", "items": {"type": "string"}, "uniqueItems": true}, "badConcretePredicate": {"const": "reachable eventClass=UNMEDIATED_EFFECT"}, "badAbstractStateIds": {"type": "array", "items": {"type": "string"}, "uniqueItems": true}
+      }
+    },
+    "monitor": {
+      "type": "object", "additionalProperties": false, "required": ["inputLayer", "stateIds", "initialStateId", "violationStateIds", "rules", "terminalClosureStateIds"],
+      "properties": {"inputLayer": {"const": "ABSTRACT_AFTER_ALPHA"}, "stateIds": {"type": "array", "items": {"type": "string"}, "uniqueItems": true}, "initialStateId": {"type": "string"}, "violationStateIds": {"type": "array", "items": {"type": "string"}, "uniqueItems": true}, "rules": {"type": "array", "items": {"type": "object", "additionalProperties": false, "required": ["from", "event", "to"], "properties": {"from": {"type": "string"}, "event": {"type": "string"}, "to": {"type": "string"}}}}, "terminalClosureStateIds": {"type": "array", "items": {"type": "string"}, "uniqueItems": true}}
+    },
+    "faultAutomaton": {
+      "type": "object", "additionalProperties": false, "required": ["stateIds", "initialStateId", "faultEventIds", "normalEventPolicy", "prefixAcceptance", "transitions"],
+      "properties": {"stateIds": {"type": "array", "items": {"type": "string"}, "uniqueItems": true}, "initialStateId": {"type": "string"}, "faultEventIds": {"type": "array", "items": {"type": "string"}, "uniqueItems": true}, "normalEventPolicy": {"const": "SELF_LOOP"}, "prefixAcceptance": {"const": "EVERY_DEFINED_PREFIX"}, "transitions": {"type": "array", "items": {"type": "object", "additionalProperties": false, "required": ["from", "event", "to"], "properties": {"from": {"type": "string"}, "event": {"type": "string"}, "to": {"type": "string"}}}}}
+    },
+    "mediation": {
+      "type": "object", "additionalProperties": false, "required": ["completeMediationClaim", "writerUniverse", "sinkEnforcement", "credentialAttestations", "crossSinkMode"],
+      "properties": {
+        "completeMediationClaim": {"type": "boolean"},
+        "writerUniverse": {"type": "object", "additionalProperties": false, "required": ["closed", "writers"], "properties": {"closed": {"const": true}, "writers": {"type": "array", "minItems": 1, "items": {"type": "object", "additionalProperties": false, "required": ["writerId", "organizationId", "credentialDomain"], "properties": {"writerId": {"type": "string"}, "organizationId": {"type": "string"}, "credentialDomain": {"type": "string"}}}}}},
+        "sinkEnforcement": {"type": "array", "minItems": 2, "items": {"type": "object", "additionalProperties": false, "required": ["sinkId", "authoritative", "aclDigest", "acceptedWriterIds", "rejectedWriterIds", "enforcementTranscript"], "properties": {"sinkId": {"type": "string"}, "authoritative": {"const": true}, "aclDigest": {"type": "string"}, "acceptedWriterIds": {"type": "array", "items": {"type": "string"}}, "rejectedWriterIds": {"type": "array", "items": {"type": "string"}}, "enforcementTranscript": {"type": "array", "items": {"type": "object", "additionalProperties": false, "required": ["attemptId", "writerId", "decision", "nonce", "epoch", "generation"], "properties": {"attemptId": {"type": "string"}, "writerId": {"type": "string"}, "decision": {"enum": ["ALLOW", "REJECT"]}, "nonce": {"type": "string"}, "epoch": {"type": "integer", "minimum": 0}, "generation": {"type": "integer", "minimum": 0}}}}}}},
+        "credentialAttestations": {"type": "array", "minItems": 2, "items": {"type": "object", "additionalProperties": false, "required": ["credentialDomain", "organizationId", "ownerId", "sinkId", "nonce", "bindingDigest", "issuerSequence"], "properties": {"credentialDomain": {"type": "string"}, "organizationId": {"type": "string"}, "ownerId": {"type": "string"}, "sinkId": {"type": "string"}, "nonce": {"type": "string"}, "bindingDigest": {"type": "string"}, "issuerSequence": {"type": "integer", "minimum": 0}}}},
+        "crossSinkMode": {"enum": ["SINGLE_ATOMIC_DOMAIN", "ESCROW"]}
+      }
+    }
+  }
+}

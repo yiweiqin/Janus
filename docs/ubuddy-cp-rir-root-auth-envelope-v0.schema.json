@@ -1,0 +1,16 @@
+{
+  "$schema":"https://json-schema.org/draft/2020-12/schema",
+  "$id":"https://ubuddy.invalid/schemas/cp-rir-root-auth-envelope-v0.json",
+  "type":"object","additionalProperties":false,
+  "required":["$schema","schemaVersion","rootType","root","issuer","keyLifecycle","signature","implementationStatus"],
+  "properties":{
+    "$schema":{"const":"ubuddy-cp-rir-root-auth-envelope-v0.schema.json"},
+    "schemaVersion":{"const":"cp-rir/root-auth-envelope/v0"},
+    "rootType":{"enum":["REQ_REGISTRY","CONTRACT","LEDGER_PREFIX"]},
+    "root":{"type":"string","pattern":"^[a-f0-9]{64}$"},
+    "issuer":{"type":"object","additionalProperties":false,"required":["issuerId","keyId","algorithm"],"properties":{"issuerId":{"type":"string","minLength":1},"keyId":{"type":"string","minLength":1},"algorithm":{"enum":["ed25519","ecdsa-p256-sha256"]}}},
+    "keyLifecycle":{"type":"object","additionalProperties":false,"required":["status","validFrom","validUntil","rotationPredecessor","revocationEvidence"],"properties":{"status":{"enum":["ACTIVE","REVOKED","EXPIRED","UNKNOWN"]},"validFrom":{"type":"integer","minimum":0},"validUntil":{"type":"integer","minimum":0},"rotationPredecessor":{"type":["string","null"]},"revocationEvidence":{"type":["string","null"]}}},
+    "signature":{"type":"object","additionalProperties":false,"required":["value","verificationStatus","signedRoot","signedKeyId"],"properties":{"value":{"type":"string","minLength":1},"verificationStatus":{"enum":["NOT_IMPLEMENTED","VERIFIED","INVALID","UNKNOWN"]},"signedRoot":{"type":"string","pattern":"^[a-f0-9]{64}$"},"signedKeyId":{"type":"string","minLength":1}}},
+    "implementationStatus":{"const":"planned/unverified"}
+  }
+}

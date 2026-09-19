@@ -1,0 +1,19 @@
+{
+  "$schema":"https://json-schema.org/draft/2020-12/schema",
+  "$id":"https://ubuddy.invalid/schemas/cp-rir-d2-recovery-fsm-grammar-v0.json",
+  "type":"object","additionalProperties":false,
+  "required":["$schema","schemaVersion","status","grammarId","horizon","initialState","states","transitions","terminalStates","implementationStatus"],
+  "properties":{
+    "$schema":{"const":"ubuddy-cp-rir-d2-recovery-fsm-grammar-v0.schema.json"},
+    "schemaVersion":{"const":"cp-rir/d2-recovery-fsm-grammar/v0"},
+    "status":{"const":"illustrative_v0_draft"},
+    "grammarId":{"type":"string","minLength":1},
+    "horizon":{"type":"integer","minimum":1,"maximum":8},
+    "initialState":{"type":"string"},
+    "states":{"type":"array","minItems":1,"uniqueItems":true,"items":{"enum":["EFFECT_POSSIBLE","CRASHED","RESTARTED","RECEIPT_QUERY","IN_DOUBT","EFFECT_CONFIRMED","NO_EFFECT_CONFIRMED","COMPENSATION_PENDING","REMEDIATED","MANUAL_INTERVENTION"]}},
+    "transitions":{"type":"array","minItems":1,"items":{"$ref":"#/$defs/transition"}},
+    "terminalStates":{"type":"array","minItems":1,"uniqueItems":true,"items":{"enum":["EFFECT_CONFIRMED","NO_EFFECT_CONFIRMED","REMEDIATED","MANUAL_INTERVENTION"]}},
+    "implementationStatus":{"const":"prototype/unverified"}
+  },
+  "$defs":{"transition":{"type":"object","additionalProperties":false,"required":["transitionId","from","event","to"],"properties":{"transitionId":{"type":"string"},"from":{"enum":["EFFECT_POSSIBLE","CRASHED","RESTARTED","RECEIPT_QUERY","IN_DOUBT","EFFECT_CONFIRMED","NO_EFFECT_CONFIRMED","COMPENSATION_PENDING","REMEDIATED","MANUAL_INTERVENTION"]},"event":{"enum":["CRASH","RESTART","QUERY_RECEIPT","RECEIPT_UNAVAILABLE","VERIFIED_RECEIPT","VERIFIED_NEGATIVE_WITNESS","START_COMPENSATION","COMPENSATION_VERIFIED","COMPENSATION_FAILED","ESCALATE_MANUAL"]},"to":{"enum":["EFFECT_POSSIBLE","CRASHED","RESTARTED","RECEIPT_QUERY","IN_DOUBT","EFFECT_CONFIRMED","NO_EFFECT_CONFIRMED","COMPENSATION_PENDING","REMEDIATED","MANUAL_INTERVENTION"]}}}}
+}

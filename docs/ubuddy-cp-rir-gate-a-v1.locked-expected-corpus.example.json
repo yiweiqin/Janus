@@ -1,0 +1,608 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "schemaVersion": "cp-rir/locked-expected-corpus/v0",
+  "status": "illustrative_v0_draft",
+  "purpose": "runner_side_expected_outputs_not_visible_to_A1_A2_A3",
+  "inputArtifactHash": "TO_BE_COMPUTED",
+  "lockedCorpusHash": "TO_BE_COMPUTED",
+  "runnerIsolation": {
+    "readableBy": [
+      "post-run-comparison-runner",
+      "independent-reviewer"
+    ],
+    "notReadableBy": [
+      "A1",
+      "A2",
+      "A3"
+    ],
+    "comparisonRule": "compare canonical output after independent artifacts are sealed",
+    "expectedHashExposureToA1A2A3": "DENY"
+  },
+  "cases": [
+    {
+      "id": "G00",
+      "inputAlias": "C0001",
+      "expected": {
+        "input": {
+          "status": "VALID",
+          "reasonCode": null,
+          "witnessRef": "G00/input"
+        },
+        "candidate": {
+          "status": "PLAN_FEASIBLE",
+          "reasonCode": null,
+          "witnessRef": "G00/candidate"
+        },
+        "instance": {
+          "status": "ACCEPT",
+          "reasonCode": null,
+          "witnessRef": "G00/instance"
+        },
+        "optimality": {
+          "status": "OPTIMAL_WITHIN_PI",
+          "reasonCode": null,
+          "witnessRef": "G00/optimality"
+        },
+        "runtime": {
+          "status": "NOT_RUN",
+          "reasonCode": null,
+          "witnessRef": null
+        },
+        "safety": {
+          "status": "SAFE",
+          "reasonCode": null,
+          "witnessRef": "G00/safety"
+        }
+      }
+    },
+    {
+      "id": "G01",
+      "inputAlias": "EMPTY-COMP",
+      "expected": {
+        "input": {
+          "status": "UNKNOWN",
+          "reasonCode": "EMPTY_COMPLETION",
+          "witnessRef": "G01/input"
+        },
+        "candidate": {
+          "status": "NOT_RUN",
+          "reasonCode": "EMPTY_COMPLETION",
+          "witnessRef": null
+        },
+        "instance": {
+          "status": "UNKNOWN",
+          "reasonCode": "EMPTY_COMPLETION",
+          "witnessRef": "G01/input"
+        },
+        "optimality": {
+          "status": "NOT_APPLICABLE",
+          "reasonCode": "EMPTY_COMPLETION",
+          "witnessRef": null
+        },
+        "runtime": {
+          "status": "NOT_RUN",
+          "reasonCode": null,
+          "witnessRef": null
+        },
+        "safety": {
+          "status": "NOT_EVALUATED",
+          "reasonCode": "EMPTY_COMPLETION",
+          "witnessRef": null
+        }
+      }
+    },
+    {
+      "id": "G03",
+      "inputAlias": "ARTIFACT-FILTER",
+      "expected": {
+        "artifactValidity": {
+          "status": "INVALID",
+          "reasonCode": "CANDIDATE_WORLD_FILTERING",
+          "witnessRef": "G03/input"
+        },
+        "input": {
+          "status": "UNKNOWN",
+          "reasonCode": "CANDIDATE_WORLD_FILTERING",
+          "witnessRef": "G03/input"
+        },
+        "candidate": {
+          "status": "NOT_RUN",
+          "reasonCode": "CANDIDATE_WORLD_FILTERING",
+          "witnessRef": null
+        },
+        "instance": {
+          "status": "UNKNOWN",
+          "reasonCode": "CANDIDATE_WORLD_FILTERING",
+          "witnessRef": "G03/input"
+        }
+      }
+    },
+    {
+      "id": "G04",
+      "inputAlias": "C0002",
+      "expected": {
+        "robustPolicyValue": {
+          "num": 4,
+          "den": 5
+        },
+        "robustBaselineValue": {
+          "num": 1,
+          "den": 10,
+          "purpose": "diagnostic_only"
+        },
+        "robustDelta": {
+          "num": 1,
+          "den": 10
+        },
+        "deltaWitnessWorld": "m1",
+        "candidate": {
+          "status": "PLAN_REJECT",
+          "reasonCode": "DELTA",
+          "witnessRef": "G04/m1"
+        },
+        "instance": {
+          "status": "INSTANCE_INFEASIBLE",
+          "reasonCode": "DELTA",
+          "witnessRef": "G04/all-candidates"
+        },
+        "optimality": {
+          "status": "NOT_APPLICABLE",
+          "reasonCode": "DELTA",
+          "witnessRef": "G04/all-candidates"
+        }
+      }
+    },
+    {
+      "id": "G06",
+      "inputAlias": "C0003",
+      "expected": {
+        "policyValue": {
+          "num": 1,
+          "den": 2
+        },
+        "baselineValue": {
+          "num": 1,
+          "den": 2
+        },
+        "delta": {
+          "num": 0,
+          "den": 1
+        },
+        "candidate": {
+          "status": "PLAN_REJECT",
+          "reasonCode": "DELTA",
+          "witnessRef": "G06/worldwise"
+        },
+        "instance": {
+          "status": "INSTANCE_INFEASIBLE",
+          "reasonCode": "DELTA",
+          "witnessRef": "G06/all-candidates"
+        }
+      }
+    },
+    {
+      "id": "G11",
+      "inputAlias": "RECEIPT-LOSS",
+      "expected": {
+        "runtime": {
+          "status": "IN_DOUBT",
+          "reasonCode": "RECEIPT_LOSS_AFTER_COMMIT",
+          "witnessRef": "G11/runtime"
+        },
+        "publicDisposition": {
+          "status": "POSSIBLE_EFFECT_DO_NOT_RETRY",
+          "reasonCode": "RECEIPT_LOSS_AFTER_COMMIT",
+          "witnessRef": "G11/public"
+        },
+        "safety": {
+          "status": "NOT_EVALUATED",
+          "reasonCode": "RECEIPT_LOSS_AFTER_COMMIT",
+          "witnessRef": null
+        }
+      }
+    },
+    {
+      "id": "G02",
+      "inputAlias": "CERT-CONTRADICTION",
+      "expected": {
+        "input": {
+          "status": "UNKNOWN",
+          "reasonCode": "CERT_INCONSISTENT",
+          "witnessRef": "G02/input"
+        },
+        "candidate": {
+          "status": "NOT_RUN",
+          "reasonCode": "CERT_INCONSISTENT",
+          "witnessRef": null
+        },
+        "instance": {
+          "status": "UNKNOWN",
+          "reasonCode": "CERT_INCONSISTENT",
+          "witnessRef": "G02/input"
+        }
+      }
+    },
+    {
+      "id": "G05",
+      "inputAlias": "ubuddy-cp-rir-g05-baseline-dominance-v0",
+      "expected": {
+        "diagnosticKind": "STRICT_BASELINE_DOMINANCE",
+        "kernelAlias": "K05",
+        "variantId": "B0001",
+        "baseRobustDelta": {"num": 1, "den": 10},
+        "robustDeltaPrime": {
+          "num": 1,
+          "den": 100
+        },
+        "baseCandidate": {"status": "SOFT_ACCEPT", "reasonCode": null, "witnessRef": "G05/base"},
+        "variantCandidate": {"status": "SOFT_PLAN_REJECT", "reasonCode": "DELTA", "witnessRef": "G05/variant"},
+        "worldwiseArithmetic": {
+          "m1": {"baseDelta": {"num": 1, "den": 10}, "variantDelta": {"num": 1, "den": 100}},
+          "m2": {"baseDelta": {"num": 4, "den": 5}, "variantDelta": {"num": 2, "den": 25}}
+        },
+        "dominanceWitness": {
+          "m1": {"baseBaseline": {"num": 7, "den": 10}, "variantBaseline": {"num": 79, "den": 100}},
+          "m2": {"baseBaseline": {"num": 1, "den": 10}, "variantBaseline": {"num": 41, "den": 50}},
+          "strictInEveryWorld": true
+        },
+        "requiredDigestOutputs": ["baseInputHash", "variantInputHash", "fixedBindingDigest", "candidateHash", "baseBaselineHash", "variantBaselineHash"],
+        "planningSafety": {"status": "NOT_EVALUATED", "reasonCode": null, "witnessRef": null},
+        "mustStrictlyDecrease": true
+      }
+    },
+    {
+      "id": "G07",
+      "inputAlias": "AUTH-OPAQUE",
+      "expected": {
+        "input": {
+          "status": "UNKNOWN",
+          "reasonCode": "AUTHORIZATION_NONPOSITIVITY",
+          "witnessRef": "G07/input"
+        },
+        "candidate": {
+          "status": "UNRESOLVED",
+          "reasonCode": "AUTHORIZATION_NONPOSITIVITY",
+          "witnessRef": "G07/candidate"
+        },
+        "instance": {
+          "status": "UNKNOWN",
+          "reasonCode": "AUTHORIZATION_NONPOSITIVITY",
+          "witnessRef": "G07/input"
+        }
+      }
+    },
+    {
+      "id": "G08",
+      "inputAlias": "VALUE-CERT",
+      "expected": {
+        "candidate": {
+          "status": "UNRESOLVED",
+          "reasonCode": "VALUE_CERT_UNVERIFIABLE",
+          "witnessRef": "G08/candidate"
+        },
+        "instance": {
+          "status": "UNKNOWN",
+          "reasonCode": "VALUE_CERT_UNVERIFIABLE",
+          "witnessRef": "G08/candidate"
+        }
+      }
+    },
+    {
+      "id": "G09",
+      "inputAlias": "STALE-CERT",
+      "expected": {
+        "candidate": {
+          "status": "UNRESOLVED",
+          "reasonCode": "STALE_CERT",
+          "witnessRef": "G09/candidate"
+        },
+        "runtime": {
+          "status": "NOT_RUN",
+          "reasonCode": "STALE_CERT",
+          "witnessRef": null
+        }
+      }
+    },
+    {
+      "id": "G10",
+      "inputAlias": "EQUIVOCATION",
+      "expected": {
+        "candidate": {
+          "status": "UNRESOLVED",
+          "reasonCode": "CERT_EQUIVOCATION",
+          "witnessRef": "G10/candidate"
+        },
+        "instance": {
+          "status": "UNKNOWN",
+          "reasonCode": "CERT_EQUIVOCATION",
+          "witnessRef": "G10/candidate"
+        }
+      }
+    },
+    {
+      "id": "G12",
+      "inputAlias": "CROSS-SINK",
+      "expected": {
+        "safety": {
+          "status": "HARD_VIOLATION",
+          "reasonCode": "CROSS_SINK_INCONSISTENCY",
+          "witnessRef": "G12/sinks"
+        }
+      }
+    },
+    {
+      "id": "G13",
+      "inputAlias": "BYPASS",
+      "expected": {
+        "safety": {
+          "status": "HARD_VIOLATION",
+          "reasonCode": "HIDDEN_EFFECT",
+          "witnessRef": "G13/effect"
+        }
+      }
+    },
+    {
+      "id": "G14",
+      "inputAlias": "TOCTOU",
+      "expected": {
+        "runtime": {
+          "status": "ABORTED",
+          "reasonCode": "TOCTOU",
+          "witnessRef": "G14/runtime"
+        },
+        "effect": {
+          "status": "ABORTED_NO_EFFECT",
+          "reasonCode": "TOCTOU",
+          "witnessRef": "G14/effect"
+        }
+      }
+    },
+    {
+      "id": "G15",
+      "inputAlias": "OLD-GEN",
+      "expected": {
+        "safety": {
+          "status": "HARD_VIOLATION",
+          "reasonCode": "OLD_OWNER_WRITE",
+          "witnessRef": "G15/effect"
+        }
+      }
+    },
+    {
+      "id": "G16",
+      "inputAlias": "TIME-BOMB",
+      "expected": {
+        "candidate": {
+          "status": "PLAN_REJECT",
+          "reasonCode": "TERMINAL_CLOSURE",
+          "witnessRef": "G16/terminal"
+        }
+      }
+    },
+    {
+      "id": "G17",
+      "inputAlias": "SEALED-OPT",
+      "expected": {
+        "instance": {
+          "status": "ACCEPT",
+          "reasonCode": null,
+          "witnessRef": "G17/feasible"
+        },
+        "optimality": {
+          "status": "FEASIBLE_NOT_PROVEN_OPTIMAL",
+          "reasonCode": "UNRESOLVED_LOWER_COST_CANDIDATE",
+          "witnessRef": "G17/candidate"
+        }
+      }
+    },
+    {
+      "id": "G18",
+      "inputAlias": "ALL-NEG",
+      "expected": {
+        "instance": {
+          "status": "INSTANCE_INFEASIBLE",
+          "reasonCode": "ALL_CANDIDATES_REJECTED",
+          "witnessRef": "G18/all-candidates"
+        }
+      }
+    },
+    {
+      "id": "G03-PREFLIGHT",
+      "familyId": "G03",
+      "expected": {
+        "artifactValidity": {
+          "status": "INVALID",
+          "reasonCode": "CANDIDATE_WORLD_FILTERING",
+          "witnessRef": "G03/completion-binding"
+        },
+        "input": {
+          "status": "UNKNOWN",
+          "reasonCode": "CANDIDATE_WORLD_FILTERING",
+          "witnessRef": "G03/completion-binding"
+        },
+        "candidate": {
+          "status": "NOT_RUN",
+          "reasonCode": "CANDIDATE_WORLD_FILTERING",
+          "witnessRef": null
+        },
+        "instance": {
+          "status": "UNKNOWN",
+          "reasonCode": "CANDIDATE_WORLD_FILTERING",
+          "witnessRef": "G03/completion-binding"
+        },
+        "runtime": {
+          "status": "NOT_RUN",
+          "reasonCode": null,
+          "witnessRef": null
+        },
+        "safety": {
+          "status": "NOT_EVALUATED",
+          "reasonCode": null,
+          "witnessRef": null
+        }
+      }
+    },
+    {
+      "id": "G11-PREFLIGHT",
+      "familyId": "G11",
+      "expected": {
+        "input": "UNKNOWN(RECEIPT_ATOMICITY_UNVERIFIED)",
+        "candidate": "NOT_RUN",
+        "runtime": "NOT_RUN",
+        "safety": "NOT_EVALUATED"
+      }
+    },
+    {
+      "id": "G11-RUNTIME-DELIVERY-LOSS",
+      "familyId": "G11",
+      "expected": {
+        "runtime": "IN_DOUBT",
+        "safety": "NOT_EVALUATED",
+        "publicDisposition": "POSSIBLE_EFFECT_DO_NOT_RETRY",
+        "implementationConformance": "UNRESOLVED_UNTIL_RECEIPT_QUERY"
+      }
+    },
+    {
+      "id": "G12-PREFLIGHT",
+      "familyId": "G12",
+      "expected": {
+        "input": "UNKNOWN(CROSS_SINK_PROOF_MISSING)",
+        "candidate": "NOT_RUN",
+        "runtime": "NOT_RUN",
+        "safety": "NOT_EVALUATED"
+      }
+    },
+    {
+      "id": "G12-MODELLED-HALF-COMMIT",
+      "familyId": "G12",
+      "expected": {
+        "candidate": "PLAN_REJECT(CROSS_SINK_INCONSISTENCY)",
+        "runtime": "NOT_RUN",
+        "safety": "NOT_EVALUATED",
+        "d2TransferVerdict": "COUNTEREXAMPLE_FOUND"
+      }
+    },
+    {
+      "id": "G12-RUNTIME-HALF-COMMIT",
+      "familyId": "G12",
+      "expected": {
+        "runtime": "IN_DOUBT",
+        "safety": "HARD_VIOLATION(CROSS_SINK_INCONSISTENCY)",
+        "publicDisposition": "POSSIBLE_EFFECT_DO_NOT_RETRY",
+        "implementationConformance": "FAILED"
+      }
+    },
+    {
+      "id": "G13-PREFLIGHT",
+      "familyId": "G13",
+      "expected": {
+        "input": "UNKNOWN(TCB_UNTRUSTED)",
+        "candidate": "NOT_RUN",
+        "runtime": "NOT_RUN",
+        "safety": "NOT_EVALUATED"
+      }
+    },
+    {
+      "id": "G13-MODELLED-BYPASS",
+      "familyId": "G13",
+      "expected": {
+        "candidate": "PLAN_REJECT(HIDDEN_EFFECT)",
+        "d2TransferVerdict": "COUNTEREXAMPLE_FOUND"
+      }
+    },
+    {
+      "id": "G13-RUNTIME-BYPASS",
+      "familyId": "G13",
+      "expected": {
+        "runtime": "COMMITTED",
+        "safety": "HARD_VIOLATION(HIDDEN_EFFECT)",
+        "implementationConformance": "FAILED"
+      }
+    },
+    {
+      "id": "G14-PREFLIGHT",
+      "familyId": "G14",
+      "expected": {
+        "input": "UNKNOWN(STALE_CERT)",
+        "candidate": "NOT_RUN",
+        "runtime": "NOT_RUN",
+        "safety": "NOT_EVALUATED"
+      }
+    },
+    {
+      "id": "G14-RUNTIME-FENCE-CORRECT",
+      "familyId": "G14",
+      "expected": {
+        "runtime": "STALE_REJECTED",
+        "safety": "SAFE",
+        "effect": "ABORTED_NO_EFFECT",
+        "implementationConformance": "PASSED"
+      }
+    },
+    {
+      "id": "G14-RUNTIME-FENCE-BUG",
+      "familyId": "G14",
+      "expected": {
+        "runtime": "COMMITTED",
+        "safety": "HARD_VIOLATION(TOCTOU)",
+        "implementationConformance": "FAILED"
+      }
+    },
+    {
+      "id": "G15-OLD-OWNER-REJECTED",
+      "familyId": "G15",
+      "expected": {
+        "runtime": "STALE_REJECTED",
+        "safety": "SAFE",
+        "effect": "ABORTED_NO_EFFECT"
+      }
+    },
+    {
+      "id": "G15-OLD-OWNER-WRITE",
+      "familyId": "G15",
+      "expected": {
+        "runtime": "COMMITTED",
+        "safety": "HARD_VIOLATION(OLD_OWNER_WRITE)",
+        "implementationConformance": "FAILED"
+      }
+    },
+    {
+      "id": "G15-OLD-GENERATION-REJECTED",
+      "familyId": "G15",
+      "expected": {
+        "runtime": "STALE_REJECTED",
+        "safety": "SAFE",
+        "effect": "ABORTED_NO_EFFECT"
+      }
+    },
+    {
+      "id": "G15-OLD-GENERATION-WRITE",
+      "familyId": "G15",
+      "expected": {
+        "runtime": "COMMITTED",
+        "safety": "HARD_VIOLATION(OLD_GENERATION_REDEEM)",
+        "implementationConformance": "FAILED"
+      }
+    },
+    {
+      "id": "G16-PLANNING-NO-CLOSURE",
+      "familyId": "G16",
+      "expected": {
+        "candidate": "PLAN_REJECT(TERMINAL_CLOSURE)",
+        "runtime": "NOT_RUN",
+        "safety": "NOT_EVALUATED",
+        "d2TransferVerdict": "COUNTEREXAMPLE_FOUND"
+      }
+    },
+    {
+      "id": "G16-RUNTIME-TIME-BOMB",
+      "familyId": "G16",
+      "expected": {
+        "runtime": "FINALIZED",
+        "safety": "HARD_VIOLATION(TERMINAL_CLOSURE)",
+        "implementationConformance": "FAILED"
+      }
+    }
+  ],
+  "implementationStatus": "planned/unverified"
+}

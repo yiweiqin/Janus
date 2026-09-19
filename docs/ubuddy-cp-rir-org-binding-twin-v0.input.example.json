@@ -1,0 +1,35 @@
+{
+  "$schema": "ubuddy-cp-rir-org-binding-twin-v0.schema.json",
+  "schemaVersion": "cp-rir/org-binding-twin-input/v0",
+  "status": "illustrative_v0_draft",
+  "purpose": "answer_free_org_binding_twin_input_only",
+  "sharedPublicPrefix": {
+    "proposal": "repair",
+    "actionId": "repair-a",
+    "cost": {"num": 1, "den": 1},
+    "tracePrefix": [{"index": 1, "event": "REPAIR_REQUEST", "publicSinkClass": "resource-sink", "publicOutcome": "PRE_EFFECT"}],
+    "contractDigest": "CONTRACT-TWIN-DRAFT",
+    "policyGrammarDigest": "POLICY-GRAMMAR-TWIN-DRAFT",
+    "publicStateDigest": "PUBLIC-PREFIX-TWIN-DRAFT"
+  },
+  "twins": [
+    {
+      "twinId": "GOOD",
+      "hiddenBinding": {"credentialDomain": "cred-a", "organizationId": "org-a", "ownerId": "owner-a", "authoritativeSinkId": "sink-a", "aclDigest": "ACL-GOOD", "bindingDigest": "BIND-GOOD"},
+      "credentialAttestation": {"issuer": "org-a-attestor", "nonce": "nonce-good", "issuerSequence": 19, "signedBindingDigest": "SIG-BIND-GOOD"},
+      "sinkChallenge": {"challengeNonce": "challenge-good", "writerId": "old-owner", "decision": "REJECT", "epoch": 7, "generation": 4, "sinkEvidenceDigest": "SINK-GOOD"},
+      "postAttemptOutcome": {"effectApplied": false, "versionBefore": 12, "versionAfter": 12, "receiptId": null},
+      "publicPrefixDigest": "PUBLIC-PREFIX-TWIN-DRAFT"
+    },
+    {
+      "twinId": "BAD",
+      "hiddenBinding": {"credentialDomain": "cred-b", "organizationId": "org-b", "ownerId": "owner-b", "authoritativeSinkId": "sink-b", "aclDigest": "ACL-BAD", "bindingDigest": "BIND-BAD"},
+      "credentialAttestation": {"issuer": "org-b-attestor", "nonce": "nonce-bad", "issuerSequence": 19, "signedBindingDigest": "SIG-BIND-BAD"},
+      "sinkChallenge": {"challengeNonce": "challenge-bad", "writerId": "old-owner", "decision": "ALLOW", "epoch": 7, "generation": 4, "sinkEvidenceDigest": "SINK-BAD"},
+      "postAttemptOutcome": {"effectApplied": true, "versionBefore": 12, "versionAfter": 13, "receiptId": "receipt-bad"},
+      "publicPrefixDigest": "PUBLIC-PREFIX-TWIN-DRAFT"
+    }
+  ],
+  "answerIsolation": {"mustNotContain": ["expected", "verdict", "gold", "selectedTwin", "planningGold", "runtimeGold"], "transitiveExpectedReference": "forbidden"},
+  "implementationStatus": "planned/unverified"
+}

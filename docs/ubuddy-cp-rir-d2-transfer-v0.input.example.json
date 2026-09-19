@@ -1,0 +1,551 @@
+{
+  "$schema": "ubuddy-cp-rir-d2-transfer-v0.schema.json",
+  "schemaVersion": "cp-rir/d2-transfer-input/v0",
+  "status": "illustrative_v0_draft",
+  "purpose": "A2_TRANSFER_INPUT_ONLY_NO_EXPECTED_OUTPUT",
+  "baseInputHash": "TO_BE_COMPUTED",
+  "horizon": 4,
+  "organizationBoundary": {
+    "organizations": [
+      {
+        "organizationId": "org-a",
+        "credentialDomain": "cred-a",
+        "privateStateRoot": "STATE-A",
+        "authoritativeSinkIds": ["sink-r"]
+      },
+      {
+        "organizationId": "org-b",
+        "credentialDomain": "cred-b",
+        "privateStateRoot": "STATE-B",
+        "authoritativeSinkIds": ["sink-ledger"]
+      }
+    ],
+    "resourceBindings": [
+      {
+        "resourceId": "resource-r",
+        "organizationId": "org-a",
+        "ownerId": "owner-a",
+        "authoritativeSinkId": "sink-r",
+        "epoch": 2,
+        "generation": 3,
+        "version": 2,
+        "actionFootprintHash": "FP-R",
+        "sinkAclRef": "ACL-R"
+      },
+      {
+        "resourceId": "resource-ledger",
+        "organizationId": "org-b",
+        "ownerId": "owner-b",
+        "authoritativeSinkId": "sink-ledger",
+        "epoch": 4,
+        "generation": 3,
+        "version": 9,
+        "actionFootprintHash": "FP-LEDGER",
+        "sinkAclRef": "ACL-LEDGER"
+      }
+    ],
+    "noSinglePrincipalHasAllPrivateStateAndWriteAuthority": true
+  },
+  "faultModel": {
+    "automatonId": "fault-v0",
+    "stateIds": ["f0", "f-prepared", "f-violation"],
+    "initialStateId": "f0",
+    "faultEventIds": ["BYPASS_WRITE", "STALE_WRITE"],
+    "acceptingStateIds": ["f0", "f-prepared"],
+    "violationStateIds": ["f-violation"],
+    "normalEventPolicy": "SELF_LOOP",
+    "prefixAcceptance": "EVERY_DEFINED_PREFIX",
+    "transitions": [
+      { "from": "f0", "event": "BYPASS_WRITE", "to": "f-violation" },
+      { "from": "f0", "event": "STALE_WRITE", "to": "f-violation" }
+    ],
+    "membershipRuleRef": "FAULT_MEMBERSHIP_DRAFT"
+  },
+  "concreteSystem": {
+    "modelKind": "CONCRETE",
+    "stateIds": [
+      "c0",
+      "c-prepared",
+      "c-r-committed",
+      "c-both-committed",
+      "c-violation"
+    ],
+    "initialStateId": "c0",
+    "eventAlphabet": [
+      "PREPARE_R",
+      "COMMIT_R",
+      "COMMIT_LEDGER",
+      "BYPASS_WRITE",
+      "STALE_WRITE"
+    ],
+    "transitions": [
+      {
+        "from": "c0",
+        "event": "PREPARE_R",
+        "to": "c-prepared",
+        "sinkId": "sink-r",
+        "resourceId": "resource-r",
+        "linearizationIndex": 1,
+        "eventClass": "INTERNAL"
+      },
+      {
+        "from": "c-prepared",
+        "event": "COMMIT_R",
+        "to": "c-r-committed",
+        "sinkId": "sink-r",
+        "resourceId": "resource-r",
+        "linearizationIndex": 2,
+        "eventClass": "MEDIATED_EFFECT"
+      },
+      {
+        "from": "c-r-committed",
+        "event": "COMMIT_LEDGER",
+        "to": "c-both-committed",
+        "sinkId": "sink-ledger",
+        "resourceId": "resource-ledger",
+        "linearizationIndex": 3,
+        "eventClass": "MEDIATED_EFFECT"
+      },
+      {
+        "from": "c-prepared",
+        "event": "BYPASS_WRITE",
+        "to": "c-violation",
+        "sinkId": "sink-ledger",
+        "resourceId": "resource-ledger",
+        "linearizationIndex": 2,
+        "eventClass": "UNMEDIATED_EFFECT"
+      },
+      {
+        "from": "c-prepared",
+        "event": "STALE_WRITE",
+        "to": "c-violation",
+        "sinkId": "sink-r",
+        "resourceId": "resource-r",
+        "linearizationIndex": 2,
+        "eventClass": "UNMEDIATED_EFFECT"
+      }
+    ],
+    "terminalStateIds": ["c-both-committed", "c-violation"],
+    "badStateIds": ["c-violation"]
+  },
+  "abstractSystem": {
+    "modelKind": "ABSTRACT",
+    "stateIds": [
+      "a0",
+      "a-prepared",
+      "a-r-committed",
+      "a-committed",
+      "a-violation"
+    ],
+    "initialStateId": "a0",
+    "eventAlphabet": [
+      "PREPARE",
+      "COMMIT_RESOURCE",
+      "COMMIT",
+      "UNMEDIATED_EFFECT"
+    ],
+    "transitions": [
+      {
+        "from": "a0",
+        "event": "PREPARE",
+        "to": "a-prepared",
+        "sinkId": null,
+        "resourceId": null,
+        "linearizationIndex": null,
+        "eventClass": "INTERNAL"
+      },
+      {
+        "from": "a-prepared",
+        "event": "COMMIT_RESOURCE",
+        "to": "a-r-committed",
+        "sinkId": null,
+        "resourceId": null,
+        "linearizationIndex": null,
+        "eventClass": "MEDIATED_EFFECT"
+      },
+      {
+        "from": "a-r-committed",
+        "event": "COMMIT",
+        "to": "a-committed",
+        "sinkId": null,
+        "resourceId": null,
+        "linearizationIndex": null,
+        "eventClass": "MEDIATED_EFFECT"
+      },
+      {
+        "from": "a-prepared",
+        "event": "UNMEDIATED_EFFECT",
+        "to": "a-violation",
+        "sinkId": null,
+        "resourceId": null,
+        "linearizationIndex": null,
+        "eventClass": "UNMEDIATED_EFFECT"
+      },
+      {
+        "from": "a-r-committed",
+        "event": "UNMEDIATED_EFFECT",
+        "to": "a-violation",
+        "sinkId": null,
+        "resourceId": null,
+        "linearizationIndex": null,
+        "eventClass": "UNMEDIATED_EFFECT"
+      }
+    ],
+    "terminalStateIds": ["a-committed", "a-violation"],
+    "badStateIds": ["a-violation"]
+  },
+  "abstraction": {
+    "stateMap": [
+      { "concrete": "c0", "abstract": "a0" },
+      { "concrete": "c-prepared", "abstract": "a-prepared" },
+      { "concrete": "c-r-committed", "abstract": "a-r-committed" },
+      { "concrete": "c-both-committed", "abstract": "a-committed" },
+      { "concrete": "c-violation", "abstract": "a-violation" }
+    ],
+    "eventMap": [
+      { "concrete": "PREPARE_R", "abstract": "PREPARE" },
+      { "concrete": "COMMIT_R", "abstract": "COMMIT_RESOURCE" },
+      { "concrete": "COMMIT_LEDGER", "abstract": "COMMIT" },
+      { "concrete": "BYPASS_WRITE", "abstract": "UNMEDIATED_EFFECT" },
+      { "concrete": "STALE_WRITE", "abstract": "UNMEDIATED_EFFECT" }
+    ],
+    "stutterEvents": [],
+    "effectCompleteEventSet": [
+      "COMMIT_R",
+      "COMMIT_LEDGER",
+      "BYPASS_WRITE",
+      "STALE_WRITE"
+    ],
+    "divergenceRankRef": "RANK-DRAFT-V0",
+    "initialStatePair": { "concrete": "c0", "abstract": "a0" },
+    "stateMapCoverage": "COMPLETE",
+    "eventMapCoverage": "COMPLETE",
+    "safetyReflectionWitnessRef": "REFLECTION-WITNESS-DRAFT"
+  },
+  "contractMonitor": {
+    "monitorId": "cross-sink-all-or-none-v0",
+    "inputLayer": "ABSTRACT_AFTER_ALPHA",
+    "stateIds": [
+      "m0",
+      "m-prepared",
+      "m-r-committed",
+      "m-safe",
+      "m-violation"
+    ],
+    "initialStateId": "m0",
+    "violationStateIds": ["m-violation"],
+    "rules": [
+      { "from": "m0", "event": "PREPARE", "to": "m-prepared" },
+      {
+        "from": "m-prepared",
+        "event": "COMMIT_RESOURCE",
+        "to": "m-r-committed"
+      },
+      { "from": "m-r-committed", "event": "COMMIT", "to": "m-safe" },
+      {
+        "from": "m-prepared",
+        "event": "UNMEDIATED_EFFECT",
+        "to": "m-violation"
+      },
+      {
+        "from": "m-r-committed",
+        "event": "UNMEDIATED_EFFECT",
+        "to": "m-violation"
+      }
+    ],
+    "terminalClosureStateIds": ["m-safe"]
+  },
+  "mediationEvidence": {
+    "completeMediationClaim": false,
+    "sinkEvidence": [
+      {
+        "sinkId": "sink-r",
+        "organizationId": "org-a",
+        "ownerId": "owner-a",
+        "bypassWriterSet": [],
+        "epochHighWatermark": 2,
+        "generationHighWatermark": 3,
+        "atomicEffectDedupReceipt": true,
+        "compareAndFence": true,
+        "aclRef": "ACL-R",
+        "linearizationPointRef": "LP-R",
+        "receiptCommitWitnessRef": "RCW-R",
+        "attestationRef": "ATTEST-R-DRAFT"
+      },
+      {
+        "sinkId": "sink-ledger",
+        "organizationId": "org-b",
+        "ownerId": "owner-b",
+        "bypassWriterSet": ["legacy-writer"],
+        "epochHighWatermark": 4,
+        "generationHighWatermark": 3,
+        "atomicEffectDedupReceipt": false,
+        "compareAndFence": true,
+        "aclRef": "ACL-LEDGER",
+        "linearizationPointRef": "LP-LEDGER",
+        "receiptCommitWitnessRef": "RCW-LEDGER",
+        "attestationRef": "ATTEST-LEDGER-DRAFT"
+      }
+    ],
+    "crossSinkMode": "SERIALIZABLE_DECOMPOSITION",
+    "globalDecisionCertificateRef": "GLOBAL-DECISION-DRAFT",
+    "receiptSchemaRef": "RECEIPT-SCHEMA-DRAFT",
+    "perSinkReceiptSchemaRef": "PER-SINK-RECEIPT-DRAFT",
+    "crossSinkLinearizationWitnessRef": "CROSS-SINK-LP-DRAFT"
+  },
+  "trials": [
+    {
+      "inputId": "T001",
+      "baseStateId": "c0",
+      "sealedBaseBindingHash": "BASE-BINDING-DRAFT",
+      "faultAutomatonMembershipRef": "MEMBER-T001",
+      "traceModelRelation": "MEMBER_OF_FROZEN_MODEL",
+      "traceCommitment": "TRACE-T001",
+      "alphaProjectionRef": "ALPHA-T001",
+      "declaredMutationScope": "CONCRETE_MODEL",
+      "concreteTrace": [
+        {
+          "index": 1,
+          "event": "PREPARE_R",
+          "eventClass": "INTERNAL",
+          "sinkId": "sink-r",
+          "resourceId": "resource-r",
+          "ownerId": "owner-a",
+          "tokenEpoch": 2,
+          "tokenGeneration": 3,
+          "versionBefore": 2,
+          "versionAfter": 2,
+          "transactionGroupId": "tx-1",
+          "receiptRef": null,
+          "eventCommitment": "EV-T001-1"
+        },
+      {
+        "index": 2,
+        "event": "COMMIT_R",
+          "eventClass": "MEDIATED_EFFECT",
+          "sinkId": "sink-r",
+          "resourceId": "resource-r",
+          "ownerId": "owner-a",
+          "tokenEpoch": 2,
+          "tokenGeneration": 3,
+          "versionBefore": 2,
+          "versionAfter": 3,
+          "transactionGroupId": "tx-1",
+          "receiptRef": "receipt-r",
+        "eventCommitment": "EV-T001-2"
+      },
+      {
+        "index": 3,
+        "event": "COMMIT_LEDGER",
+        "eventClass": "MEDIATED_EFFECT",
+        "sinkId": "sink-ledger",
+        "resourceId": "resource-ledger",
+        "ownerId": "owner-b",
+        "tokenEpoch": 4,
+        "tokenGeneration": 3,
+        "versionBefore": 9,
+        "versionAfter": 10,
+        "transactionGroupId": "tx-1",
+        "receiptRef": "receipt-ledger",
+        "eventCommitment": "EV-T001-3"
+      }
+      ],
+      "abstractTrace": [
+      {
+        "index": 1,
+        "event": "PREPARE",
+          "eventClass": "INTERNAL",
+          "sinkId": null,
+          "resourceId": null,
+          "ownerId": null,
+          "tokenEpoch": null,
+          "tokenGeneration": null,
+          "versionBefore": null,
+          "versionAfter": null,
+          "transactionGroupId": null,
+          "receiptRef": null,
+        "eventCommitment": "A-T001-1"
+      },
+      {
+        "index": 2,
+        "event": "COMMIT_RESOURCE",
+        "eventClass": "MEDIATED_EFFECT",
+        "sinkId": null,
+        "resourceId": null,
+        "ownerId": null,
+        "tokenEpoch": null,
+        "tokenGeneration": null,
+        "versionBefore": null,
+        "versionAfter": null,
+        "transactionGroupId": null,
+        "receiptRef": null,
+        "eventCommitment": "A-T001-2"
+      },
+      {
+        "index": 3,
+        "event": "COMMIT",
+        "eventClass": "MEDIATED_EFFECT",
+        "sinkId": null,
+        "resourceId": null,
+        "ownerId": null,
+        "tokenEpoch": null,
+        "tokenGeneration": null,
+        "versionBefore": null,
+        "versionAfter": null,
+        "transactionGroupId": null,
+        "receiptRef": null,
+        "eventCommitment": "A-T001-3"
+      }
+      ]
+    },
+    {
+      "inputId": "T002",
+      "baseStateId": "c0",
+      "sealedBaseBindingHash": "BASE-BINDING-DRAFT",
+      "faultAutomatonMembershipRef": "NOT-EVALUATED-T002",
+      "traceModelRelation": "PREFLIGHT_NOT_CHECKED",
+      "traceCommitment": "TRACE-T002",
+      "alphaProjectionRef": "ALPHA-T002",
+      "declaredMutationScope": "PREFLIGHT_EVIDENCE",
+      "concreteTrace": [
+        {
+          "index": 1,
+          "event": "PREPARE_R",
+          "eventClass": "INTERNAL",
+          "sinkId": "sink-r",
+          "resourceId": "resource-r",
+          "ownerId": "owner-a",
+          "tokenEpoch": 2,
+          "tokenGeneration": 3,
+          "versionBefore": 2,
+          "versionAfter": 2,
+          "transactionGroupId": "tx-2",
+          "receiptRef": null,
+          "eventCommitment": "EV-T002-1"
+        },
+        {
+          "index": 2,
+          "event": "COMMIT_R",
+          "eventClass": "MEDIATED_EFFECT",
+          "sinkId": "sink-r",
+          "resourceId": "resource-r",
+          "ownerId": "owner-a",
+          "tokenEpoch": 2,
+          "tokenGeneration": 3,
+          "versionBefore": 2,
+          "versionAfter": 3,
+          "transactionGroupId": "tx-2",
+          "receiptRef": "receipt-r",
+          "eventCommitment": "EV-T002-2"
+        },
+        {
+          "index": 3,
+          "event": "BYPASS_WRITE",
+          "eventClass": "UNMEDIATED_EFFECT",
+          "sinkId": "sink-ledger",
+          "resourceId": "resource-ledger",
+          "ownerId": null,
+          "tokenEpoch": null,
+          "tokenGeneration": null,
+          "versionBefore": 9,
+          "versionAfter": 10,
+          "transactionGroupId": "tx-2",
+          "receiptRef": null,
+          "eventCommitment": "EV-T002-3"
+        }
+      ],
+      "abstractTrace": [
+        {
+          "index": 1,
+          "event": "PREPARE",
+          "eventClass": "INTERNAL",
+          "sinkId": null,
+          "resourceId": null,
+          "ownerId": null,
+          "tokenEpoch": null,
+          "tokenGeneration": null,
+          "versionBefore": null,
+          "versionAfter": null,
+          "transactionGroupId": null,
+          "receiptRef": null,
+          "eventCommitment": "A-T002-1"
+        },
+        {
+          "index": 2,
+          "event": "COMMIT_RESOURCE",
+          "eventClass": "MEDIATED_EFFECT",
+          "sinkId": null,
+          "resourceId": null,
+          "ownerId": null,
+          "tokenEpoch": null,
+          "tokenGeneration": null,
+          "versionBefore": null,
+          "versionAfter": null,
+          "transactionGroupId": null,
+          "receiptRef": null,
+          "eventCommitment": "A-T002-2"
+        },
+        {
+          "index": 3,
+          "event": "UNMEDIATED_EFFECT",
+          "eventClass": "UNMEDIATED_EFFECT",
+          "sinkId": null,
+          "resourceId": null,
+          "ownerId": null,
+          "tokenEpoch": null,
+          "tokenGeneration": null,
+          "versionBefore": null,
+          "versionAfter": null,
+          "transactionGroupId": null,
+          "receiptRef": null,
+          "eventCommitment": "A-T002-3"
+        }
+      ]
+    },
+    {
+      "inputId": "T003",
+      "baseStateId": "c0",
+      "sealedBaseBindingHash": "BASE-BINDING-DRAFT",
+      "faultAutomatonMembershipRef": "MEMBER-T003",
+      "traceModelRelation": "PREFLIGHT_NOT_CHECKED",
+      "traceCommitment": "TRACE-T003",
+      "alphaProjectionRef": "ALPHA-T003",
+      "declaredMutationScope": "PREFLIGHT_EVIDENCE",
+      "concreteTrace": [
+        {
+          "index": 0,
+          "event": "STALE_WRITE",
+          "eventClass": "UNMEDIATED_EFFECT",
+          "sinkId": "sink-r",
+          "resourceId": "resource-r",
+          "ownerId": "owner-a",
+          "tokenEpoch": 1,
+          "tokenGeneration": 2,
+          "versionBefore": 2,
+          "versionAfter": 3,
+          "transactionGroupId": null,
+          "receiptRef": null,
+          "eventCommitment": "EV-T003-1"
+        }
+      ],
+      "abstractTrace": [
+        {
+          "index": 0,
+          "event": "UNMEDIATED_EFFECT",
+          "eventClass": "UNMEDIATED_EFFECT",
+          "sinkId": null,
+          "resourceId": null,
+          "ownerId": null,
+          "tokenEpoch": null,
+          "tokenGeneration": null,
+          "versionBefore": null,
+          "versionAfter": null,
+          "transactionGroupId": null,
+          "receiptRef": null,
+          "eventCommitment": "A-T003-1"
+        }
+      ]
+    }
+  ],
+  "implementationStatus": "planned/unverified"
+}

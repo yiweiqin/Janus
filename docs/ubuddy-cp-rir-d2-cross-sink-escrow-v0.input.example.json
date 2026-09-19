@@ -1,0 +1,8 @@
+{
+  "$schema":"ubuddy-cp-rir-d2-cross-sink-escrow-v0.schema.json","schemaVersion":"cp-rir/d2-cross-sink-escrow/v0","status":"illustrative_v0_draft","caseAlias":"7Q2P9K4M",
+  "observedTick":5,"contract":{"allOrNoneClaim":"HYPOTHESIS_NOT_VERIFIED","historicalViolationErasure":"FORBIDDEN"},"globalSafety":"HARD_VIOLATION_UNVERIFIED",
+  "sinks":[{"sinkId":"s1","resourceId":"r1","ownerId":"owner-a","epoch":1,"versionBefore":0,"versionAfter":1,"effectReality":"APPLIED_DECLARED"},{"sinkId":"s2","resourceId":"r2","ownerId":"owner-b","epoch":1,"versionBefore":0,"versionAfter":0,"effectReality":"UNKNOWN_UNVERIFIED"}],
+  "effects":[{"effectId":"e1","sinkId":"s1","versionDelta":1,"epoch":1},{"effectId":"e2","sinkId":"s2","versionDelta":1,"epoch":1}],
+  "escrow":{"reservationId":"escrow-run-1","state":"PARTIALLY_COMMITTED_UNVERIFIED","ownerId":"gateway-a","expiry":10,"reclaimStatus":"NOT_IMPLEMENTED","capacity":2,"reservedUnits":2},
+  "runtimeStatus":"UNKNOWN_INPUT_NOT_PROVEN","utilityStatus":"NOT_EVALUATED","causalScope":"NOT_EVALUATED","implementationStatus":"planned/unverified"
+}

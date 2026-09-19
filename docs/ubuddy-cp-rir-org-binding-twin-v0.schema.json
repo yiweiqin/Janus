@@ -1,0 +1,44 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://ubuddy.invalid/schemas/cp-rir-org-binding-twin-v0.json",
+  "title": "CP-RIR Org-Binding Twin fixture (draft)",
+  "description": "Two deployments share a public pre-effect view but differ only in independently attested credential-to-owner-to-sink binding and sink enforcement outcome.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["$schema", "schemaVersion", "status", "purpose", "sharedPublicPrefix", "twins", "answerIsolation", "implementationStatus"],
+  "properties": {
+    "$schema": {"const": "ubuddy-cp-rir-org-binding-twin-v0.schema.json"},
+    "schemaVersion": {"const": "cp-rir/org-binding-twin-input/v0"},
+    "status": {"const": "illustrative_v0_draft"},
+    "purpose": {"const": "answer_free_org_binding_twin_input_only"},
+    "sharedPublicPrefix": {
+      "type": "object", "additionalProperties": false,
+      "required": ["proposal", "actionId", "cost", "tracePrefix", "contractDigest", "policyGrammarDigest", "publicStateDigest"],
+      "properties": {
+        "proposal": {"const": "repair"}, "actionId": {"const": "repair-a"},
+        "cost": {"type": "object", "additionalProperties": false, "required": ["num", "den"], "properties": {"num": {"const": 1}, "den": {"const": 1}}},
+        "tracePrefix": {"type": "array", "minItems": 1, "items": {"type": "object", "additionalProperties": false, "required": ["index", "event", "publicSinkClass", "publicOutcome"], "properties": {"index": {"type": "integer", "minimum": 0}, "event": {"type": "string"}, "publicSinkClass": {"type": "string"}, "publicOutcome": {"enum": ["PRE_EFFECT"]}}}},
+        "contractDigest": {"type": "string"}, "policyGrammarDigest": {"type": "string"}, "publicStateDigest": {"type": "string"}
+      }
+    },
+    "twin": {
+      "type": "object", "additionalProperties": false,
+      "required": ["twinId", "hiddenBinding", "credentialAttestation", "sinkChallenge", "postAttemptOutcome", "publicPrefixDigest"],
+      "properties": {
+        "twinId": {"enum": ["GOOD", "BAD"]},
+        "hiddenBinding": {"type": "object", "additionalProperties": false, "required": ["credentialDomain", "organizationId", "ownerId", "authoritativeSinkId", "aclDigest", "bindingDigest"], "properties": {"credentialDomain": {"type": "string"}, "organizationId": {"type": "string"}, "ownerId": {"type": "string"}, "authoritativeSinkId": {"type": "string"}, "aclDigest": {"type": "string"}, "bindingDigest": {"type": "string"}}},
+        "credentialAttestation": {"type": "object", "additionalProperties": false, "required": ["issuer", "nonce", "issuerSequence", "signedBindingDigest"], "properties": {"issuer": {"type": "string"}, "nonce": {"type": "string"}, "issuerSequence": {"type": "integer", "minimum": 0}, "signedBindingDigest": {"type": "string"}}},
+        "sinkChallenge": {"type": "object", "additionalProperties": false, "required": ["challengeNonce", "writerId", "decision", "epoch", "generation", "sinkEvidenceDigest"], "properties": {"challengeNonce": {"type": "string"}, "writerId": {"type": "string"}, "decision": {"enum": ["ALLOW", "REJECT"]}, "epoch": {"type": "integer", "minimum": 0}, "generation": {"type": "integer", "minimum": 0}, "sinkEvidenceDigest": {"type": "string"}}},
+        "postAttemptOutcome": {"type": "object", "additionalProperties": false, "required": ["effectApplied", "versionBefore", "versionAfter", "receiptId"], "properties": {"effectApplied": {"type": "boolean"}, "versionBefore": {"type": "integer", "minimum": 0}, "versionAfter": {"type": "integer", "minimum": 0}, "receiptId": {"type": ["null", "string"]}}},
+        "publicPrefixDigest": {"type": "string"}
+      }
+    },
+    "answerIsolation": {
+      "type": "object", "additionalProperties": false, "required": ["mustNotContain", "transitiveExpectedReference"],
+      "properties": {"mustNotContain": {"type": "array", "items": {"type": "string"}, "uniqueItems": true}, "transitiveExpectedReference": {"const": "forbidden"}}
+    },
+    "twins": {"type": "array", "minItems": 2, "maxItems": 2, "items": {"$ref": "#/properties/twin"}},
+    "implementationStatus": {"const": "planned/unverified"}
+  },
+  "$defs": {}
+}

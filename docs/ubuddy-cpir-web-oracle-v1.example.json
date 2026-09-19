@@ -1,0 +1,37 @@
+{
+  "schemaVersion": "cpir-web/oracle/v1",
+  "manifestId": "al-pc-er-an-locked-pairs-v1",
+  "contractRegistryHash": "sha256:freeze-contract-registry-before-run",
+  "observationProjectorHash": "sha256:freeze-public-projector-before-run",
+  "transitionVerifierHash": "sha256:freeze-transition-verifier-before-run",
+  "trustRootHashes": ["sha256:oauth-trust-root", "sha256:sink-trust-root"],
+  "observationProjector": {"fields": ["status", "cause", "tenant", "version"]},
+  "budget": {"maxCost": 5},
+  "actions": [
+    {"id": "retry-original-key", "cost": 2, "effectClass": "IRREVERSIBLE", "transition": {"guards": [{"id": "no-commit", "op": "EQ", "left": {"path": "world.commitState"}, "right": {"value": "NO_COMMIT"}, "violationReason": "DUPLICATE_EFFECT"}, {"id": "cardinality", "op": "LTE_AFTER_DELTA", "left": {"path": "state.effectCount"}, "delta": {"value": 1}, "max": {"path": "world.contract.maxCardinality"}}], "increments": [{"path": "effectCount", "by": {"value": 1}}], "successReason": "NO_COMMIT_CONFIRMED"}},
+    {"id": "abstain", "cost": 0, "effectClass": "READ_ONLY", "transition": {"guards": []}}
+  ],
+  "probes": [
+    {"id": "public-receipt-status", "cost": 1, "effectClass": "READ_ONLY", "projection": [{"field": "cause", "path": "world.commitState"}]}
+  ],
+  "faultSchedules": [
+    {"id": "clean", "events": []},
+    {"id": "response-timeout", "events": [{"id": "timeout-1", "fault": "TIMEOUT"}]}
+  ],
+  "worlds": [
+    {
+      "id": "AN-PRECOMMIT",
+      "commitState": "NO_COMMIT",
+      "contract": {"maxCardinality": 1},
+      "publicObservation": {"status": "timeout", "cause": "hidden", "tenant": "tenant-a", "version": "v1"},
+      "initialState": {"activationVector": {"tabEpoch": 1, "pageEpoch": 1, "swEpoch": 1, "partitionEpoch": 1}, "effectCount": 0}
+    },
+    {
+      "id": "AN-COMMITTED-RECEIPT-LOST",
+      "commitState": "COMMITTED",
+      "contract": {"maxCardinality": 1},
+      "publicObservation": {"status": "timeout", "cause": "hidden", "tenant": "tenant-a", "version": "v1"},
+      "initialState": {"activationVector": {"tabEpoch": 1, "pageEpoch": 1, "swEpoch": 1, "partitionEpoch": 1}, "effectCount": 1}
+    }
+  ]
+}

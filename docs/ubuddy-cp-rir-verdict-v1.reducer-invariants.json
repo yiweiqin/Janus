@@ -1,0 +1,77 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "schemaVersion": "cp-rir/verdict-reducer-invariants/v0",
+  "status": "normative_draft_unimplemented",
+  "inputSchemaRef": "ubuddy-cp-rir-verdict-v1.schema.json",
+  "precedence": [
+    "ARTIFACT_INVALID",
+    "INPUT_UNKNOWN",
+    "HISTORICAL_HARD_VIOLATION",
+    "RUNTIME_CONFIRMED_HARD_VIOLATION",
+    "RUNTIME_IN_DOUBT",
+    "PLANNING_RESULT"
+  ],
+  "invariants": [
+    {
+      "id": "R01",
+      "if": "artifactVerdict.status != VALID",
+      "then": "planningVerdict.input.status = UNKNOWN; candidateResults = []; instance.status = UNKNOWN; optimality.status = NOT_APPLICABLE; execution.runtime.status = NOT_RUN",
+      "failure": "REDUCER_INVALID_ARTIFACT_PROPAGATION"
+    },
+    {
+      "id": "R02",
+      "if": "planningVerdict.input.status = UNKNOWN",
+      "then": "candidateResults = []; selectedCandidateId = null; instance.status = UNKNOWN; optimality.status = NOT_APPLICABLE; every exact numeric output is null",
+      "failure": "UNKNOWN_PROMOTED_TO_PLANNING_RESULT"
+    },
+    {
+      "id": "R03",
+      "if": "planningVerdict.instance.status = INSTANCE_INFEASIBLE",
+      "then": "enumerationCoverage.complete = true; visitedCount = expectedCount; unresolvedSet = []; every canonical candidate is PLAN_REJECT and has a complete negative witness",
+      "failure": "INCOMPLETE_INFEASIBILITY_WITNESS"
+    },
+    {
+      "id": "R04",
+      "if": "planningVerdict.optimality.status = OPTIMAL_WITHIN_PI",
+      "then": "enumerationCoverage.complete = true; selectedCandidateId != null; every candidate lexicographically better than selected is determinately PLAN_REJECT",
+      "failure": "UNPROVEN_OPTIMALITY"
+    },
+    {
+      "id": "R05",
+      "if": "executionVerdict.runtime.status = IN_DOUBT",
+      "then": "executionVerdict.publicDisposition.status = POSSIBLE_EFFECT_DO_NOT_RETRY; effectKnowledge.status != NO_EFFECT_CONFIRMED",
+      "failure": "UNSAFE_RETRY_DISPOSITION"
+    },
+    {
+      "id": "R06",
+      "if": "executionVerdict.runtimeTraceSafety.status = HARD_VIOLATION",
+      "then": "the violation cannot be demoted to planning UNKNOWN or used as an infeasibility witness; implementationConformance is FAILED unless the trace was explicitly in the frozen model",
+      "failure": "RUNTIME_VIOLATION_MISCLASSIFIED"
+    },
+    {
+      "id": "R07",
+      "if": "mutationLayer = CONCRETE_MODEL and a hard-safety counterexample is reachable",
+      "then": "candidate is PLAN_REJECT or A2 transfer fails; a planning ACCEPT is UNSAFE_FALSE_ACCEPT",
+      "failure": "UNSAFE_FALSE_ACCEPT"
+    },
+    {
+      "id": "R08",
+      "if": "mutationLayer = DEPLOYED_RUNTIME and planning input/hash is unchanged",
+      "then": "planning axes equal the comparator-private sealed base output; only execution/conformance axes change",
+      "failure": "RUNTIME_FAULT_REWROTE_PLANNING_RESULT"
+    },
+    {
+      "id": "R09",
+      "if": "central_full exact oracle returns any candidate UNRESOLVED",
+      "then": "artifact is invalid or runner status is TIMEOUT; it is not a normal Gate A candidate verdict",
+      "failure": "SEALED_SEMANTICS_LEAKED_INTO_GATE_A"
+    },
+    {
+      "id": "R10",
+      "if": "robustDelta is computed",
+      "then": "robustDelta = min_world(policyValue(world) - baselineValue(world)); difference of separate minima is forbidden",
+      "failure": "WRONG_DELTA_ARITHMETIC"
+    }
+  ],
+  "implementationStatus": "planned/unverified"
+}

@@ -1,0 +1,11 @@
+{
+  "$schema":"https://json-schema.org/draft/2020-12/schema","$id":"https://ubuddy.invalid/schemas/cp-rir-d2-recovery-evidence-step-binding-v0.json","type":"object","additionalProperties":false,
+  "required":["$schema","schemaVersion","status","caseAlias","sources","expected","bindings","implementationStatus"],
+  "properties":{
+    "$schema":{"const":"ubuddy-cp-rir-d2-recovery-evidence-step-binding-v0.schema.json"},"schemaVersion":{"const":"cp-rir/d2-recovery-evidence-step-binding/v0"},"status":{"const":"illustrative_v0_draft"},"caseAlias":{"type":"string","minLength":1},
+    "sources":{"type":"object","additionalProperties":false,"required":["recoveryEvidence","recoveryGrammar","recoveryManifest"],"properties":{"recoveryEvidence":{"const":"ubuddy-cp-rir-d2-recovery-evidence-v0.input.example.json"},"recoveryGrammar":{"const":"ubuddy-cp-rir-d2-recovery-fsm-grammar-v0.input.example.json"},"recoveryManifest":{"const":"ubuddy-cp-rir-d2-recovery-fsm-manifest-v0.input.example.json"}}},
+    "expected":{"type":"object","additionalProperties":false,"required":["evidenceDigest","grammarDigest","pathSetDigest"],"properties":{"evidenceDigest":{"$ref":"#/$defs/digest"},"grammarDigest":{"$ref":"#/$defs/digest"},"pathSetDigest":{"$ref":"#/$defs/digest"}}},
+    "bindings":{"type":"array","minItems":1,"items":{"type":"object","additionalProperties":false,"required":["claimId","kind","effectId","sinkId","pathId","stepIndex","transitionId","event","from","to"],"properties":{"claimId":{"type":"string","minLength":1},"kind":{"enum":["RECEIPT","NEGATIVE_WITNESS","COMPENSATION"]},"effectId":{"type":"string","minLength":1},"sinkId":{"type":"string","minLength":1},"pathId":{"type":"string","minLength":1},"stepIndex":{"type":"integer","minimum":1},"transitionId":{"type":"string","minLength":1},"event":{"type":"string","minLength":1},"from":{"type":"string","minLength":1},"to":{"type":"string","minLength":1}}}},
+    "implementationStatus":{"const":"prototype/unverified"}
+  },"$defs":{"digest":{"type":"string","pattern":"^[a-f0-9]{64}$"}}
+}

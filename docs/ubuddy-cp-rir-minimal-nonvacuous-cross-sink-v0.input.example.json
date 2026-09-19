@@ -1,0 +1,6 @@
+{
+  "$schema":"ubuddy-cp-rir-minimal-nonvacuous-cross-sink-v0.schema.json","schemaVersion":"cp-rir/minimal-nonvacuous-cross-sink/v0","status":"illustrative_v0_draft","publicCut":"same-public-failure-cut-v0",
+  "worlds":[{"worldId":"w-hard-upstream","hiddenCause":"UPSTREAM_CAPABILITY_MISSING","effectiveActionId":"patch-capability","unsafeActionId":"bind-version"},{"worldId":"w-hard-cache","hiddenCause":"DOWNSTREAM_CACHE_STALE","effectiveActionId":"bind-version","unsafeActionId":"patch-capability"}],
+  "typedActions":[{"actionId":"probe-owner","ownerId":"owner-a","cost":1,"kind":"PROBE","readSet":["owner-attestation"],"writeSet":[]},{"actionId":"patch-capability","ownerId":"owner-a","cost":3,"kind":"REPAIR","readSet":["capability-version"],"writeSet":["s1"]},{"actionId":"bind-version","ownerId":"owner-b","cost":2,"kind":"REPAIR","readSet":["cache-version"],"writeSet":["s2"]}],
+  "baseline":{"actionId":"noop-positive-v0","candidateIndependent":true,"cost":1},"hardContract":{"allOrNone":"HYPOTHESIS_NOT_VERIFIED","historicalViolationErasure":"FORBIDDEN","obligationIds":["o-s1","o-s2"]},"crossSinkEffect":{"sinkIds":["s1","s2"],"ownerIds":["owner-a","owner-b"],"reservationStatus":"NOT_IMPLEMENTED","runtimeStatus":"UNKNOWN_INPUT_NOT_PROVEN"},"expectedDecision":"ABSTAIN_UNTIL_PROBE_OR_CERTIFICATE","implementationStatus":"planned/unverified"
+}

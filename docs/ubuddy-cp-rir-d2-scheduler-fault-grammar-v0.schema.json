@@ -1,0 +1,25 @@
+{
+  "$schema":"https://json-schema.org/draft/2020-12/schema",
+  "$id":"https://ubuddy.invalid/schemas/cp-rir-d2-scheduler-fault-grammar-v0.json",
+  "title":"CP-RIR D2 external scheduler/fault grammar (research draft)",
+  "type":"object",
+  "additionalProperties":false,
+  "required":["$schema","schemaVersion","status","grammarId","horizon","schedulerAlphabet","faultAlphabet","generationRules","closureContract","implementationStatus"],
+  "properties":{
+    "$schema":{"const":"ubuddy-cp-rir-d2-scheduler-fault-grammar-v0.schema.json"},
+    "schemaVersion":{"const":"cp-rir/d2-scheduler-fault-grammar/v0"},
+    "status":{"const":"illustrative_v0_draft"},
+    "grammarId":{"type":"string","minLength":1},
+    "horizon":{"const":1},
+    "schedulerAlphabet":{"type":"array","minItems":1,"items":{"$ref":"#/$defs/schedulerSymbol"}},
+    "faultAlphabet":{"type":"array","minItems":1,"items":{"$ref":"#/$defs/faultSymbol"}},
+    "generationRules":{"type":"array","minItems":1,"items":{"$ref":"#/$defs/rule"}},
+    "closureContract":{"type":"object","additionalProperties":false,"required":["schedulerChoiceCardinality","faultEventCardinality","prefixClosure","reachabilitySemantics"],"properties":{"schedulerChoiceCardinality":{"const":"EXACTLY_ONE_PER_BRANCH"},"faultEventCardinality":{"const":"EXACTLY_ONE_PER_BRANCH"},"prefixClosure":{"const":"NOT_IMPLEMENTED_HORIZON_ONE_ONLY"},"reachabilitySemantics":{"const":"RULE_ENUMERATION_ONLY_UNVERIFIED"}}},
+    "implementationStatus":{"const":"prototype/unverified"}
+  },
+  "$defs":{
+    "schedulerSymbol":{"type":"object","additionalProperties":false,"required":["id","semantic"],"properties":{"id":{"enum":["DELIVER_RECEIPT","DROP_RECEIPT","CRASH_AFTER_EFFECT"]},"semantic":{"type":"string","minLength":1}}},
+    "faultSymbol":{"type":"object","additionalProperties":false,"required":["id","semantic"],"properties":{"id":{"enum":["NONE","RECEIPT_DROP","CRASH_RESTART"]},"semantic":{"type":"string","minLength":1}}},
+    "rule":{"type":"object","additionalProperties":false,"required":["ruleId","schedulerChoice","faultEvents","branchSemantic"],"properties":{"ruleId":{"type":"string","minLength":1},"schedulerChoice":{"enum":["DELIVER_RECEIPT","DROP_RECEIPT","CRASH_AFTER_EFFECT"]},"faultEvents":{"type":"array","minItems":1,"uniqueItems":true,"items":{"enum":["NONE","RECEIPT_DROP","CRASH_RESTART"]}},"branchSemantic":{"enum":["RECEIPT_PRESENT_UNVERIFIED","RECEIPT_LOST_EFFECT_DECLARED_APPLIED","CRASHED_EFFECT_POSSIBLE"]}}}
+  }
+}

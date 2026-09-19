@@ -1,0 +1,19 @@
+{
+  "$schema":"ubuddy-cp-rir-obligation-ledger-v0.schema.json",
+  "schemaVersion":"cp-rir/obligation-ledger/v0",
+  "normativeRegistry":{"registryDigest":"1111111111111111111111111111111111111111111111111111111111111111","independentFromCandidate":true,"lockedBeforeCandidate":true,"obligations":[
+    {"id":"o1","kind":"HARD","required":true,"multiplicity":1,"cancelable":false},
+    {"id":"o2","kind":"HARD","required":true,"multiplicity":1,"cancelable":false}
+  ]},
+  "contractBefore":{"obligationIds":["o1","o2"],"contractDigest":"2222222222222222222222222222222222222222222222222222222222222222"},
+  "contractAfter":{"obligationIds":["o1","o2"],"contractDigest":"3333333333333333333333333333333333333333333333333333333333333333"},
+  "prefixes":[
+    {"stepIndex":0,"event":{"kind":"TRIGGER","obligationId":"o1","instanceId":"o1-i1"}},
+    {"stepIndex":1,"event":{"kind":"DISCHARGE","obligationId":"o1","instanceId":"o1-i1","witnessId":"w-o1-i1"}},
+    {"stepIndex":2,"event":{"kind":"TRIGGER","obligationId":"o2","instanceId":"o2-i1"}},
+    {"stepIndex":3,"event":{"kind":"DISCHARGE","obligationId":"o2","instanceId":"o2-i1","witnessId":"w-o2-i1"}},
+    {"stepIndex":4,"event":{"kind":"ACCEPT"}}
+  ],
+  "finalDisposition":"ACCEPT",
+  "implementationStatus":"planned/unverified"
+}

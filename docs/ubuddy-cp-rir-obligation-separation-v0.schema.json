@@ -1,0 +1,13 @@
+{
+  "$schema":"https://json-schema.org/draft/2020-12/schema",
+  "$id":"https://ubuddy.invalid/schemas/cp-rir-obligation-separation-v0.json",
+  "type":"object","additionalProperties":false,
+  "required":["$schema","schemaVersion","implementationStatus","registry","cases"],
+  "properties":{
+    "$schema":{"const":"ubuddy-cp-rir-obligation-separation-v0.schema.json"},
+    "schemaVersion":{"const":"cp-rir/obligation-separation/v0"},
+    "implementationStatus":{"const":"planned/unverified"},
+    "registry":{"type":"object","additionalProperties":false,"required":["obligations"],"properties":{"obligations":{"type":"array","minItems":1,"items":{"type":"object","additionalProperties":false,"required":["id","kind","required","multiplicity","cancelable"],"properties":{"id":{"type":"string","minLength":1},"kind":{"const":"HARD"},"required":{"const":true},"multiplicity":{"type":"integer","minimum":1},"cancelable":{"const":false}}}}}},
+    "cases":{"type":"array","minItems":2,"items":{"type":"object","additionalProperties":false,"required":["caseId","contractCompleteDeclared","contractObligationIds","ledgerEvents"],"properties":{"caseId":{"type":"string","minLength":1},"contractCompleteDeclared":{"type":"boolean"},"contractObligationIds":{"type":"array","items":{"type":"string"},"uniqueItems":true},"ledgerEvents":{"type":"array","minItems":1,"items":{"type":"object","additionalProperties":false,"required":["kind"],"properties":{"kind":{"enum":["TRIGGER","DISCHARGE","VIOLATE","CANCEL","COMPENSATE","ACCEPT"]},"obligationId":{"type":"string"},"witnessId":{"type":"string"}}}}}}}
+  }
+}

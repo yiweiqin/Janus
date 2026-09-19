@@ -1,0 +1,27 @@
+{
+  "$schema":"ubuddy-cp-rir-effect-complete-inductive-transfer-v0.schema.json",
+  "schemaVersion":"cp-rir/effect-complete-inductive-transfer/v0",
+  "cases":[
+    {
+      "caseId":"CYCLIC_MULTI_EFFECT_SAFE","claimStatus":"PASS",
+      "concreteSystem":{"stateIds":["c0","c1","c2","c-safe"],"initialStateId":"c0","terminalStateIds":["c-safe"],"badStateIds":[],"transitions":[{"from":"c0","event":"C_PREPARE","to":"c1","eventClass":"INTERNAL","effectFootprint":[]},{"from":"c1","event":"C_RETRY_A","to":"c1","eventClass":"INTERNAL","effectFootprint":[]},{"from":"c1","event":"C_COMMIT_A","to":"c2","eventClass":"MEDIATED_EFFECT","effectFootprint":["sink-a/resource-x"]},{"from":"c2","event":"C_RETRY_B","to":"c2","eventClass":"INTERNAL","effectFootprint":[]},{"from":"c2","event":"C_COMMIT_B","to":"c-safe","eventClass":"MEDIATED_EFFECT","effectFootprint":["sink-b/resource-y"]}]},
+      "abstractSystem":{"stateIds":["a0","a1","a2","a-safe"],"initialStateId":"a0","terminalStateIds":["a-safe"],"badStateIds":[],"transitions":[{"from":"a0","event":"PREPARE","to":"a1","eventClass":"INTERNAL","effectFootprint":[]},{"from":"a1","event":"RETRY_A","to":"a1","eventClass":"INTERNAL","effectFootprint":[]},{"from":"a1","event":"COMMIT_A","to":"a2","eventClass":"MEDIATED_EFFECT","effectFootprint":["sink-a/resource-x"]},{"from":"a2","event":"RETRY_B","to":"a2","eventClass":"INTERNAL","effectFootprint":[]},{"from":"a2","event":"COMMIT_B","to":"a-safe","eventClass":"MEDIATED_EFFECT","effectFootprint":["sink-b/resource-y"]}]},
+      "stateMap":[{"concrete":"c0","abstract":"a0"},{"concrete":"c1","abstract":"a1"},{"concrete":"c2","abstract":"a2"},{"concrete":"c-safe","abstract":"a-safe"}],
+      "eventMap":[{"concrete":"C_PREPARE","abstract":"PREPARE"},{"concrete":"C_RETRY_A","abstract":"RETRY_A"},{"concrete":"C_COMMIT_A","abstract":"COMMIT_A"},{"concrete":"C_RETRY_B","abstract":"RETRY_B"},{"concrete":"C_COMMIT_B","abstract":"COMMIT_B"}],
+      "legalStutterEvents":[],
+      "monitor":{"stateIds":["m0","m1","m2","m-safe","m-bad"],"initialStateId":"m0","terminalStateIds":["m-safe"],"violationStateIds":["m-bad"],"rules":[{"from":"m0","event":"PREPARE","to":"m1"},{"from":"m1","event":"RETRY_A","to":"m1"},{"from":"m1","event":"COMMIT_A","to":"m2"},{"from":"m2","event":"RETRY_B","to":"m2"},{"from":"m2","event":"COMMIT_B","to":"m-safe"}]},
+      "relation":[{"concrete":"c0","abstract":"a0","monitor":"m0"},{"concrete":"c1","abstract":"a1","monitor":"m1"},{"concrete":"c2","abstract":"a2","monitor":"m2"},{"concrete":"c-safe","abstract":"a-safe","monitor":"m-safe"}]
+    },
+    {
+      "caseId":"CYCLIC_HIDDEN_EFFECT","claimStatus":"COUNTEREXAMPLE",
+      "concreteSystem":{"stateIds":["c0","c1","c-bad"],"initialStateId":"c0","terminalStateIds":["c-bad"],"badStateIds":["c-bad"],"transitions":[{"from":"c0","event":"C_PREPARE","to":"c1","eventClass":"INTERNAL","effectFootprint":[]},{"from":"c1","event":"C_RETRY","to":"c1","eventClass":"INTERNAL","effectFootprint":[]},{"from":"c1","event":"C_HIDDEN_WRITE","to":"c-bad","eventClass":"UNMEDIATED_EFFECT","effectFootprint":["sink-z/hidden"]}]},
+      "abstractSystem":{"stateIds":["a0","a1"],"initialStateId":"a0","terminalStateIds":[],"badStateIds":[],"transitions":[{"from":"a0","event":"PREPARE","to":"a1","eventClass":"INTERNAL","effectFootprint":[]},{"from":"a1","event":"RETRY","to":"a1","eventClass":"INTERNAL","effectFootprint":[]}]},
+      "stateMap":[{"concrete":"c0","abstract":"a0"},{"concrete":"c1","abstract":"a1"},{"concrete":"c-bad","abstract":"a1"}],
+      "eventMap":[{"concrete":"C_PREPARE","abstract":"PREPARE"},{"concrete":"C_RETRY","abstract":"RETRY"},{"concrete":"C_HIDDEN_WRITE","abstract":"STUTTER"}],
+      "legalStutterEvents":["C_HIDDEN_WRITE"],
+      "monitor":{"stateIds":["m0","m1","m-bad"],"initialStateId":"m0","terminalStateIds":[],"violationStateIds":["m-bad"],"rules":[{"from":"m0","event":"PREPARE","to":"m1"},{"from":"m1","event":"RETRY","to":"m1"}]},
+      "relation":[],"counterexample":["C_PREPARE","C_HIDDEN_WRITE"]
+    }
+  ],
+  "implementationStatus":"prototype/unverified"
+}
