@@ -68,15 +68,35 @@
 // ---------------------------------------------------------------------------
 //
 // 因为底料还没被观测到。`agent_step` 节点与 `sequence_of` 链是本轮才进图的
-// （`projectAgentPlanSteps`），本地真实库上 `activityType='plan'` 的事件数目前是 **0**
-// —— 也就是说这条链路**一次都没有在真实数据上跑过**。此时把 `minimal_plan_edit`
-// 接到真实图上去改规划，等于在一个未观测的输入分布上自动改产品。
+// （`projectAgentPlanSteps`）。
+//
+// 更正（2026-09-19）：这里原来写的是「本地真实库上 `activityType='plan'` 的事件数目前是 0
+// —— 也就是说这条链路一次都没有在真实数据上跑过」。**那句话是错的**，它是被一个探针 bug
+// 误导的结论：`_probe_task_events_plan.mjs` 在 WHERE 里用了 SELECT 别名
+// （`WHERE activityType = 'plan'`），SQLite 直接抛 `no such column: activityType`，
+// 而探针的 `q()` 把异常吞成 `[]` —— 于是「查询写错了」被读成了「数据里没有」。
+//
+// 实测（`C:\Users\zhang\.janus-test\data\janus.db`，只读）：`payload.activityType='plan'`
+// 的事件有 **6 条 / 25 个 step**，落在 3 个 task run 上，生产者是 `codex/codex_app_server`，
+// step 形状恰好是 `{step, status}`（status ∈ completed / inProgress / pending）。
+// `agentPlanEventsFromTaskEvents` 的判据（`activityType === 'plan' && plan !== undefined`）
+// 对这批数据**成立**，`normalizeAgentPlan` 也吃得下（`step` → label，`status` 归一化）。
+//
+// 所以真正挡着这条链路的是**发布缺口**，不是数据缺口：已安装构建的 `app.asar` 里
+// 没有 `ensureUBuddyCollaborationGraphSchema` / `collaboration_graph_nodes`
+// / `collaborationGraphStoreMethods`（同一个 asar 里 `ensureUBuddyCoordinationContractV2`
+// 是有的，而活库也确实记录了 `ubuddy_coordination_contract_v2` 却没记录
+// `ubuddy_collaboration_graph_v1` —— 两边对得上）。见
+// `experiments/rdmd_detective_dataset/ubuddy_recon/PLAN_EXEC_TRUTH.zh-CN.md` §11。
+//
+// 结论没变、理由变了：底料**依然没有被观测到**（表不存在 → 一次都没物化过），
+// 但缺的是「装一个含该迁移的构建」，不是「等数据长出来」。
 //
 // 所以本阶段的契约是：**度量与归因必须落库，动作一律 record_only**。
 // 记录里同时保留「模型怎么说」与「JS 度量怎么算」，两者的差值就是下一轮重训要看的。
 // 动作开关留给 `planExecDrift` 之后的第二个 flag（`ubuddy_plan_exec_drift_apply`），
 // 在真实底料被观测到之后再谈。
-﻿
+
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
@@ -99,32 +119,51 @@ export const RDMD_PLAN_EXEC_RECORD_VERSION = 'rdmd_plan_exec_drift_v1';
 export const RDMD_TRANSPORTS = Object.freeze(['cloud', 'local_spawn', 'none']);
 
 /**
- * 动作侧的阶梯。
+ * 动作侧的阶梯。三级，**默认停在最低一级**：
  *
- * `'apply'` **刻意不在这个数组里**，这是 P5 的核心约束：开真动作的前置条件是
- * 影子度量（见 `summarizeShadowAgreement`），而那个度量今天还是零条。所以"能走到 apply"
- * 这件事必须在代码上不可能，而不是靠文档里写一句"还没实现"。
- * 只被注释拦住的危险路径，迟早会被某次"顺手接上"绕过；
- * 常量里没有它，`resolveDriftPhase` 就没有任何输入能产出它。
+ *   `record_only` —— 能力位关着。今天的产品行为，一字不变。
+ *   `shadow`      —— 能力位开着，但**度量门不满足**。记提案、记真实后续，不改图。
+ *   `apply`       —— 能力位开着 **且** 度量门满足。把提案落成"下一轮规划的先验"。
+ *
+ * 为什么 `'apply'` 现在可以出现在这个数组里（P5 时它被刻意排除在外）：
+ * 那时唯一的门是"能力位"，而能力位是个开关 —— 常量的存在与否就是全部防线。
+ * 现在多了一道**度量门**，而且是在这里**代码上**判的（`shadowApplyGate`）：
+ * 没有足够多、足够一致的已观察提案，`resolveDriftPhase` 就产不出 `apply`。
+ * 所以"能走到 apply"仍然不是一个靠文档约定的性质，而是没有输入能满足它的性质。
+ *
+ * 但要说清这一版的真实状态：**真实环境里 apply 依旧不可达**，因为
+ * `SHADOW_MIN_OBSERVATIONS` 是 30、而真实已观察提案数是 **0**（底料一次都没被观测到，
+ * 见 PLAN_EXEC_TRUTH §12.7）。闭环接好且**可证被闸住**，这是预期结果。
  */
-export const RDMD_ACTION_PHASES = Object.freeze(['record_only', 'shadow']);
+export const RDMD_ACTION_PHASES = Object.freeze(['record_only', 'shadow', 'apply']);
 
 // 影子"后续"事件。**单独一种事件类型**，不去改写原记录：
 // 原记录说的是"我在 T 时刻提了什么"，后续说的是"T2 时刻图变成了什么样"。
 // 两件事各有各的时间戳，合并进一行会让"这条提案当时说了什么"变成可变的。
 export const RDMD_SHADOW_FOLLOWUP_EVENT = 'rdmd_plan_exec_drift_followup';
 
+// apply 阶段唯一写出来的东西：**下一轮规划的"先验"**，不是一次改图。
+//
+// 它是一行事件（与这个文件里其它产物一致），按**任务族**取 id，所以下一轮同类任务
+// 在规划时能按族把它读出来。刻意不复用 `rdmd_plan_exec_drift`：那条记录的语义是
+// "我诊断到了什么"，可以被反复 upsert；而"我因此建议下一轮怎么改"是另一个事实，
+// 混进同一行会让"这条诊断当时说了什么"随动作阶段变化而变。
+export const RDMD_PLAN_PRIOR_EVENT = 'rdmd_plan_exec_drift_plan_prior';
+
 /**
- * 能力位 → `record.phase`。**纯函数，且只有两级。**
+ * 能力位 + 度量门 → `record.phase`。**纯函数**。
  *
- *   applyEnabled=false → `record_only`：今天的产品行为，一字不变。
- *   applyEnabled=true  → `shadow`：记提案、**不执行**、记真实后续。
+ *   applyEnabled=false                     → `record_only`（今天的产品行为）
+ *   applyEnabled=true, gate 不满足/没给     → `shadow`
+ *   applyEnabled=true, gate.met === true    → `apply`
  *
- * 没有第三条分支。注意能力位叫 `plan_exec_drift_apply` 指的是"它守的是动作侧"，
- * 不是"打开就开始改图"—— 打开它最坏的后果是库里多一类事件。
+ * `applyGate` 缺省、为 `null`、或任何非 `{met:true}` 的形状都**退化成 `shadow`**。
+ * 这是 fail-closed 的关键：调用方忘记算度量、算错了、或者将来有人"顺手"传个
+ * `true` 进来，都只会停在影子阶段，而不是直接去改用户的规划。
  */
-export function resolveDriftPhase({ applyEnabled = false } = {}) {
-  return applyEnabled ? 'shadow' : 'record_only';
+export function resolveDriftPhase({ applyEnabled = false, applyGate = null } = {}) {
+  if (!applyEnabled) return 'record_only';
+  return applyGate?.met === true ? 'apply' : 'shadow';
 }
 
 /**
@@ -136,7 +175,7 @@ export function resolveDriftPhase({ applyEnabled = false } = {}) {
  * `source: 'js_metric'` 是刻意的：提案来自**度量**（差多少），不是模型的归因（谁造成的）。
  * 影子阶段先度量这个更弱但更便宜的信号；模型判定在 `model` 字段里另有出处，两者不混。
  */
-export function shadowProposal(candidate = {}) {
+export function shadowProposal(candidate = {}, { taskFamily = null } = {}) {
   const edit = candidate?.minimal?.edit || null;
   if (!edit) return null;
   const fields = Array.isArray(edit.fields) ? edit.fields.map((field) => String(field)).slice(0, 12) : [];
@@ -154,6 +193,15 @@ export function shadowProposal(candidate = {}) {
     edgeId: String(edit.edgeId || '').slice(0, 160),
     fields,
     target,
+    // 任务族随提案一起走：没有它，后续按族分区/统计时只能回到记录顶层去猜，
+    // 而提案一旦被复制到 follow-up 事件里，顶层字段是不跟着走的。
+    ...(taskFamily && taskFamily.id ? {
+      taskFamily: {
+        version: taskFamily.version, id: taskFamily.id, anchor: taskFamily.anchor,
+        anchorKind: taskFamily.anchorKind, shape: taskFamily.shape,
+        degenerate: taskFamily.degenerate === true,
+      },
+    } : {}),
     // 提案**没有被执行**。这个字段是字面断言而不是注释：读记录的人、以及将来写聚合
     // 脚本的人，可以直接判断"这条记录有没有可能改过图"。
     executable: false,
@@ -238,8 +286,18 @@ export function summarizeShadowAgreement({ proposals = [], followUps = [] } = {}
   const counts = { carried_out: 0, partially_carried_out: 0, not_carried_out: 0, node_gone: 0, edge_gone: 0, unsupported_op: 0 };
   let observed = 0;
   let unobserved = 0;
+  // 任务族口径（P3 新增）。**只做分区与报告，不进比率**：把一个族拆开算
+  // 会得到一堆各自都"样本不足"的小比率，合起来算又会把不同类的任务混成一个数。
+  const familyIds = new Set();
+  let degenerateFamilyProposals = 0;
   for (const proposal of proposals) {
     const eventId = String(proposal?.eventId || '');
+    const family = proposal?.taskFamily || {};
+    if (family.id) familyIds.add(String(family.id));
+    // 退化的族 = anchor 落到了 task_run 上（既没有 groupId 也没有 delegationId）。
+    // 这种族只有这一次运行，下一轮同类任务必然换族 —— 它的提案**结构上**无法收敛，
+    // 单独计数就是为了不让它们悄悄把"样本在积累"读成真的。
+    if (family.degenerate === true) degenerateFamilyProposals += 1;
     const followUp = eventId ? outcomeByProposal.get(eventId) : null;
     if (!followUp) { unobserved += 1; continue; }
     observed += 1;
@@ -257,7 +315,14 @@ export function summarizeShadowAgreement({ proposals = [], followUps = [] } = {}
     nodeGone: counts.node_gone,
     edgeGone: counts.edge_gone,
     unsupportedOp: counts.unsupported_op,
-    // 分母是 observed，不是 proposals —— 见上面的注释。
+    // 分母是 observed，不是 proposals —— 见上面的注释。写成字段而不是只写在注释里，
+    // 是因为报告脚本要能**断言**自己用的分母：读错分母是这类度量最贵的错。
+    denominator: 'observed',
+    denominatorNote: 'agreementRate = carriedOut / observed；unobserved 既不算同意也不算反对',
+    // 分区信息：族数、族 id（截断）、以及结构上无法收敛的提案数。
+    families: familyIds.size,
+    familyIds: [...familyIds].slice(0, 16),
+    degenerateFamilyProposals,
     agreementRate: observed ? round(carriedOut / observed) : null,
     // 低于这个观察量时不给结论。不是统计上的显著性，而是产品上的诚实：
     // 5 条观察出来的 100% 不足以支撑"去改用户的规划"。
@@ -270,6 +335,174 @@ export function summarizeShadowAgreement({ proposals = [], followUps = [] } = {}
 // 而是"提案按 op 分布还算看得过来"：影子阶段真正要判断的是每一类 op
 // （align_node / add_edge / …）各自的一致性，而不是一个总数。
 const SHADOW_MIN_OBSERVATIONS = 30;
+
+// 开真动作所需的**最低一致率**。同样不是统计阈值：它要回答的是
+// "我们的最小改动建议，现实里大多数时候真的走过去了么"。低于这个数，
+// 说明我们在建议一件现实反复不选的事 —— 那改的是用户的规划，代价不对称。
+const SHADOW_MIN_AGREEMENT_RATE = 0.6;
+
+// ---------------------------------------------------------------------------
+// 任务族标识（P3）
+// ---------------------------------------------------------------------------
+//
+// 为什么需要它：影子度量要回答的是"**下一轮同类任务**是否采纳了上轮建议"，
+// 而 `observeShadowFollowUp` 今天只能在**一张图**的后续 revision 上观察
+// （`readPlanExecGraphs` 的 `scope.taskRunIds` 只覆盖当前图里的 run）。
+// 没有"族"这个概念，就无法回答"两次运行算不算同一类任务"，
+// 也无法在报告里说清"分母为什么是这个数"。
+//
+// 定义刻意**保守且可解释**：
+//   anchor = groupId || delegationId || taskRunId
+//     —— 协作单元本身。**不跨组合并**：两个不同的组即使形状一样，也是两个团队、两种上下文。
+//   shape  = 规划侧的结构指纹（kind×depth 计数 + 边种类计数）
+//     —— 同一个组里的不同任务形状差很远（3 个 agent_task vs 10 个），所以组内需要再分一次。
+//   id     = anchor::shape
+//
+// 诚实交代这个定义的边界：理想形态是"按任务**类型**聚类"（一个语义信号），
+// 而那是方案二（能力画像 / 依赖集束）的事，用户明确说先不做。所以这一版用的是
+// **结构**代理：形状相同 + 同一个协作单元 = 同类任务。它会在两种情况下失真
+// （同形状不同任务、更常见的：同任务因 planner 输出条数不同而形状不同），
+// 所以 `degenerate` 与族计数都会如实报出来，而不是让读者以为分区是准的。
+export const RDMD_TASK_FAMILY_VERSION = 'rdmd_task_family_v1';
+
+/** 规划侧的**结构指纹**。只取 kind/边种类与计数，不取标题、文本或 id。 */
+export function planExecFamilyShape(plan = {}) {
+  const nodes = Array.isArray(plan?.nodes) ? plan.nodes : [];
+  const edges = Array.isArray(plan?.edges) ? plan.edges : [];
+  const nodeCounts = new Map();
+  for (const node of nodes) {
+    const kind = String(node?.kind || 'unknown');
+    const depth = Number.isFinite(Number(node?.depth)) ? Number(node.depth) : -1;
+    const key = `${kind}@${depth}`;
+    nodeCounts.set(key, (nodeCounts.get(key) || 0) + 1);
+  }
+  const edgeCounts = new Map();
+  for (const edge of edges) {
+    const kind = String(edge?.kind || 'unknown');
+    edgeCounts.set(kind, (edgeCounts.get(kind) || 0) + 1);
+  }
+  const part = (map) => [...map.entries()].sort((a, b) => (a[0] < b[0] ? -1 : a[0] > b[0] ? 1 : 0))
+    .map(([key, n]) => `${key}:${n}`).join(',');
+  return `n[${part(nodeCounts)}]e[${part(edgeCounts)}]`;
+}
+
+/**
+ * 一次运行属于哪个任务族。**纯函数**，只读 `scope` 与规划图。
+ *
+ * `degenerate: true` 表示 anchor 落到了 `taskRunId`（这条 run 既不在协作组里、
+ * 也没有 delegation）。这种族只有这一次运行，**结构上不可能收敛** ——
+ * 报告必须把它单独计数，否则"分母在涨"会是个假象。
+ */
+export function planExecTaskFamily({ groupId = '', delegationId = '', taskRunId = '', plan = null } = {}) {
+  const group = text(groupId, 200);
+  const delegation = text(delegationId, 200);
+  const run = text(taskRunId, 200);
+  const anchor = group || delegation || run;
+  const anchorKind = group ? 'group' : delegation ? 'delegation' : run ? 'task_run' : 'none';
+  // 没有规划图时形状是空串：族 id 仍然可用（anchor 部分），但**不能**声称
+  // "形状相同所以同类"。把形状留空比给一个 `n[]e[]` 的假形状诚实。
+  const shape = plan && Array.isArray(plan.nodes) ? planExecFamilyShape(plan) : '';
+  return {
+    version: RDMD_TASK_FAMILY_VERSION,
+    anchor,
+    anchorKind,
+    shape,
+    id: anchor ? `${anchor}::${shape || '-'}` : '',
+    degenerate: anchorKind === 'task_run' || anchorKind === 'none',
+  };
+}
+
+/**
+ * 影子度量的**闸门**：能不能从 `shadow` 升到 `apply`。**纯函数，fail-closed**。
+ *
+ * 三条都要满足，缺一条就给出原因（不是静默停在 shadow）：
+ *   1. 有度量；
+ *   2. 已观察提案数 ≥ `SHADOW_MIN_OBSERVATIONS`；
+ *   3. 一致率 ≥ `SHADOW_MIN_AGREEMENT_RATE`。
+ *
+ * 注意 `sampleSufficient` 用的是 `observed`（不是 `proposals`）—— 报告脚本、
+ * 这里的判据、`summarizeShadowAgreement` 三处必须同一个分母，所以这里不重算，
+ * 而是直接读它给出的字段。分母口径只有一个来源。
+ */
+export function shadowApplyGate({
+  agreement = null,
+  minObservations = SHADOW_MIN_OBSERVATIONS,
+  minAgreementRate = SHADOW_MIN_AGREEMENT_RATE,
+} = {}) {
+  const reasons = [];
+  if (!agreement || typeof agreement !== 'object') {
+    reasons.push('no_metric');
+  } else {
+    const observed = Number(agreement.observed || 0);
+    if (!(observed >= minObservations)) reasons.push('sample_insufficient');
+    if (agreement.agreementRate === null || agreement.agreementRate === undefined) reasons.push('no_observed');
+    else if (!(Number(agreement.agreementRate) >= minAgreementRate)) reasons.push('agreement_below_threshold');
+  }
+  return {
+    met: reasons.length === 0,
+    reasons,
+    observed: Number(agreement?.observed || 0),
+    agreementRate: agreement?.agreementRate ?? null,
+    minObservations,
+    minAgreementRate,
+  };
+}
+
+/**
+ * `apply` 阶段唯一允许写出去的东西：**下一轮规划的先验**。
+ *
+ * 三条硬约束，全部在代码里而不是注释里：
+ *   1. **只处理 `minimal_plan_edit`**。`similar_swap`（换人）是方案二的事，这里 no-op；
+ *      其余 action（`record_only`）也 no-op。
+ *   2. **只写规划侧**。产物是一行 `RDMD_PLAN_PRIOR_EVENT` 事件，键是任务族；
+ *      这个函数**不可能**改执行图 —— 它不引入任何写图的方法，也不调用
+ *      `applyPlanEdit`（契约里那个纯函数改的是"图对象"，一旦被调用就说明有一条路
+ *      在内存里改图，那正是要避免的形状）。
+ *   3. **`target` 没给全就 no-op**。一个只说了"改哪个节点"却没说"改成什么"的提案
+ *      去执行就是瞎改，所以宁可不写，并把原因记下来。
+ */
+export function planPriorFromRecord(record = {}) {
+  const action = String(record?.decision?.action || '');
+  if (action !== 'minimal_plan_edit') {
+    return { eligible: false, reason: action ? `action_${action}` : 'action_missing', op: '', edit: null };
+  }
+  const proposal = record?.shadow?.proposal || null;
+  if (!proposal) return { eligible: false, reason: 'no_proposal', op: '', edit: null };
+  const op = String(proposal.op || '');
+  const nodeId = String(proposal.nodeId || '');
+  const edgeId = String(proposal.edgeId || '');
+  const fields = Array.isArray(proposal.fields) ? proposal.fields : [];
+  const target = proposal.target && typeof proposal.target === 'object' ? proposal.target : {};
+  const incomplete = 'target_incomplete';
+  if (op === 'align_node') {
+    if (!nodeId || !fields.length) return { eligible: false, reason: incomplete, op, edit: null };
+    // 每一个要改的字段都必须有目标值。少一个就整条 no-op（不是"改能改的那几个"）。
+    const missing = fields.filter((field) => target[field] === undefined);
+    if (missing.length) return { eligible: false, reason: incomplete, op, edit: null, missing };
+    return { eligible: true, reason: '', op, edit: { op, nodeId, fields: [...fields], target: { ...target } } };
+  }
+  if (op === 'add_node' || op === 'drop_node') {
+    if (!nodeId) return { eligible: false, reason: incomplete, op, edit: null };
+    return { eligible: true, reason: '', op, edit: { op, nodeId } };
+  }
+  if (op === 'add_edge' || op === 'drop_edge') {
+    if (!edgeId) return { eligible: false, reason: incomplete, op, edit: null };
+    return { eligible: true, reason: '', op, edit: { op, edgeId } };
+  }
+  return { eligible: false, reason: op ? 'unsupported_op' : 'op_missing', op, edit: null };
+}
+
+// 规划先验的 id = **任务族 + 写它的那条 run**。
+//
+// 为什么带 `taskRunId` 而不是一族一行：`recordTaskEvent` 把事件 id 绑在一条 run 上
+// （同 id 换 run 会抛 `Task event identity conflict`，这是 store 的既有不变量）。
+// 硬做成"一族一行"只有两条路，两条都不能走：改写上一条 run 的行（等于伪造它写下的时间
+// 与内容），或者后来的先验直接丢弃。所以一族**多条**是有意的 —— 它本来就是一条时间线。
+//
+// 消费者（下一轮同类任务在规划时）按族查询、取最新的一条，而不是按 id 取唯一一条。
+export function planExecPlanPriorEventId(taskFamilyId = '', taskRunId = '') {
+  return `rdmd_plan_prior:${String(taskFamilyId || '').trim()}:${String(taskRunId || '').trim()}`;
+}
 
 // 诊断记录恒定使用的事件 id。`notifyTaskUpdated` 在终态上会被调用多次
 // （任何后续事件都会再报一次同一个 status），带 id 的 recordTaskEvent 是 upsert 语义，
@@ -364,7 +597,7 @@ export function rdmdInferenceArgs({ script = '', casePath = '', outputPath = '',
   args.push('--device', String(device || 'cuda:0'));
   return args;
 }
-﻿
+
 /**
  * 跑一条 case。**永远 resolve，永远不抛**。
  *
@@ -408,7 +641,7 @@ export async function runRdmdInference({ case: caseValue = {}, config = {}, spaw
     }
   }
 }
-﻿
+
 /**
  * 读并校验 predict.py 的那一行输出。
  *
@@ -584,7 +817,7 @@ function spawnWithTimeout(spawnImpl, command, args, { cwd = '', timeoutMs = 0, e
     });
   });
 }
-﻿
+
 // ---------------------------------------------------------------------------
 // 诊断记录（纯函数）
 // ---------------------------------------------------------------------------
@@ -609,17 +842,24 @@ export function truthQualification(taskStatus = '') {
  */
 export function planExecDriftRecord({
   read = null, taskRunId = '', taskStatus = '', model = null, config = null,
-  threshold = RDMD_PROXIMITY_DEFAULTS.threshold, now = '', applyEnabled = false,
+  threshold = RDMD_PROXIMITY_DEFAULTS.threshold, now = '', applyEnabled = false, applyGate = null,
 } = {}) {
   const scope = read?.scope || {};
-  // 动作侧的能力位 → phase。**只能在这里推导**，不接受调用方传 phase：
-  // 那样就存在一条"传 'apply' 进来"的路，而 apply 必须不可达（见 RDMD_ACTION_PHASES）。
-  const phase = resolveDriftPhase({ applyEnabled });
+  // 动作侧的**能力位 + 度量门** → phase。**只能在这里推导**，不接受调用方传 phase：
+  // 那样就存在一条"传 'apply' 进来"的路，而 apply 必须由 `shadowApplyGate` 才能打开。
+  // 注意 `applyGate` 缺省时 `resolveDriftPhase` 停在 shadow —— 少传参数不会变成改图。
+  const phase = resolveDriftPhase({ applyEnabled, applyGate });
+  // 任务族：一次运行属于哪一类任务。落在记录顶层（`taskFamilyId`）便于按族查询/分区，
+  // 完整定义放在 `taskFamily` 里，"这个 id 是怎么算出来的"不需要去读代码。
+  const taskFamily = planExecTaskFamily({
+    groupId: scope.groupId, delegationId: scope.delegationId,
+    taskRunId: String(taskRunId || scope.taskRunId || ''), plan: read?.plan || null,
+  });
   const record = {
     version: RDMD_PLAN_EXEC_RECORD_VERSION,
     generatedAt: now || new Date().toISOString(),
-    // `record_only`（能力位关）/ `shadow`（能力位开）。两者都**不改图**；
-    // 区别是影子会把"本来想改哪一处"和"现实后来做了什么"记下来。
+    // `record_only`（能力位关）/ `shadow`（能力位开、度量门不满足）/ `apply`（两道门都过）。
+    // 前两者都**不改图**；区别是影子会把"本来想改哪一处"和"现实后来做了什么"记下来。
     phase,
     taskRunId: String(taskRunId || scope.taskRunId || ''),
     graphId: String(scope.graphId || ''),
@@ -627,6 +867,18 @@ export function planExecDriftRecord({
     groupId: String(scope.groupId || ''),
     delegationId: String(scope.delegationId || ''),
     taskRunIds: (Array.isArray(scope.taskRunIds) ? scope.taskRunIds : []).map((item) => String(item)).slice(0, 32),
+    taskFamilyId: taskFamily.id,
+    taskFamily,
+    // 升到 apply 的判据，与 phase 同源落库：只看 `phase: 'apply'` 无法回答
+    // "它是靠什么数升上去的"。度量门没算时这里是 null，也是事实。
+    applyGate: applyGate && typeof applyGate === 'object' ? {
+      met: applyGate.met === true,
+      reasons: (applyGate.reasons || []).map((item) => String(item)).slice(0, 8),
+      observed: Number(applyGate.observed || 0),
+      agreementRate: applyGate.agreementRate ?? null,
+      minObservations: Number(applyGate.minObservations || 0),
+      minAgreementRate: applyGate.minAgreementRate ?? null,
+    } : null,
     truth: truthQualification(taskStatus),
   };
   if (!read) {
@@ -640,7 +892,9 @@ export function planExecDriftRecord({
       decision: { action: 'record_only', reason: 'no_graph' },
       // 影子阶段也要如实记一行"这里没东西可提"，否则"提案数"会被读成"评估数"。
       // proposal 为 null 而不是空提案：没有图就没有"最小的一处改动"这回事。
-      ...(phase === 'shadow' ? { shadow: { executable: false, proposal: null, followUp: null, reason: 'no_graph' } } : {}),
+      ...(phase !== 'record_only' ? { shadow: { executable: false, proposal: null, followUp: null, reason: 'no_graph' } } : {}),
+      // `apply` 阶段没图 → 不写先验。原因写清楚，别让 `apply` + 无产物看起来像漏了。
+      ...(phase === 'apply' ? { apply: { applied: false, reason: 'no_graph', priorEventId: '', edit: null } } : {}),
     };
   }
   const proximity = planExecProximity(read.plan, read.exec, { threshold });
@@ -653,6 +907,12 @@ export function planExecDriftRecord({
   // 并存的事实，把后者盖到前者身上只会让人以为配了就能跑。契约问题体现在
   // `decision.reason` 与 `gaps` 上。
   const modelOutcome = model && typeof model === 'object' ? model : { invoked: false, reason: 'model_not_configured' };
+  const decision = resolveDecision({ model: modelOutcome, guardFailed });
+  // 提案与"能不能落先验"在这里算**一次**，供下面三个分支共用：
+  // 记录里的 `shadow.proposal`、`apply.eligibility`、以及服务里真正写先验时读的是同一份。
+  // 算两次会让"记录说可落、写的时候又判成不可落"这种自相矛盾变成可能。
+  const proposal = phase !== 'record_only' ? shadowProposal(candidate, { taskFamily }) : null;
+  const eligibility = planPriorFromRecord({ decision, shadow: { proposal } });
   return {
     ...record,
     status: guardFailed ? 'contract_gap' : 'evaluated',
@@ -699,9 +959,10 @@ export function planExecDriftRecord({
       evidenceNodeIds: modelOutcome.verdict?.evidenceNodeIds || [],
       warnings: (modelOutcome.warnings || []).slice(0, 8),
     },
-    decision: resolveDecision({ model: modelOutcome, guardFailed }),
-    ...(phase === 'shadow' ? {
-      // 影子：**记下本来想改的那一处，但不改**。
+    decision,
+    ...(phase !== 'record_only' ? {
+      // 影子：**记下本来想改的那一处，但不改**。`apply` 阶段也保留这一块 ——
+      // 它是"这次本来想改什么"的唯一出处，而 apply 的产物（下一轮先验）正是从这里来的。
       //
       // 为什么提案只取 `candidate`（JS 度量）而不取模型判定：P5 要度量的是
       // "度量给出的最小改动能不能预测现实"。模型给的 `type`/`nodeId` 是归因
@@ -709,7 +970,7 @@ export function planExecDriftRecord({
       // 模型判定在 `model` 字段里有独立出处，两者不混。
       shadow: {
         executable: false,
-        proposal: shadowProposal(candidate),
+        proposal,
         // 写这条记录的时刻，后续还没发生，所以恒为 null。
         // 后续由**下一次**同图评估写成 `rdmd_plan_exec_drift_followup` 事件
         // （见服务里的 recordShadowFollowUps），不去改写这条记录。
@@ -717,9 +978,24 @@ export function planExecDriftRecord({
         reason: '',
       },
     } : {}),
+    // `apply` 阶段：**这一版里 `applied` 永远是 `false`**，因为服务在写库前会用真实结果
+    // 覆盖它。留一个 `reason: 'pending'` 在这里，是为了让"纯函数产出的记录"也自洽：
+    // 没被服务处理过的记录不该看起来像"已经改过用户的规划了"。
+    ...(phase === 'apply' ? {
+      apply: {
+        applied: false,
+        reason: 'pending',
+        priorEventId: '',
+        eligibility,
+        edit: eligibility.eligible ? eligibility.edit : null,
+        // 契约里那个纯函数 `applyPlanEdit`（改图对象）**一次都没被调用**，这是字形断言：
+        // 这里只产出"要写一行什么事件"的描述，路径上不存在改图的代码。
+        graphMutated: false,
+      },
+    } : {}),
   };
 }
-﻿
+
 /**
  * 路由。三种证据强度，三条出口：
  *   - 有可用模型判定 → `routeEvolution` 的输出（`minimal_plan_edit` / `similar_swap` / `record_only`）；
@@ -782,9 +1058,53 @@ export function createPlanExecDriftService({
   };
 
   /**
+   * 把当前图里的**提案事件**与**后续事件**读出来，算一次影子一致性度量。
+   *
+   * 读取范围说明（P3 的口径澄清，也是 `denominatorNote` 的由来）：只能覆盖
+   * `read.scope.taskRunIds`，即**当前这一张图**里的 run。这不是偷懒 ——
+   * `observeShadowFollowUp` 判的是"提案说的那个 nodeId 有没有变成 target 的样子"，
+   * 而 nodeId 是**图内**标识：跨图比较节点 id 没有意义（两张图各有一套 id）。
+   * 所以"下一轮同类任务是否采纳"这件事，在**有跨图节点标识**之前无法被诚实地度量。
+   *
+   * 这也正是要落 `taskFamilyId` 的原因：分区先建起来，等身份问题解决后
+   * 就能直接按族汇总，而不必回填历史。
+   */
+  const readShadowAgreement = ({ read } = {}) => {
+    if (!read || !store?.listTaskEvents) return null;
+    const proposals = [];
+    const followUps = [];
+    for (const runId of read.scope?.taskRunIds || []) {
+      for (const event of store.listTaskEvents(runId) || []) {
+        const payload = event.payload || {};
+        if (event.eventType === 'rdmd_plan_exec_drift' && payload.shadow?.proposal) {
+          proposals.push({
+            eventId: String(event.eventId || event.id || ''),
+            taskRunId: String(runId),
+            graphRevision: Number(payload.graphRevision || 0),
+            // 提案自带族（见 shadowProposal）；老记录没有这个字段，回落到记录顶层的
+            // `taskFamily`，再没有就是"未知族"—— 未知族不计入 `families`，
+            // 但提案本身仍进分母口径的分子/分母（`observed` 是图的属性，不是族的）。
+            taskFamily: payload.shadow.proposal.taskFamily || payload.taskFamily || null,
+            op: String(payload.shadow.proposal.op || ''),
+          });
+        }
+        if (event.eventType === RDMD_SHADOW_FOLLOWUP_EVENT) {
+          followUps.push({ proposalRef: payload.proposalRef || null, outcome: payload.outcome || '', toRevision: Number(payload.toRevision || 0) });
+        }
+      }
+    }
+    return { ...summarizeShadowAgreement({ proposals, followUps }), proposals: proposals.length };
+  };
+
+  /**
    * 观察历史提案的现实结局，落成 follow-up 事件。
    *
-   * 只在影子阶段跑：能力位关着时连读都不读，`record_only` 路径的开销与今天完全一致。
+   * 只在动作侧开着时跑（`shadow` / `apply` 都算）：能力位关着时连读都不读，
+   * `record_only` 路径的开销与今天完全一致。
+   *
+   * **`apply` 阶段也必须继续观察** —— 这是 P3 修掉的一个真 bug：此前判据是
+   * `phase === 'shadow'`，于是一旦升到 `apply`，后续观察就停了，度量被冻在
+   * 升级那一刻的数字上。而 apply 恰恰是最需要继续盯着的时候。
    *
    * 三条自律，都是为了让这个度量**不会被读成比实际更强**：
    *   1. 只观察**更晚的** revision（`revision > proposalRevision`）。同一版图上说
@@ -862,12 +1182,66 @@ export function createPlanExecDriftService({
     const model = blockedReason
       ? { invoked: false, ok: false, reason: blockedReason }
       : await runRdmdInference({ case: read.case, config, spawnImpl });
-    // 能力位判定要传进**纯函数**，而不是先算出来再贴到记录上：记录里的 `phase` 与
-    // 有没有影子块必须同源，否则会出现"phase=shadow 却没有提案"这种自相矛盾的行。
+    // 度量门在**评估时**算，而且只在动作侧开着时才算（关着时连读都不读）。
+    // 门不满足时 `resolveDriftPhase` 停在 `shadow` —— 少算一次度量不会变成 apply。
+    const applyEnabled = applyEnabledFor(task);
+    const agreement = applyEnabled ? readShadowAgreement({ read }) : null;
+    const applyGate = applyEnabled ? shadowApplyGate({ agreement }) : null;
+    // 能力位与度量门要传进**纯函数**，而不是先算出来再贴到记录上：记录里的 `phase`、
+    // 有没有影子块、apply 的判据必须同源，否则会出现"phase=apply 却没有门"这种自相矛盾的行。
     return planExecDriftRecord({
       read, taskRunId, taskStatus: String(task.status || ''),
-      model, config, now: now(), applyEnabled: applyEnabledFor(task),
+      model, config, now: now(), applyEnabled, applyGate,
     });
+  };
+
+  /**
+   * apply 阶段**唯一**的写消费者：把提案落成"下一轮规划的先验"。
+   *
+   * 它写什么、不写什么是这个阶段的核心约束（详见 `planPriorFromRecord`）：
+   *   - 只处理 `minimal_plan_edit`（`similar_swap` 是方案二的事，no-op）；
+   *   - 只写一行 `RDMD_PLAN_PRIOR_EVENT` 事件，**不碰任何图**；
+   *   - `target` 没给全就 no-op，并把原因记进记录。
+   *
+   * 事件 id 是**任务族 + 写它的那条 run**（见 `planExecPlanPriorEventId`）：一族多条是有意的
+   * —— 先验本来就是一条时间线。读者（下一个同类任务的规划轮）按族查询、取**最新**一条，
+   * 因为那时它自己的 run id 还不存在，按 id 取唯一一条是取不到的。
+   */
+  const writePlanPrior = (record = {}) => {
+    const eligibility = record?.apply?.eligibility || planPriorFromRecord(record);
+    if (!eligibility.eligible || !eligibility.edit) {
+      return { applied: false, reason: eligibility.reason || 'not_eligible', priorEventId: '', edit: null };
+    }
+    const familyId = String(record.taskFamilyId || '');
+    if (!familyId) return { applied: false, reason: 'no_task_family', priorEventId: '', edit: null };
+    const eventId = planExecPlanPriorEventId(familyId, record.taskRunId);
+    try {
+      store.recordTaskEvent({
+        eventId,
+        taskRunId: record.taskRunId,
+        eventType: RDMD_PLAN_PRIOR_EVENT,
+        actorId: 'reverse_detective',
+        summary: `rdmd plan prior: ${eligibility.op} ${eligibility.edit.nodeId || eligibility.edit.edgeId || ''}`,
+        payload: {
+          version: RDMD_PLAN_EXEC_RECORD_VERSION,
+          recordedAt: now(),
+          taskFamilyId: familyId,
+          taskFamily: record.taskFamily || null,
+          sourceTaskRunId: String(record.taskRunId || ''),
+          sourceGraphRevision: Number(record.graphRevision || 0),
+          // 判据随产物一起落库：读这条先验的人应该能看见"它是凭什么被写下来的"。
+          gate: record.applyGate || null,
+          edit: eligibility.edit,
+          op: eligibility.op,
+          // 字面断言：这条先验**没有**改过任何图。写它的函数在代码里也不具备改图的能力。
+          graphMutated: false,
+        },
+      });
+    } catch (error) {
+      logger?.warn('rdmd-plan-prior-write-failed', { error, data: { taskRunId: record.taskRunId } });
+      return { applied: false, reason: 'write_failed', priorEventId: '', edit: eligibility.edit };
+    }
+    return { applied: true, reason: '', priorEventId: eventId, edit: eligibility.edit };
   };
 
   const persist = (record = {}) => {
@@ -908,12 +1282,21 @@ export function createPlanExecDriftService({
         // 没有协作图 = 这个 run 根本没进过 uBuddy 的图（普通任务）。
         // 为它落一行 no_graph 只会把真正有图的诊断淹掉。
         if (record.status === 'no_graph') return record;
+        // apply 的写入放在 persist **之前**：这样落库的那条记录里的 `apply` 说的是
+        // **事实**（到底有没有写出先验、写成了什么 id），而不是一个事后补写的猜测。
+        // 这也是 `planExecDriftRecord` 里把 `applied` 先写成 false + `reason:'pending'` 的原因。
+        if (record.phase === 'apply') {
+          record.apply = { ...(record.apply || {}), ...writePlanPrior(record) };
+        }
         persist(record);
         // 影子后续在**落完本次记录之后**观察历史提案的结局。放在这里而不是 evaluate 里，
         // 是因为它是动作侧的事：诊断（record_only）路径不该因为"没人开动作位"而多读一次库。
         // 本次刚写的记录不会被自己观察到 —— 它的 revision 等于当前 revision，
         // 被 `revision <= proposalRevision` 挡住（见 recordShadowFollowUps 自律 1）。
-        if (record.phase === 'shadow') {
+        //
+        // `apply` 阶段**同样要观察**：一旦升到 apply 就停掉观察，等于把度量冻在升级那一刻，
+        // 而升级之后恰恰是最需要继续盯着的时期（此前这里判的是 `=== 'shadow'`）。
+        if (record.phase !== 'record_only') {
           const read = store.readPlanExecGraphs({
             taskRunId: record.taskRunId, viewerUserId: String(task?.ownerUserId || ''), skipAuthorization: true,
           });

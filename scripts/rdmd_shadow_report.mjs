@@ -65,6 +65,10 @@ export function buildShadowReport(db, { dbPath = '', now = () => new Date().toIS
       fields: Array.isArray(proposal.fields) ? proposal.fields : [],
       target: proposal.target && typeof proposal.target === 'object' ? proposal.target : {},
       score: proposal.score ?? null,
+      // 任务族随提案一起读出来（P3）。老记录可能只有顶层 `taskFamily`，再没有就是 null
+      // —— null **不计入** `families`，但提案本身照常进分母口径：
+      // `observed` 是图的属性，不是族的属性，两件事不能互相顶替。
+      taskFamily: proposal.taskFamily || payload?.taskFamily || null,
     };
     proposals.push(record);
     if (record.op) opByProposal.set(sourceEventId, record.op);
@@ -85,7 +89,7 @@ export function buildShadowReport(db, { dbPath = '', now = () => new Date().toIS
   const ops = [...new Set(proposals.map((item) => item.op).filter(Boolean))].sort();
   const ofOp = (list, op) => list.filter((item) => item.op === op);
   const summarize = (list, followUpsOfOp) => summarizeShadowAgreement({
-    proposals: list.map((item) => ({ eventId: item.sourceEventId })),
+    proposals: list.map((item) => ({ eventId: item.sourceEventId, taskFamily: item.taskFamily })),
     followUps: followUpsOfOp,
   });
 
@@ -105,6 +109,15 @@ export function buildShadowReport(db, { dbPath = '', now = () => new Date().toIS
     remaining: Object.fromEntries(ops.map((op) => [
       op, Math.max(0, Number(overall.minObservations || 0) - Number(byOp[op].observed || 0)),
     ])),
+    // 任务族分区（P3）：先建起来，等"跨图节点身份"解决后就能按族汇总而不必回填历史。
+    // `degenerateFamilyProposals` 是 anchor 落到单条 run 上的提案数 —— 它们**结构上**
+    // 不可能收敛，报告必须把它们单独说出来，否则"提案数在涨"会被读成"样本在积累"。
+    families: overall.families,
+    familyIds: overall.familyIds,
+    degenerateFamilyProposals: overall.degenerateFamilyProposals,
+    // 分母口径随报告一起给出，让读的人（和测试）不必去猜它用的是哪个数。
+    denominator: overall.denominator,
+    denominatorNote: overall.denominatorNote,
   };
 }
 
@@ -120,6 +133,10 @@ export function renderShadowReport(report) {
     `生成时间 ${report.generatedAt}`,
     '',
     `影子提案 ${report.shadowProposals} 条，后续观察 ${report.shadowFollowUps} 条。`,
+    // 分母说在表格**之前**：读错分母是这类度量最贵的错，而"12 条提案、1 条命中"配上
+    // 一个没写清的分母，可以读成 8% 也可以读成 100%。
+    `一致率的分母是**已观察**（observed=${report.overall.observed}），不是提案数：`,
+    '  未观察到后续（图不再变，产品里是常态）既不算同意也不算反对。',
   ];
   if (!report.capabilityObserved) {
     lines.push('', '没有任何影子提案 —— 能力位 `ubuddy_plan_exec_drift_apply` 还没开过，',
@@ -127,7 +144,14 @@ export function renderShadowReport(report) {
   }
   lines.push('', 'op                  提案  已观察  未观察  命中   一致率  样本够', line('(全部)', report.overall));
   for (const op of ops) lines.push(line(op, report.byOp[op]));
-  lines.push('', `开真动作的判据：**每一类 op** 的「样本够」都要是「是」（各需 ${report.overall.minObservations} 条已观察）。`);
+  // 族分区：`families` 是族数，`degenerate` 是"anchor 落到单条 run"的提案数。
+  lines.push('', `任务族：${report.families} 个族；其中**结构上无法收敛**的提案（anchor 只有单条 run）`
+    + ` ${report.degenerateFamilyProposals} 条。`);
+  lines.push('  说明：今天的后续观察只能在**同一张协作图**里做 —— `nodeId` 是图内标识，',
+    '  跨图比较节点 id 没有意义。所以"下一个**同类任务**是否采纳"这件事，',
+    '  在拿到跨图节点身份之前无法被诚实度量；族先记下来是为了那时不必回填历史。');
+  lines.push('', `开真动作的判据（**两道门**，缺一不可）：能力位开着，且 \`shadowApplyGate\` 通过 ——`,
+    `每一类 op 已观察 ≥ ${report.overall.minObservations} 条，且一致率 ≥ 阈值。`);
   const pending = Object.entries(report.remaining).filter(([, need]) => need > 0);
   if (pending.length) {
     lines.push('还差：');
@@ -137,8 +161,9 @@ export function renderShadowReport(report) {
   } else if (ops.length) {
     lines.push('各类 op 的样本量都够了 —— 现在可以**开始看**一致率，注意这仍然不是自动开动作。');
   }
-  lines.push('', '注意：本脚本只读；它不会、也不该打开真动作。开动作要改的是 RDMD_ACTION_PHASES，',
-    '那是一次显式的代码改动加一次显式的复审，不是这里的一个开关。');
+  lines.push('', '注意：本脚本只读；它不会、也不该打开真动作。升到 apply 由 `resolveDriftPhase`',
+    '在**能力位 + 度量门**同时满足时决定（见 RDMD_ACTION_PHASES），这是一次显式的代码改动',
+    '加一次显式的复审，不是这里的一个开关。');
   return lines.join('\n');
 }
 
