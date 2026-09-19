@@ -1,0 +1,25 @@
+{
+  "schema": "cpdb_org_world_v1",
+  "seed": 20260912,
+  "generatedAt": "2026-09-12T00:00:00.000Z",
+  "counts": {
+    "orgs": 2,
+    "people": 4,
+    "agents": 20,
+    "ubuddyProfiles": 4,
+    "agentProfiles": 20,
+    "pairs": 131,
+    "cards": 131
+  },
+  "pairKinds": {
+    "within_owner_directed": 80,
+    "cross_owner_similar": 19,
+    "cross_owner_complement": 12,
+    "hard_negative": 20
+  },
+  "splits": {
+    "train": 131,
+    "development": 0,
+    "test": 0
+  }
+}

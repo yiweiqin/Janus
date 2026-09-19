@@ -1,0 +1,40 @@
+{
+  "schema": "cpdb_org_world_v1",
+  "seed": 20260912,
+  "smoke": true,
+  "generatedAt": "2026-09-12T00:00:00.000Z",
+  "counts": {
+    "orgs": 2,
+    "people": 4,
+    "agents": 20,
+    "ubuddyProfiles": 4,
+    "agentProfiles": 20,
+    "pairs": 131,
+    "cards": 131
+  },
+  "families": {
+    "research": 6,
+    "writing": 5,
+    "ppt": 1,
+    "review": 2,
+    "data": 2,
+    "code": 4
+  },
+  "pairKinds": {
+    "within_owner_directed": 80,
+    "cross_owner_similar": 19,
+    "cross_owner_complement": 12,
+    "hard_negative": 20
+  },
+  "twinPairs": 27,
+  "splits": {
+    "train": 131,
+    "development": 0,
+    "test": 0
+  },
+  "notes": [
+    "依赖分与相似度分开保存，没有合成总分。",
+    "uBuddy 初始画像由其手下 5 个 Agent 的 Skill / 标签聚合。",
+    "pairs.jsonl 含 teacher 初始化分数；annotation_cards.jsonl 供人工改标。"
+  ]
+}

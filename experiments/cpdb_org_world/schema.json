@@ -1,0 +1,26 @@
+{
+  "name": "cpdb_org_world_v1",
+  "version": "cpdb_org_world_v1",
+  "description": "能力画像依赖集束的组织世界：人、uBuddy、每人 5 个 specialist、初始画像、初始依赖分与相似度。",
+  "personCount": 120,
+  "agentsPerPerson": 5,
+  "orgCount": 12,
+  "peoplePerOrg": 10,
+  "pairKinds": [
+    "within_owner_directed",
+    "cross_owner_similar",
+    "cross_owner_complement",
+    "facet_twin",
+    "hard_negative"
+  ],
+  "scoreFields": ["initDependency", "initSimilarity"],
+  "humanFields": ["humanDependency", "humanSimilarity", "annotatorId", "rationale"],
+  "forbidden": {
+    "combinedScore": true,
+    "useSimilarityForPlanning": true,
+    "useDependencyForReplacement": true
+  },
+  "scoreScale": [0, 0.25, 0.5, 0.75, 1],
+  "splitRatio": { "train": 0.8, "development": 0.1, "test": 0.1 },
+  "splitBy": "orgId"
+}

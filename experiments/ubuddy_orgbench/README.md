@@ -24,9 +24,11 @@ The runner creates an isolated evolution namespace for every method/seed, runs E
 
 ## 运行
 
-在 `D:/Cli-anything/Janus`：
+在远程 Ubuntu 的 Janus 仓库根目录：
 
-```powershell
+```bash
+bash experiments/ubuddy_orgbench/appworld_setup_remote.sh
+source .orgbench_env
 npm run experiment:ubuddy:orgbench:doctor
 npm run experiment:ubuddy:orgbench:prepare
 npm run experiment:ubuddy:orgbench:canary
@@ -38,11 +40,11 @@ npm run experiment:ubuddy:orgbench:report -- --run-dir <canary-run-dir>
 
 `--real-appworld` 才会启动官方 AppWorld 环境、让内部 Agent 执行真实 `apis.*` 代码并调用官方 evaluator；必须先用 1 个任务、1 个 seed 验证，再扩大 pilot。可用环境变量控制预算：
 
-```powershell
-$env:UBUDDY_ORGBENCH_MAX_FIRST_LEVEL_TASKS = '5'
-$env:UBUDDY_ORGBENCH_MAX_LEAVES_PER_UBUDDY = '4'
-$env:UBUDDY_ORGBENCH_MAX_STEPS_PER_AGENT = '3'
-$env:UBUDDY_ORGBENCH_MODEL_RETRIES = '3'
+```bash
+export UBUDDY_ORGBENCH_MAX_FIRST_LEVEL_TASKS=5
+export UBUDDY_ORGBENCH_MAX_LEAVES_PER_UBUDDY=4
+export UBUDDY_ORGBENCH_MAX_STEPS_PER_AGENT=3
+export UBUDDY_ORGBENCH_MODEL_RETRIES=3
 npm run experiment:ubuddy:orgbench:pilot -- --real-appworld --task-count 1
 ```
 
@@ -62,8 +64,10 @@ requester uBuddy → recipient uBuddy → recipient 的内部 Agent
 
 ## 外部 benchmark
 
-- TheAgentCompany：主真实工作场景，适配器已准备；仓库未下载时 doctor 会明确标记 deferred。
-- AppWorld：可控执行和官方 evaluator，复用 `experiments/ubuddy_appworld` 的任务 manifest。
-- MARBLE：组织和动态 planner 参考，不把其 LLM judge 分数当成核心真值。
-- Who&When：归因参考。
+- AppWorld：唯一主 benchmark，官方题目、初始状态和 evaluator 负责结果真值；bridge、任务 manifest 和远程安装脚本均已收进本目录。
+- TheAgentCompany：只做外部场景有效性验证，不作为主表的替代评分器。
+- MARBLE：可选组织参考，不阻塞 AppWorld 主实验，也不把其 LLM judge 分数当成核心真值。
+- Who&When：可选归因参考，不阻塞主实验。
 - SWE-bench Verified：第二阶段代码外部验证。
+
+旧的独立 AppWorld v1 和 WebArena/WorkArena benchmark 已移动到 `experiments/archive/`，只用于历史追溯，不再作为正式入口。

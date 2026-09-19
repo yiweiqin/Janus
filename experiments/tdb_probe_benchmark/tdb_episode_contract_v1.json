@@ -1,0 +1,8 @@
+{
+  "version": "tdb-episode-contract-v1",
+  "required": ["taskFamilyId", "taskInstanceId", "episodeId", "agentPair", "conversation", "toolTrace", "eventTrace", "gPlan", "gExec", "tdbPlan", "tdbActiveTrace", "tdbExec", "receiverScope", "decisionQuery", "privacyPolicy", "hardContract", "labelMask"],
+  "forbiddenInputKeys": ["hidden_state", "fault_type", "ground_truth", "oracle_action", "post_action_utility", "test_outcome", "taskFamilyId", "private_prompt", "private_memory", "password", "token"],
+  "dependencyDimensions": ["data", "logic", "quality", "freshness", "review", "capability", "resource", "risk", "downstreamImpact", "uncertainty"],
+  "proposalStatuses": ["PROPOSED", "UNKNOWN", "CONFLICT"],
+  "evolutionCauses": ["node", "edge", "handoff", "version", "resource", "disclosure", "organization"]
+}

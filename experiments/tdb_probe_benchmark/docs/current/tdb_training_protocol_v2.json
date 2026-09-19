@@ -1,0 +1,136 @@
+{
+  "version": "tdb-training-protocol-v3",
+  "objects": [
+    "state_posterior",
+    "bundle_interaction",
+    "counterfactual_uplift",
+    "decision_sufficient_projection"
+  ],
+  "llm_role": [
+    "semantic_encoder",
+    "structured_hypothesis_generator",
+    "candidate_disclosure_ranker"
+  ],
+  "llm_forbidden": [
+    "final_evaluator",
+    "permission_decider",
+    "unique_root_cause_certifier",
+    "final_action_executor"
+  ],
+  "forbidden_features": [
+    "condition",
+    "fault_type",
+    "hidden_state",
+    "ground_truth",
+    "oracle_action",
+    "test_outcome",
+    "password",
+    "token",
+    "private_prompt",
+    "private_memory"
+  ],
+  "splits": {
+    "train": 0.5,
+    "calibration": 0.2,
+    "test": 0.3,
+    "group_key": "taskFamilyId"
+  },
+  "freeze_before_test": [
+    "evaluator",
+    "features",
+    "models",
+    "weights",
+    "thresholds",
+    "privacy_policy",
+    "hard_contract"
+  ],
+  "hard_gates": {
+    "json_valid_rate": 0.99,
+    "hard_constraint_violation_rate": 0,
+    "family_leakage": 0,
+    "replay_reset_failures": 0,
+    "privacy_leakage": 0,
+    "paired_noop_completeness": 1.0
+  },
+  "labels": {
+    "state": {
+      "source": "independent_event_or_gold",
+      "weak_labels_allowed": true
+    },
+    "uplift": {
+      "formula": "U(action)-U(noop)",
+      "paired_noop_required": true,
+      "na_excluded": true,
+      "infrastructure_invalid_excluded": true
+    },
+    "bundle_interaction": {
+      "source": "independent_paired_combination_evaluator",
+      "formula": "U(AB)-U(A)-U(B)+U(noop)",
+      "required_arms": ["noop", "A", "B", "AB"],
+      "same_initial_snapshot_required": true,
+      "evaluator_version_fixed": true,
+      "unsupported_interaction": "UNKNOWN",
+      "label_mask_required": true
+    },
+    "projection": {
+      "source": "finite_world_reference_and_privacy_contract",
+      "direct_total_score": false
+    }
+  },
+  "policy": {
+    "score": "predicted_gain - z*uncertainty - lambda*cost",
+    "nonpositive_lcb": "noop_or_abstain",
+    "risk_is_constraint": true
+  },
+  "evidence_level": "synthetic_only_until_real_independent_evaluator",
+  "causal_assumptions": [
+    "consistency",
+    "conditional_exchangeability",
+    "positivity",
+    "sutva_no_interference",
+    "replayability"
+  ],
+  "minimum_design": {
+    "total_task_families": 67,
+    "train_calibration_families": 47,
+    "heldout_test_families": 20,
+    "random_seeds": 5,
+    "repeats_per_arm": 3,
+    "family_split": {
+      "train": 0.5,
+      "calibration": 0.2,
+      "test": 0.3
+    },
+    "bootstrap_unit": "taskFamilyId"
+  },
+  "baselines": [
+    "noop",
+    "fixed_heuristic",
+    "cost_aware_action_prior",
+    "oracle_upper_bound",
+    "lightgbm_structured",
+    "catboost_structured",
+    "mlp_structured_embedding",
+    "qwen_structured_json",
+    "full_model",
+    "direct_total_score_negative_control",
+    "no_uncertainty",
+    "no_paired_noop",
+    "no_interaction",
+    "no_embedding",
+    "no_privacy_gate",
+    "no_prior",
+    "label_shuffle",
+    "family_shuffle"
+  ],
+  "statistics": {
+    "confidence_level": 0.95,
+    "paired_test": "family_paired_bootstrap_or_permutation",
+    "multiple_comparison_control": "FDR",
+    "primary_endpoints": [
+      "net_utility",
+      "regret",
+      "negative_transfer_rate"
+    ]
+  }
+}

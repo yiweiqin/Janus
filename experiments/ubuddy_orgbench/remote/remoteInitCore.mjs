@@ -112,8 +112,8 @@ async function upsertCatalog(pool) {
       VALUES($1,$2,$3,$4::jsonb) ON CONFLICT(id) DO UPDATE SET agent_family_id=excluded.agent_family_id,content_hash=excluded.content_hash,payload_json=excluded.payload_json`,
       [versionId, family.id, sha256(JSON.stringify(payload)), JSON.stringify({ ...payload, baseSkillContent: `# ${family.name} baseline\n\nUse only assigned tools and report structured progress.` })]);
     await pool.query(`INSERT INTO cloud_agent_families_v3(id,department_id,name,role,payload_json,status,routable,current_version_id,instance_kind,recruitable,default_for_new_user,quota_cost,classification_version)
-      VALUES($1,'orgbench','${family.name.replaceAll("'", "''")}','agent',$2::jsonb,'active',true,$3,'employee',true,false,1,'orgbench_v1')
-      ON CONFLICT(id) DO UPDATE SET name=excluded.name,payload_json=excluded.payload_json,status='active',routable=true,current_version_id=excluded.current_version_id,instance_kind='employee',recruitable=true,quota_cost=1,classification_version='orgbench_v1'`,
+      VALUES($1,'orgbench','${family.name.replaceAll("'", "''")}','agent',$2::jsonb,'active',true,$3,'employee',true,false,1,'orgbench_v2')
+      ON CONFLICT(id) DO UPDATE SET name=excluded.name,payload_json=excluded.payload_json,status='active',routable=true,current_version_id=excluded.current_version_id,instance_kind='employee',recruitable=true,quota_cost=1,classification_version='orgbench_v2'`,
       [family.id, JSON.stringify(payload), versionId]);
   }
 }
@@ -239,7 +239,7 @@ async function verifyDatabaseState(pool, { agentMap, jwtSecret, requesterId, fet
   const forbiddenSkillActivation = await checkForeignSkillActivationDenied(fetchImpl, apiBaseUrl, requesterGrant, recipientAgentId);
   const visibleProfiles = await checkProfilesVisible(fetchImpl, apiBaseUrl, requesterAccessToken);
   const checks = { users, internalAgents: internal, ubuddies, memories, profiles, visibleRecipientProfiles: visibleProfiles, evolutionGrants: grants, personalWorkspaces: workspaces, uniqueAgentOwners: uniqueOwners, agentMapEntries: Object.keys(agentMap).length, agentMapComplete: mapComplete, requesterAccessTokenSigned: Boolean(signAccessToken({ userId: requesterId, secret: jwtSecret })), requesterCannotReadRecipientPrivateMemory: privateMemoryRows.length > 0 && privateMemoryRows.every((row) => row.visibility === 'agent_private'), requesterCannotActivateRecipientSkill: forbiddenSkillActivation };
-  return { version: 'remote_orgbench_verification_v1', passed: users === 6 && internal === 36 && ubuddies === 6 && memories >= 42 && profiles === 6 && visibleProfiles === 5 && grants === 6 && workspaces === 6 && uniqueOwners === 6 && mapComplete && checks.requesterCannotReadRecipientPrivateMemory && forbiddenSkillActivation, checks, generatedAt: new Date().toISOString() };
+  return { version: 'remote_orgbench_verification_v2', passed: users === 6 && internal === 36 && ubuddies === 6 && memories >= 42 && profiles === 6 && visibleProfiles === 5 && grants === 6 && workspaces === 6 && uniqueOwners === 6 && mapComplete && checks.requesterCannotReadRecipientPrivateMemory && forbiddenSkillActivation, checks, generatedAt: new Date().toISOString() };
 }
 
 async function checkForeignSkillActivationDenied(fetchImpl, apiBaseUrl, requesterGrant, recipientAgentId) {

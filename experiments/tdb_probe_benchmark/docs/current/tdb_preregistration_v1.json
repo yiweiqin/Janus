@@ -1,0 +1,22 @@
+{
+  "version": "tdb-preregistration-v1",
+  "status": "frozen_before_real_test",
+  "research_question": "Does an observable dependency-bundle policy improve cost-aware action selection over a fixed heuristic on unseen task families without increasing unsafe or privacy-violating decisions?",
+  "primary_endpoints": [
+    {"name": "family_mean_net_utility", "unit": "taskFamilyId", "direction": "higher"},
+    {"name": "family_mean_regret", "unit": "taskFamilyId", "direction": "lower"},
+    {"name": "negative_transfer_rate", "unit": "adapt-eval episode", "direction": "lower"}
+  ],
+  "secondary_endpoints": [
+    "task_success", "brier", "ece", "interval_coverage", "unknown_precision",
+    "privacy_leakage", "hard_constraint_violations", "json_valid_rate",
+    "latency", "tokens", "probe_cost", "repair_cost", "disclosure_cost"
+  ],
+  "comparisons": ["full_model_vs_fixed_heuristic", "full_model_vs_noop", "full_model_vs_oracle_upper_bound"],
+  "inference": {"cluster_unit": "taskFamilyId", "paired_test": "sign_permutation", "interval": "percentile_bootstrap_95", "multiple_comparison": "BH_FDR", "alpha": 0.05},
+  "design": {"total_families_min": 67, "heldout_families_min": 20, "random_seeds_min": 5, "repeats_per_arm_min": 3, "split": {"train": 0.5, "calibration": 0.2, "test": 0.3}},
+  "exclusions": ["applicable=false", "infrastructure_invalid", "evaluator_invalid", "reset_mismatch", "replay_invalid", "paired_noop_missing", "family_leakage"],
+  "frozen_before_test": ["evaluator", "feature_schema", "model", "weights", "thresholds", "privacy_policy", "hard_contract", "primary_endpoints"],
+  "stopping": {"no_early_stop_on_test": true, "failure_policy": "retain_failed_artifacts_and_report", "release_requires": ["privacy_leakage=0", "hard_constraint_violations=0", "json_valid_rate>=0.99", "replay_reset_failures=0"]},
+  "claim_scope": {"synthetic": "protocol_and_replay_only", "real_pilot": "noise_cost_and_feasibility_only", "real_heldout": "cross-family generalization if all evidence gates pass"}
+}

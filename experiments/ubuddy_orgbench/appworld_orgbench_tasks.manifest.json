@@ -1,6 +1,7 @@
 {
-  "benchmark": "uBuddy-OrgBench-AppWorld",
-  "version": "v1",
+  "benchmark": "ubuddy_orgbench_v2",
+  "name": "uBuddy-AppWorld Hybrid Benchmark",
+  "version": "v2",
   "baseBenchmark": "AppWorld",
   "officialEvaluatorRequired": true,
   "approvalRequired": false,
@@ -580,5 +581,5 @@
     "modelResultBasedFiltering": false,
     "boundaryTasksExcludedFromStrictMainTable": true
   },
-  "manifestSha256": "1cd00d717974becb727def91034e2532f5d44dd55f1646ba5893076318317964"
+  "manifestSha256": "bc3b97f4ce7e77741d6ef844896a8ce88459b262406981a57511367963fef0bf"
 }

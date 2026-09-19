@@ -13,5 +13,5 @@ const checks = {
   noApiKeyInArtifacts: !JSON.stringify({ verification, identities, agentMap }).match(/(?:sk-|CRS_OAI_KEY|OPENAI_BASE_URL)/i),
 };
 const passed = Object.values(checks).every(Boolean);
-console.log(JSON.stringify({ version: 'remote_orgbench_verify_v1', passed, checks }, null, 2));
+console.log(JSON.stringify({ version: 'remote_orgbench_verify_v2', passed, checks }, null, 2));
 if (!passed) process.exitCode = 1;

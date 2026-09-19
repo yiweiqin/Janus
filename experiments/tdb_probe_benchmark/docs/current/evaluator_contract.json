@@ -1,0 +1,13 @@
+{
+  "version": "invoice-exact-cents-v1",
+  "input": ["currentRows", "taxPercent"],
+  "output": ["totalCents"],
+  "utility": "1 iff totalCents exactly equals independently computed expected cents; otherwise 0",
+  "noop": "evaluated by the same evaluator; no special-case credit",
+  "cost": "policy-only intervention cost; never added to evaluator utility",
+  "applicability": "N/A interventions are recorded with applicable=false and excluded from failure counts and training labels",
+  "infrastructure": "infrastructure_invalid is recorded separately and excluded from training/effect estimates",
+  "abstain": "abstain is a policy decision equivalent to selecting noop, not an execution outcome",
+  "interaction": "joint incremental effect = U(joint)-U(noop)-[U(a)-U(noop)]-[U(b)-U(noop)]",
+  "independence": "evaluator receives specification and output only; never fault condition, action label, or features"
+}

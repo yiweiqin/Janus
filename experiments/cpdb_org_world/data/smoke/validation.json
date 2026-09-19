@@ -1,0 +1,12 @@
+{
+  "ok": true,
+  "errors": [],
+  "counts": {
+    "orgs": 2,
+    "people": 4,
+    "agents": 20,
+    "agentProfiles": 20,
+    "ubuddyProfiles": 4,
+    "pairs": 131
+  }
+}

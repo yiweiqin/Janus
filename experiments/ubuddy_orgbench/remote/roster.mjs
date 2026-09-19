@@ -1,6 +1,6 @@
 import crypto from 'node:crypto';
 
-export const ORGBENCH_NAMESPACE = 'ubuddy-orgbench-v1';
+export const ORGBENCH_NAMESPACE = 'ubuddy-orgbench-v2';
 export const USERS = Object.freeze([
   { key: 'a', id: 'orgbench_user_a', role: 'requester' },
   { key: 'b', id: 'orgbench_user_b', role: 'recipient' },

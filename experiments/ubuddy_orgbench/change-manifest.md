@@ -1,4 +1,4 @@
-# uBuddy-OrgBench v1 change manifest
+# uBuddy-OrgBench v2 change manifest
 
 本轮相对已有 OrgBench 协议原型的实现变更：
 
@@ -20,11 +20,16 @@
 4. `evaluators/metrics.mjs`
    - 增加官方 checkpoint rate、目标覆盖率、重复任务率、内部分配 regret、组织形成时间等指标。
 
-5. `experiments/ubuddy_appworld/appworld_bridge.py`
+5. `experiments/ubuddy_orgbench/appworld_bridge.py`
    - 修复 Windows GBK 环境下 AppWorld Unicode 输出导致 JSONL bridge 崩溃的问题。
 
 6. `README.md`
    - 明确真实 AppWorld 命令、预算变量、artifact、Janus 同步方式和论文结论边界。
+
+7. benchmark 清理与归档
+   - `experiments/ubuddy_orgbench` 是唯一正式入口。
+   - 旧 AppWorld v1、WebArena/WorkArena 目录和 runner 已移入 archive，未删除。
+   - v2 已解除对旧目录的运行时依赖，并移除本机 Windows 硬编码路径。
 
 ## 已验证运行
 

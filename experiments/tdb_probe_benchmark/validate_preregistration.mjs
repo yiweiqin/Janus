@@ -1,0 +1,15 @@
+import fs from 'node:fs/promises';
+const file = process.argv[2] || new URL('./tdb_preregistration_v1.json', import.meta.url);
+const p = JSON.parse(await fs.readFile(file, 'utf8')); const errors = []; const need = (v, e) => { if (!v) errors.push(e); };
+need(p.version === 'tdb-preregistration-v1', 'version');
+need(p.status === 'frozen_before_real_test', 'freeze_status');
+need(p.primary_endpoints?.length === 3, 'primary_endpoint_count');
+need(p.primary_endpoints?.every(x => x.unit === 'taskFamilyId' || x.unit === 'adapt-eval episode'), 'primary_unit');
+need(p.inference?.cluster_unit === 'taskFamilyId' && p.inference?.paired_test === 'sign_permutation', 'inference_unit');
+need(p.inference?.multiple_comparison === 'BH_FDR' && p.inference?.alpha === 0.05, 'multiplicity');
+need(p.design?.total_families_min >= 67 && p.design?.heldout_families_min >= 20 && p.design?.random_seeds_min >= 5, 'design_power');
+need(p.stopping?.no_early_stop_on_test === true, 'test_stopping');
+need(p.frozen_before_test?.includes('primary_endpoints'), 'endpoint_freeze');
+need(p.claim_scope?.synthetic === 'protocol_and_replay_only', 'claim_scope');
+console.log(JSON.stringify({ valid: errors.length === 0, errors, checks: 10 }, null, 2));
+if (errors.length) process.exitCode = 1;

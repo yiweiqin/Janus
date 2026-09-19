@@ -50,4 +50,4 @@
 
 本包只包含代码、协议、schema 和 manifest，不包含模型密钥，也不包含正式实验数据。当前已通过本机静态检查和 15 个单元测试；AppWorld 正式运行仍需在远程机执行。
 
-本压缩包用于评审，不能脱离 Janus 仓库单独正式运行；正式运行需要完整 Janus 仓库中的 AppWorld bridge、Cloud 模块、npm scripts 和依赖。
+本目录已包含 AppWorld bridge、远程安装脚本和 v2 任务 manifest；但正式运行仍需要完整 Janus 仓库中的 Cloud 模块、npm scripts、Node 依赖和官方 AppWorld 数据。

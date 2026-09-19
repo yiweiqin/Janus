@@ -1,0 +1,168 @@
+{
+  "generatedAt": "2026-09-10T15:51:08.102Z",
+  "tpm": {
+    "gates": {
+      "inspect_drops_secrets": true,
+      "participant_hides_raw": true,
+      "stranger_sees_nothing": true,
+      "wide_request_rejected_before_owner": true,
+      "approved_excerpt_only": true
+    },
+    "pass": true
+  },
+  "rdmd": {
+    "n": 240,
+    "hit": 1,
+    "typeHit": 1,
+    "terminalBlameHit": 0.4,
+    "firstDiffHit": 0.4,
+    "meanInvolvedNodes": 4.3333,
+    "meanDetectiveEvidence": 1,
+    "noDriftRate": 1,
+    "multiInjectUnknownRate": 1,
+    "byType": {
+      "missing_dependency": {
+        "n": 48,
+        "hit": 1
+      },
+      "wrong_agent": {
+        "n": 48,
+        "hit": 1
+      },
+      "wrong_version": {
+        "n": 48,
+        "hit": 1
+      },
+      "wrong_acceptance": {
+        "n": 48,
+        "hit": 1
+      },
+      "local_replan": {
+        "n": 48,
+        "hit": 1
+      }
+    },
+    "gates": {
+      "detective_hit_ge_0_80": true,
+      "detective_beats_terminal_by_0_20": true,
+      "no_drift_ge_0_95": true,
+      "multi_unknown_ge_0_50": true,
+      "evidence_lt_involved": true
+    },
+    "pass": true
+  },
+  "cpdb": {
+    "pairs": {
+      "A->C dep": 0.6667,
+      "A~B sim": 0.7667,
+      "A~C sim": 0,
+      "D~E sim": 0.9,
+      "D->E dep": 0.15,
+      "A->F dep": 0
+    },
+    "decay": [
+      0.52,
+      0.4765,
+      0.4488,
+      0.4198,
+      0.4033
+    ],
+    "collab": {
+      "profile": {
+        "agentId": "A",
+        "capabilityTags": [
+          "research",
+          "信息整理"
+        ],
+        "supportedTaskTypes": [
+          "research"
+        ],
+        "deliverableTypes": [
+          "spreadsheet"
+        ],
+        "roles": [
+          "research",
+          "data"
+        ]
+      },
+      "score": 0.6666666666666666
+    },
+    "swap": {
+      "profile": {
+        "agentId": "B",
+        "capabilityTags": [
+          "research",
+          "信息整理",
+          "source_verify"
+        ],
+        "supportedTaskTypes": [
+          "research"
+        ],
+        "deliverableTypes": [
+          "spreadsheet"
+        ],
+        "roles": [
+          "research",
+          "data",
+          "review"
+        ]
+      },
+      "score": 0.7666666666666667
+    },
+    "attributed": {
+      "decision": "attribute_capability_gap",
+      "gap": {
+        "onlyLeft": [],
+        "onlyRight": [
+          "source_verify"
+        ]
+      },
+      "similarLift": 0.41999999999999993,
+      "randomLift": 0.03999999999999998
+    },
+    "handback": {
+      "decision": "hand_back_to_rdmd",
+      "gap": {
+        "onlyLeft": [],
+        "onlyRight": [
+          "source_verify"
+        ]
+      },
+      "similarLift": 0.009999999999999953,
+      "randomLift": 0
+    },
+    "gates": {
+      "planning_picks_A_for_writer": true,
+      "replacement_picks_B_not_writer": true,
+      "dep_not_equal_sim_argmax": true,
+      "similar_swap_isolates_source_verify": true,
+      "failed_swap_hands_back": true,
+      "decay_is_monotonic": true
+    },
+    "pass": true
+  },
+  "loop": {
+    "routes": {
+      "wrong_agent": {
+        "action": "similar_swap",
+        "reason": "wrong_agent",
+        "swapDecision": "pending"
+      },
+      "missing_dependency": {
+        "action": "minimal_plan_edit",
+        "reason": "missing_dependency"
+      },
+      "unknown": {
+        "action": "record_only",
+        "reason": "unknown_drift"
+      }
+    },
+    "gates": {
+      "agent_goes_to_swap": true,
+      "structure_goes_to_plan_edit": true,
+      "unknown_does_not_update": true
+    },
+    "pass": true
+  },
+  "pass": true
+}

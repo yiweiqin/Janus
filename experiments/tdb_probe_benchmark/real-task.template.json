@@ -1,0 +1,20 @@
+{
+  "taskId": "TODO_task_id",
+  "familyId": "TODO_task_family",
+  "split": "train",
+  "inputSnapshotRef": "TODO_sanitized_fixture_reference",
+  "inputHash": "TODO_sha256",
+  "evaluatorVersion": "TODO_version",
+  "evaluatorCommand": "TODO_local_acceptance_test_command",
+  "resetCommand": "TODO_sandbox_reset_command",
+  "agentVersion": "TODO_model_and_agent_version",
+  "promptVersion": "TODO_prompt_hash",
+  "toolVersion": "TODO_tool_versions",
+  "acceptanceRule": "TODO_explicit_success_and_failure_rule",
+  "dataBoundary": "TODO_allowed_data_and_redaction_rules",
+  "interventions": ["noop", "refreshVersion"],
+  "maxExecutions": 12,
+  "maxCost": 0,
+  "resetVerified": false,
+  "independentEvaluator": false
+}

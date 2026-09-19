@@ -1,0 +1,7 @@
+{
+  "phase": "B",
+  "status": "complete",
+  "tests": {"command": "node --test experiments/tdb_probe_benchmark/runner.test.mjs", "passed": 16, "failed": 0},
+  "contract": "evaluator_contract.json",
+  "verified": ["noop utility is evaluator-only", "cost is policy-only", "N/A excluded", "infrastructure_invalid excluded", "abstain selects noop", "joint interaction uses inclusion-exclusion", "evaluator independent of labels"]
+}

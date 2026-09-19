@@ -1,0 +1,37 @@
+{
+  "version": "tdb-multitask-label-contract-v2",
+  "unit": ["taskFamilyId", "taskInstanceId", "edgeId", "timeIndex"],
+  "required_identity": ["taskFamilyId", "taskInstanceId", "edgeId", "sourceVersion", "schemaVersion"],
+  "heads": {
+    "state_posterior": {
+      "targets": ["data", "logic", "quality", "freshness", "review", "capability", "resource", "risk", "downstreamImpact", "uncertainty"],
+      "label_sources": ["independent_evaluator", "validated_event_rule", "dual_human_gold"],
+      "required": ["status", "mean", "interval", "evidenceRefs", "label_mask"],
+      "unknown_policy": "missing_or_conflicting_evidence => UNKNOWN; never convert to numeric zero"
+    },
+    "counterfactual_uplift": {
+      "targets": ["noop", "candidate_action"],
+      "formula": "utility(candidate_action)-utility(noop)",
+      "required": ["intervention", "applicable", "utility", "cost", "evaluatorVersion", "paired_noop"],
+      "exclude_when": ["applicable=false", "outcome=infrastructure_invalid", "paired_noop=false", "reset_mismatch=true", "evaluator_invalid=true"]
+    },
+    "decision_sufficient_projection": {
+      "targets": ["decision_agreement", "privacy_safe", "selected_units", "disclosure_cost", "next_action"],
+      "label_sources": ["finite_world_reference", "authorization_contract", "independent_privacy_checker"],
+      "required": ["query", "receiverScope", "privacyPolicy", "hardContract", "coverageRef", "label_mask"],
+      "unknown_policy": "world ambiguity or insufficient coverage => UNKNOWN/PROBE"
+    },
+    "attribution": {
+      "targets": ["cause_set", "evidence_refs", "layer"],
+      "required": ["independent_gold", "evidenceRefs", "identifiability_status", "label_mask"],
+      "no_gold_policy": "label_mask=false; report blocked/unknown, never train a unique-cause probability"
+    }
+  },
+  "global_rules": [
+    "test outcomes are read-only after freeze",
+    "taskFamilyId is split metadata, not an input feature",
+    "condition/fault_type/ground_truth/oracle_action never enter inputs",
+    "cost is policy accounting and cannot modify evaluator utility",
+    "hard constraints and privacy checks are non-differentiable gates"
+  ]
+}

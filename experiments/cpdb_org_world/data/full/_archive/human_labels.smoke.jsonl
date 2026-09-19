@@ -1,0 +1,16 @@
+{"id":"ag_p_01_00_3>ag_p_12_03_4","annotatorId":"张亦弛","dependency":0.25,"similarity":0,"rationale":"","split":"test","kind":"hard_negative","at":"2026-09-12T12:35:41Z"}
+{"id":"ag_p_01_01_2>ag_p_12_06_4","annotatorId":"张亦弛","dependency":0,"similarity":0,"rationale":"","split":"test","kind":"hard_negative","at":"2026-09-12T12:36:37Z"}
+{"id":"ag_p_01_01_4>ag_p_12_03_4","annotatorId":"张亦弛","dependency":0.75,"similarity":0.25,"rationale":"","split":"test","kind":"hard_negative","at":"2026-09-12T12:37:22Z"}
+{"id":"ag_p_01_03_2>ag_p_12_09_1","annotatorId":"张亦弛","dependency":0.5,"similarity":0,"rationale":"","split":"test","kind":"hard_negative","at":"2026-09-12T12:38:02Z"}
+{"id":"ag_p_01_03_3>ag_p_12_02_3","annotatorId":"张亦弛","dependency":0.75,"similarity":0,"rationale":"","split":"test","kind":"hard_negative","at":"2026-09-12T12:38:18Z"}
+{"id":"ag_p_01_05_2>ag_p_12_08_2","annotatorId":"张亦弛","dependency":0.25,"similarity":0,"rationale":"","split":"test","kind":"hard_negative","at":"2026-09-12T13:04:21Z"}
+{"id":"ag_p_01_05_4>ag_p_12_08_2","annotatorId":"张亦弛","dependency":0.75,"similarity":0.25,"rationale":"","split":"test","kind":"hard_negative","at":"2026-09-12T13:04:36Z"}
+{"id":"ag_p_01_06_1>ag_p_12_08_4","annotatorId":"张亦弛","dependency":0.5,"similarity":0.75,"rationale":"","split":"test","kind":"hard_negative","at":"2026-09-12T13:07:15Z"}
+{"id":"ag_p_01_06_1>ag_p_12_07_0","annotatorId":"张亦弛","dependency":0.25,"similarity":0.5,"rationale":"","split":"test","kind":"hard_negative","at":"2026-09-12T13:06:59Z"}
+{"id":"ag_p_01_07_4>ag_p_12_06_3","annotatorId":"张亦弛","dependency":0,"similarity":0,"rationale":"","split":"test","kind":"hard_negative","at":"2026-09-12T13:07:56Z"}
+{"id":"ag_p_01_08_0>ag_p_12_00_2","annotatorId":"张亦弛","dependency":1,"similarity":0.25,"rationale":"","split":"test","kind":"hard_negative","at":"2026-09-12T13:09:02Z"}
+{"id":"ag_p_01_08_4>ag_p_12_06_3","annotatorId":"张亦弛","dependency":0,"similarity":0,"rationale":"","split":"test","kind":"hard_negative","at":"2026-09-12T13:09:49Z"}
+{"id":"ag_p_01_09_1>ag_p_12_04_2","annotatorId":"张亦弛","dependency":0.75,"similarity":0.25,"rationale":"","split":"test","kind":"hard_negative","at":"2026-09-12T13:10:04Z"}
+{"id":"ag_p_02_02_1>ag_p_12_04_1","annotatorId":"张亦弛","dependency":0.25,"similarity":0.5,"rationale":"","split":"test","kind":"hard_negative","at":"2026-09-12T13:11:41Z"}
+{"id":"ag_p_02_02_1>ag_p_12_01_0","annotatorId":"张亦弛","dependency":0.25,"similarity":0.5,"rationale":"","split":"test","kind":"hard_negative","at":"2026-09-12T13:10:54Z"}
+{"id":"ag_p_02_03_2>ag_p_12_03_0","annotatorId":"张亦弛","dependency":0.5,"similarity":0.75,"rationale":"","split":"test","kind":"hard_negative","at":"2026-09-12T13:13:23Z"}

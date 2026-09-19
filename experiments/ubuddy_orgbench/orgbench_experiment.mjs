@@ -23,8 +23,8 @@ import { independentlyVerify } from './evaluators/independentVerifier.mjs';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..');
 const ORG_ROOT = path.join(ROOT, 'experiments', 'ubuddy_orgbench');
-const RUN_ROOT = path.join(ROOT, 'experiments', 'runs');
-const APPWORLD_MANIFEST = path.join(ROOT, 'experiments', 'ubuddy_appworld', 'appworld_tasks.manifest.json');
+const RUN_ROOT = path.resolve(process.env.UBUDDY_ORGBENCH_OUTPUT_ROOT || path.join(ROOT, 'experiments', 'runs'));
+const APPWORLD_MANIFEST = path.join(ORG_ROOT, 'appworld_orgbench_tasks.manifest.json');
 const TASK_PROTOCOL_MANIFEST = path.join(ORG_ROOT, 'task_protocol.manifest.json');
 const TRANSFER_PAIRS_MANIFEST = path.join(ORG_ROOT, 'transfer_pairs.manifest.json');
 const args = parseArgs(process.argv.slice(2));
@@ -51,11 +51,48 @@ function encryptJson(value, keyMaterial = process.env.UBUDDY_ORGBENCH_TRUTH_KEY 
 }
 function runDir(name = `orgbench-${Date.now()}`) { return path.join(RUN_ROOT, name); }
 function help() { console.log('uBuddy-AppWorld Hybrid Benchmark v2\n\nCommands: doctor, prepare, manifest, canary, pilot, main, attribution, evolution, swebench, verify, report, package'); }
+function modelUsageRow(stage, response, extra = {}) { return { stage, ...extra, usage: response?.usage || null, responseHash: response?.responseHash || null, model: response?.model || null, attempt: response?.attempt || null, finishReason: response?.finishReason || null, maxTokens: response?.maxTokens || null }; }
+function stableTopologicalTasks(items) {
+  const tasks = Array.isArray(items) ? [...items] : [];
+  const byId = new Map(tasks.map((task) => [String(task.id), task]));
+  const pending = [...tasks]; const sorted = []; const emitted = new Set();
+  while (pending.length) {
+    const index = pending.findIndex((task) => (task.dependsOn || []).every((dependency) => !byId.has(String(dependency)) || emitted.has(String(dependency))));
+    if (index < 0) throw new Error(`task_dependency_cycle:${pending.map((task) => task.id).join(',')}`);
+    const [task] = pending.splice(index, 1); sorted.push(task); emitted.add(String(task.id));
+  }
+  return sorted;
+}
+
+function runtimeFreeze() {
+  return {
+    janusCommit: process.env.JANUS_COMMIT || null,
+    janusSnapshotSha256: process.env.JANUS_SNAPSHOT_SHA256 || null,
+    appworldCommit: process.env.APPWORLD_COMMIT || null,
+    appworldPackageVersion: process.env.APPWORLD_PACKAGE_VERSION || null,
+    appworldDataVersion: process.env.APPWORLD_DATA_VERSION || null,
+    appworldManifestSha256: process.env.APPWORLD_MANIFEST_SHA256 || null,
+    model: process.env.UBUDDY_ORGBENCH_MODEL || process.env.UBUDDY_APPWORLD_MODEL || 'gpt-5.4-mini',
+    modelBaseUrl: process.env.OPENAI_BASE_URL || null,
+    budget: {
+      maxFirstLevelTasks: Number(process.env.UBUDDY_ORGBENCH_MAX_FIRST_LEVEL_TASKS || 5),
+      maxLeavesPerUbuddy: Number(process.env.UBUDDY_ORGBENCH_MAX_LEAVES_PER_UBUDDY || 4),
+      maxStepsPerAgent: Number(process.env.UBUDDY_ORGBENCH_MAX_STEPS_PER_AGENT || 3),
+      modelRetries: Number(process.env.UBUDDY_ORGBENCH_MODEL_RETRIES || 3),
+      modelTimeoutMs: Number(process.env.UBUDDY_ORGBENCH_MODEL_TIMEOUT_MS || 180000),
+      organizationMaxTokens: process.env.UBUDDY_ORGBENCH_ORGANIZATION_MAX_TOKENS ? Number(process.env.UBUDDY_ORGBENCH_ORGANIZATION_MAX_TOKENS) : null,
+      executorMaxTokens: process.env.UBUDDY_ORGBENCH_EXECUTOR_MAX_TOKENS ? Number(process.env.UBUDDY_ORGBENCH_EXECUTOR_MAX_TOKENS) : null,
+      recoveryMaxTokens: process.env.UBUDDY_ORGBENCH_RECOVERY_MAX_TOKENS ? Number(process.env.UBUDDY_ORGBENCH_RECOVERY_MAX_TOKENS) : null,
+      executionTimeoutSec: Number(process.env.UBUDDY_ORGBENCH_EXECUTION_TIMEOUT_SEC || 180),
+    },
+    compatibilityOverrides: process.env.UBUDDY_ORGBENCH_COMPATIBILITY_OVERRIDES || null,
+  };
+}
 
 function spawnAppWorldBridge() {
-  const python = process.env.APPWORLD_PYTHON || 'D:/Cli-anything/benchmarks/appworld-official/.venv313/Scripts/python.exe';
-  const root = process.env.APPWORLD_ROOT || 'D:/Cli-anything/benchmarks/appworld-runtime';
-  const bridgeScript = path.join(ROOT, 'experiments', 'ubuddy_appworld', 'appworld_bridge.py');
+  const python = process.env.APPWORLD_PYTHON || 'python3';
+  const root = process.env.APPWORLD_ROOT || path.join(ROOT, 'benchmarks', 'appworld-runtime');
+  const bridgeScript = path.join(ORG_ROOT, 'appworld_bridge.py');
   const child = spawn(python, [bridgeScript], { env: { ...process.env, APPWORLD_ROOT: root, PYTHONUTF8: '1', PYTHONIOENCODING: 'utf-8' }, stdio: ['pipe', 'pipe', 'inherit'], windowsHide: true });
   let buffer = ''; const pending = [];
   child.stdout.on('data', (chunk) => { buffer += chunk.toString(); let index; while ((index = buffer.indexOf('\n')) >= 0) { const line = buffer.slice(0, index); buffer = buffer.slice(index + 1); if (line.trim()) { const resolver = pending.shift(); if (resolver) { try { const response = JSON.parse(line); response.ok ? resolver.resolve(response.result) : resolver.reject(new Error(response.error)); } catch (error) { resolver.reject(error); } } } } });
@@ -65,7 +102,7 @@ function spawnAppWorldBridge() {
 
 function modelRolePrompt({ method, layer, capability }) {
   const sharing = method === 'M1_static_profile' ? 'You only receive your assigned task and no shared progress.' : method === 'M2_generic_shared' ? 'You receive a plain, unversioned progress summary.' : 'Use the versioned visibility-filtered collaboration board; respect dependencies and result versions.';
-  return `You are an AppWorld ${layer}. You are not allowed to organize other agents unless you are a uBuddy. ${sharing}\nFor an execution step, return JSON only: {"status":"execute|done|blocked","code":"valid Python for AppWorld.execute","summary":"..."}. Code may use apis.* and apis.api_docs. Execute real state changes; do not merely describe them. When the official task is fully satisfied, the final review executor must call apis.supervisor.complete_task(), including answer=... for answer-returning tasks. Capability focus: ${capability}.`;
+  return `You are an AppWorld ${layer}. You are not allowed to organize other agents unless you are a uBuddy. ${sharing}\nFor an execution step, return JSON only: {"status":"execute|done|blocked","code":"valid Python for AppWorld.execute","summary":"..."}. The AppWorld executor already provides a global object named apis: call it directly. Never import apis, appworld, requests, or any tool module. Every API function is namespaced by app: use apis.simple_note.search_notes(...), apis.spotify.search_songs(...), and apis.supervisor.complete_task(...). Never call apis.search_notes or getattr(apis, \"search_notes\"); the first attribute after apis must always be an app name. Discover unfamiliar APIs with apis.api_docs.show_app_descriptions() or apis.api_docs.show_api_descriptions(app_name=\"simple_note\"), then use the documented names. For simple_note, common names include search_notes, show_note, update_note, and add_content_to_note (there is no list_notes). Execute real state changes; do not merely describe them, and do not return status=done until the required state change has actually succeeded. Use exact existing task IDs in dependsOn; do not invent dependency IDs. When the official task is fully satisfied, the final review executor must call apis.supervisor.complete_task(), including answer=... for answer-returning tasks. Capability focus: ${capability}.`;
 }
 
 function playbookRules(playbook, { taskType = 'appworld', objective = '' } = {}) {
@@ -97,6 +134,8 @@ function safeRealEpisode(episode) {
 async function runRealAppWorldEpisode({ task, method, seed, runDir, evolutionContext = null, round = 1 }) {
   const bridge = spawnAppWorldBridge(); const client = new ModelPolicyClient(); const janus = new JanusOrgBenchClient(); const usage = []; const events = []; const janusArtifacts = [];
   const episodeId = `appworld:${task.taskId}:${method}:${seed}`; const scenario = buildScenario({ taskId: task.taskId, seed, problem: task.instruction });
+  const progressFile = path.join(runDir, 'progress.jsonl');
+  const progress = async (stage, metadata = {}) => { await fs.mkdir(runDir, { recursive: true }); await fs.appendFile(progressFile, `${JSON.stringify({ at: nowIso(), episodeId, stage, ...metadata })}\n`, 'utf8'); };
   const graph = new CollaborationStateGraph({ episodeId, method, addEvent: (event) => events.push(event) });
   const event = (kind, layer, sourceId, metadata = {}, actorId = layer === 'requester_ubuddy' ? 'ubuddy_A' : 'system') => { const e = makeEvent({ eventKind: kind, episodeId, actorId, actorLayer: layer, sourceKind: 'appworld', sourceId, metadata }); events.push(e); return e; };
   const selections = []; const boardUpdates = []; const executions = []; let janusDelegationId = '';
@@ -114,14 +153,18 @@ async function runRealAppWorldEpisode({ task, method, seed, runDir, evolutionCon
     return '';
   };
   try {
+    await progress('reset_started');
     const reset = await bridge.call({ command: 'reset', taskId: task.taskId, experimentName: `orgbench-${method}-${seed}-${Date.now()}` });
+    await progress('reset_completed', { instructionHash: sha256(reset.instruction) });
     event('project_created', 'requester_ubuddy', 'project_root', { benchmark: 'AppWorld', taskId: task.taskId, seed, round, evolutionNamespace: evolutionContext?.namespace || '', policyVersionId: evolutionContext?.policyVersionId || '', officialInstructionHash: sha256(reset.instruction) });
     graph.node('project_root', { kind: 'project', owner: 'ubuddy_A', title: reset.instruction, status: 'running', visibility: 'all' });
     const visibleProfiles = methodFeatures(method).multiUbuddy ? scenario.profiles.filter((p) => p.ubuddyId !== 'ubuddy_A').map((p) => publicProfile(p, method)) : [];
     event('profile_queried', 'requester_ubuddy', 'profile_catalog', { visibleCount: visibleProfiles.length });
     if (janus.enabled) janusArtifacts.push({ stage: 'candidate_query', result: await janus.queryCandidates({ userIds: String(process.env.UBUDDY_ORGBENCH_JANUS_CANDIDATE_USER_IDS || '').split(',').map((x) => x.trim()).filter(Boolean), requirement: { description: reset.instruction, capabilityTags: scenario.requirements.map((r) => r.capability) } }) });
+    await progress('requester_model_started');
     const requester = method === 'M0_single_ubuddy' ? { value: { inviteUbuddyIds: [], tasks: [{ id: 'whole_task', title: 'Complete official AppWorld task', description: reset.instruction, capability: 'execution', assigneeUbuddyId: 'ubuddy_A', dependsOn: [] }], usage: null } } : await requesterDecision({ client, problem: reset.instruction, profiles: visibleProfiles, board: graph.project('all'), method, evolutionContext });
-    usage.push({ stage: 'requester_organization', usage: requester.usage, responseHash: requester.responseHash, model: requester.model });
+    await progress('requester_model_completed', { responseHash: requester.responseHash || null });
+    usage.push(modelUsageRow('requester_organization', requester));
     const invited = method === 'M0_single_ubuddy' ? [] : [...new Set((requester.value.inviteUbuddyIds || []).map(String).filter((id) => scenario.internalPools[id]))];
     for (const id of invited) { selections.push({ ubuddyId: id, revision: scenario.profiles.find((p) => p.ubuddyId === id)?.revision, contentHash: scenario.profiles.find((p) => p.ubuddyId === id)?.contentHash }); event('ubuddy_invited', 'requester_ubuddy', id, { recipientUbuddyId: id }); if (methodFeatures(method).profileVersioning) event('selection_snapshot_frozen', 'requester_ubuddy', `${id}:snapshot`, { recipientUbuddyId: id, revision: selections.at(-1).revision, contentHash: selections.at(-1).contentHash, immutable: true }); }
     if (janus.enabled && invited.length) janusArtifacts.push({ stage: 'selection_confirm', result: await janus.confirmSelection({ recipientUserId: String(ubuddyUserMap[invited[0]] || process.env.UBUDDY_ORGBENCH_JANUS_RECIPIENT_USER_ID || ''), selection: { profileRevision: selections[0]?.revision, contentHash: selections[0]?.contentHash, requirement: reset.instruction, selectionReason: 'OrgBench requester model decision' } }) });
@@ -143,15 +186,18 @@ async function runRealAppWorldEpisode({ task, method, seed, runDir, evolutionCon
     const maxFirstLevelTasks = Number(process.env.UBUDDY_ORGBENCH_MAX_FIRST_LEVEL_TASKS || 5);
     const rawTasks = (Array.isArray(requester.value.tasks) ? requester.value.tasks : []).slice(0, maxFirstLevelTasks).map((item, i) => ({ id: String(item.id || `task_${i + 1}`), title: String(item.title || `Subtask ${i + 1}`), description: String(item.description || reset.instruction), capability: String(item.capability || 'execution'), assigneeUbuddyId: allowed.has(String(item.assigneeUbuddyId)) ? String(item.assigneeUbuddyId) : (invited[0] || 'ubuddy_A'), dependsOn: Array.isArray(item.dependsOn) ? item.dependsOn.map(String) : [] }));
     const policyApplied = applyOrganizationPlaybook(rawTasks, evolutionContext?.playbook, { taskType: 'appworld', objective: reset.instruction });
-    const tasks = policyApplied.tasks.slice(0, maxFirstLevelTasks + 1);
+    const taskIds = new Set(policyApplied.tasks.map((item) => String(item.id)));
+    const tasks = stableTopologicalTasks(policyApplied.tasks.slice(0, maxFirstLevelTasks + 1).map((item) => ({ ...item, dependsOn: [...new Set((item.dependsOn || []).map(String).filter((dependency) => taskIds.has(dependency) && dependency !== String(item.id)))] })));
     event('organization_policy_applied', 'requester_ubuddy', evolutionContext?.policyVersionId || 'baseline', { policyVersionId: evolutionContext?.policyVersionId || 'baseline', ruleIds: policyApplied.applied, appliedCount: policyApplied.applied.length });
     if (!tasks.length) throw new Error('requester_model_returned_no_tasks');
     for (const item of tasks) { graph.node(item.id, { kind: 'ubuddy_task', owner: item.assigneeUbuddyId, title: item.title, description: item.description, capability: item.capability, parentNodeId: 'project_root', status: 'pending', visibility: 'all' }); graph.edge('parent_of', 'project_root', item.id); graph.edge('assigned_to', item.id, item.assigneeUbuddyId, { assignmentLayer: item.assigneeUbuddyId === 'ubuddy_A' ? 'requester_internal' : 'cross_user' }); for (const dep of item.dependsOn) graph.edge('dependency_of', dep, item.id); event('task_node_created', 'requester_ubuddy', item.id, { generatedBy: 'requester_model' }); event('task_assigned', 'requester_ubuddy', item.id, { recipientUbuddyId: item.assigneeUbuddyId }); }
     const owners = [...new Set(tasks.map((t) => t.assigneeUbuddyId))];
     for (const owner of owners) {
       const pool = scenario.internalPools[owner]; const assigned = tasks.filter((t) => t.assigneeUbuddyId === owner); const internalAgents = pool.agents.map(({ privateMemory, ...a }) => ({ ...a, activeSkillVersion: evolutionContext?.agentVersions?.[a.agentInstanceId] || a.activeSkillVersion || a.skillVersion || 'base-v1', memoryVersion: evolutionContext?.memoryVersions?.[a.agentInstanceId] || a.memoryVersion || 'memory-v1' }));
+      await progress('recipient_model_started', { owner });
       const recipient = owner === 'ubuddy_A' ? { value: { subtasks: assigned.map((t, i) => ({ id: `${t.id}_leaf`, parentTaskId: t.id, title: t.title, description: t.description, capability: t.capability, agentInstanceId: pool.agents[i % pool.agents.length].agentInstanceId, dependsOn: t.dependsOn })) }, usage: null } : await recipientDecision({ client, ubuddyId: owner, assignedTasks: assigned, internalAgents, board: graph.project('all'), method, evolutionContext });
-      usage.push({ stage: `recipient_organization:${owner}`, usage: recipient.usage, responseHash: recipient.responseHash, model: recipient.model });
+      await progress('recipient_model_completed', { owner, responseHash: recipient.responseHash || null });
+      usage.push(modelUsageRow(`recipient_organization:${owner}`, recipient));
       const maxLeaves = Math.min(Number(process.env.UBUDDY_ORGBENCH_MAX_LEAVES_PER_UBUDDY || 4), Math.max(1, assigned.length * 2));
       const subtasks = Array.isArray(recipient.value.subtasks) ? recipient.value.subtasks.slice(0, maxLeaves) : [];
       for (const [i, raw] of subtasks.entries()) {
@@ -159,7 +205,7 @@ async function runRealAppWorldEpisode({ task, method, seed, runDir, evolutionCon
         assertActionAllowed({ actorLayer: owner === 'ubuddy_A' ? 'requester_ubuddy' : 'recipient_ubuddy', action: 'assign_internal_agent', targetLayer: 'internal_agent', targetOwnerUbuddyId: owner, actorUbuddyId: owner });
         graph.node(id, { kind: 'internal_agent_task', owner, agentInstanceId: agent.agentInstanceId, title: String(raw.title || id), description: String(raw.description || parent.description), capability: String(raw.capability || parent.capability), parentNodeId: parent.id, status: 'running', visibility: 'all' }); graph.edge('parent_of', parent.id, id); graph.edge('assigned_to', id, agent.agentInstanceId, { assignmentLayer: 'internal' }); event('internal_agent_selected', owner === 'ubuddy_A' ? 'requester_ubuddy' : 'recipient_ubuddy', id, { agentInstanceId: agent.agentInstanceId, ownerUbuddyId: owner }); event('execution_started', 'internal_agent', id, { agentInstanceId: agent.agentInstanceId }, agent.agentInstanceId);
         const history = []; let finalStatus = 'blocked';
-        const declaredDependencies = Array.isArray(raw.dependsOn) ? raw.dependsOn.map(String) : [];
+        const declaredDependencies = Array.isArray(raw.dependsOn) ? raw.dependsOn.map(String).filter((dependency) => dependency !== parent.id && dependency !== id) : [];
         const unmetDependencies = declaredDependencies.filter((dependency) => graph.nodes.get(dependency)?.status !== 'done');
         if (unmetDependencies.length && methodFeatures(method).sharedState === 'gcsG') {
           graph.update(id, { status: 'blocked', blockedReason: `unmet_dependencies:${unmetDependencies.join(',')}` }, owner, owner === 'ubuddy_A' ? 'requester_ubuddy' : 'recipient_ubuddy');
@@ -169,30 +215,42 @@ async function runRealAppWorldEpisode({ task, method, seed, runDir, evolutionCon
         }
         const maxAgentSteps = Number(process.env.UBUDDY_ORGBENCH_MAX_STEPS_PER_AGENT || 3);
         for (let step = 0; step < maxAgentSteps; step += 1) {
-          const shared = method === 'M1_static_profile' ? [] : graph.project('all'); const evolutionHint = evolutionContext ? `\nActive organization policy: ${evolutionContext.policyVersionId || 'baseline'}\nActive individual versions: ${JSON.stringify(evolutionContext.agentVersions || {})}` : ''; const response = await client.json(modelRolePrompt({ method, layer: 'internal Agent executor', capability: graph.nodes.get(id).capability }), `Official task: ${reset.instruction}\nAssigned subtask: ${graph.nodes.get(id).description}\nShared board: ${JSON.stringify(shared)}${evolutionHint}\nPrevious execution outputs: ${JSON.stringify(history.slice(-3))}`, 1600);
-          usage.push({ stage: `execute:${id}`, step, usage: response.usage, responseHash: response.responseHash, model: response.model }); const action = response.value || {};
+          const shared = method === 'M1_static_profile' ? [] : graph.project('all'); const evolutionHint = evolutionContext ? `\nActive organization policy: ${evolutionContext.policyVersionId || 'baseline'}\nActive individual versions: ${JSON.stringify(evolutionContext.agentVersions || {})}` : ''; await progress('executor_model_started', { nodeId: id, step }); const response = await client.json(modelRolePrompt({ method, layer: 'internal Agent executor', capability: graph.nodes.get(id).capability }), `Official task: ${reset.instruction}\nAssigned subtask: ${graph.nodes.get(id).description}\nShared board: ${JSON.stringify(shared)}${evolutionHint}\nPrevious execution outputs: ${JSON.stringify(history.slice(-3))}`, { stage: `execute:${id}:step${step}`, maxTokens: process.env.UBUDDY_ORGBENCH_EXECUTOR_MAX_TOKENS || undefined, validate: (value) => { if (!['execute', 'done', 'blocked'].includes(String(value.status))) throw new Error('executor_status_invalid'); } });
+          await progress('executor_model_completed', { nodeId: id, step, responseHash: response.responseHash || null });
+          usage.push(modelUsageRow(`execute:${id}`, response, { step })); const action = response.value || {};
           if (action.status === 'done') { finalStatus = 'done'; history.push({ status: 'done', summary: String(action.summary || '') }); break; }
           if (action.status === 'blocked') { finalStatus = 'blocked'; history.push({ status: 'blocked', summary: String(action.summary || '') }); break; }
           if (!String(action.code || '').trim()) { history.push({ status: 'invalid_action' }); continue; }
-          const result = await bridge.call({ command: 'execute', role: 'internal_agent', code: String(action.code) }); history.push({ codeHash: sha256(action.code), output: String(result.output || '').slice(0, 8000) }); graph.update(id, { status: 'running', progress: (step + 1) / maxAgentSteps, lastOutputHash: sha256(result.output || '') }, agent.agentInstanceId, 'internal_agent'); event('progress_published', 'internal_agent', id, { progress: (step + 1) / maxAgentSteps, outputHash: sha256(result.output || ''), boardVersion: graph.nodes.get(id).version }, agent.agentInstanceId);
+          const codeHash = sha256(action.code); await progress('appworld_execute_started', { nodeId: id, step, codeHash });
+          const result = await bridge.call({ command: 'execute', role: 'internal_agent', code: String(action.code) }); await progress('appworld_execute_completed', { nodeId: id, step, codeHash, outputHash: sha256(result.output || '') }); history.push({ codeHash, output: String(result.output || '').slice(0, 8000) }); graph.update(id, { status: 'running', progress: (step + 1) / maxAgentSteps, lastOutputHash: sha256(result.output || '') }, agent.agentInstanceId, 'internal_agent'); event('progress_published', 'internal_agent', id, { progress: (step + 1) / maxAgentSteps, outputHash: sha256(result.output || ''), boardVersion: graph.nodes.get(id).version }, agent.agentInstanceId);
         }
         if (finalStatus !== 'done' && methodFeatures(method).sharedState === 'gcsG') {
           const recovery = await recoveryDecision({ client, ubuddyId: owner, failedTask: { id, title: graph.nodes.get(id).title, description: graph.nodes.get(id).description, capability: graph.nodes.get(id).capability, reason: history.at(-1)?.summary || 'execution_budget_exhausted' }, internalAgents, board: graph.project('all'), method });
-          usage.push({ stage: `recovery:${id}`, usage: recovery.usage, responseHash: recovery.responseHash, model: recovery.model });
+          usage.push(modelUsageRow(`recovery:${id}`, recovery));
           event('task_replanned', owner === 'ubuddy_A' ? 'requester_ubuddy' : 'recipient_ubuddy', id, { action: recovery.value?.action || 'block', reason: recovery.value?.reason || 'model_recovery_decision' }, owner);
           const reassigned = pool.agents.find((candidate) => candidate.agentInstanceId === String(recovery.value?.agentInstanceId));
           if ((recovery.value?.action === 'retry' || recovery.value?.action === 'reassign') && reassigned) {
             agent = reassigned; graph.update(id, { status: 'running', retryCount: (graph.nodes.get(id).retryCount || 0) + 1, agentInstanceId: agent.agentInstanceId }, owner, owner === 'ubuddy_A' ? 'requester_ubuddy' : 'recipient_ubuddy'); event('execution_retried', owner === 'ubuddy_A' ? 'requester_ubuddy' : 'recipient_ubuddy', id, { retryReason: recovery.value.action, agentInstanceId: agent.agentInstanceId }, owner);
-            const retryResponse = await client.json(modelRolePrompt({ method, layer: 'internal Agent executor', capability: graph.nodes.get(id).capability }), `Official task: ${reset.instruction}\nRetry this failed subtask: ${graph.nodes.get(id).description}\nExecute one recovery step and return done only if the state change is complete.`, 1600);
-            usage.push({ stage: `retry_execute:${id}`, usage: retryResponse.usage, responseHash: retryResponse.responseHash, model: retryResponse.model });
-            if (retryResponse.value?.status === 'done') { finalStatus = 'done'; graph.result(id, owner, owner === 'ubuddy_A' ? 'requester_ubuddy' : 'recipient_ubuddy', 'AppWorld recovery result', methodFeatures(method).resultVersioning ? 'adopted' : 'pending'); }
+            const retryResponse = await client.json(modelRolePrompt({ method, layer: 'internal Agent executor', capability: graph.nodes.get(id).capability }), `Official task: ${reset.instruction}\nRetry this failed subtask: ${graph.nodes.get(id).description}\nExecute one recovery step and return done only if the state change is complete.`, { stage: `retry_execute:${id}`, maxTokens: process.env.UBUDDY_ORGBENCH_EXECUTOR_MAX_TOKENS || undefined, validate: (value) => { if (!['execute', 'done', 'blocked'].includes(String(value.status))) throw new Error('executor_status_invalid'); } });
+            usage.push(modelUsageRow(`retry_execute:${id}`, retryResponse));
+            if (retryResponse.value?.status === 'execute' && String(retryResponse.value?.code || '').trim()) {
+              const retryResult = await bridge.call({ command: 'execute', role: 'internal_agent', code: String(retryResponse.value.code) });
+              const retryOutput = String(retryResult.output || ''); history.push({ codeHash: sha256(retryResponse.value.code), output: retryOutput.slice(0, 8000), recovery: true });
+              event('progress_published', 'internal_agent', id, { progress: 1, outputHash: sha256(retryOutput), recovery: true }, agent.agentInstanceId);
+              if (!retryOutput.startsWith('Execution failed.')) finalStatus = 'done';
+            } else if (retryResponse.value?.status === 'done') finalStatus = 'done';
+            if (finalStatus === 'done') graph.result(id, owner, owner === 'ubuddy_A' ? 'requester_ubuddy' : 'recipient_ubuddy', 'AppWorld recovery result', methodFeatures(method).resultVersioning ? 'adopted' : 'pending');
           }
         }
         if (finalStatus === 'done') { graph.result(id, owner, owner === 'ubuddy_A' ? 'requester_ubuddy' : 'recipient_ubuddy', 'AppWorld execution result', methodFeatures(method).resultVersioning ? 'adopted' : 'pending'); event('handoff_published', owner === 'ubuddy_A' ? 'requester_ubuddy' : 'recipient_ubuddy', id, { agentInstanceId: agent.agentInstanceId }, owner); } else { graph.update(id, { status: 'blocked', blockedReason: 'agent_blocked' }, agent.agentInstanceId, 'internal_agent'); event('execution_failed', 'internal_agent', id, { reason: 'agent_blocked' }, agent.agentInstanceId); }
         executions.push({ nodeId: id, ownerUbuddyId: owner, agentInstanceId: agent.agentInstanceId, status: finalStatus, history }); graph.update(parent.id, { status: finalStatus === 'done' ? 'done' : 'blocked', progress: finalStatus === 'done' ? 1 : 0 }, owner, owner === 'ubuddy_A' ? 'requester_ubuddy' : 'recipient_ubuddy');
       }
     }
-    graph.update('project_root', { status: 'done', progress: 1 }, 'ubuddy_A', 'requester_ubuddy'); event('result_accepted', 'requester_ubuddy', 'project_root', { acceptance: 'awaiting_official_evaluator' }); const officialEvaluation = await bridge.call({ command: 'evaluate' }); event('project_evaluated', 'environment', 'appworld_official_evaluator', { success: officialEvaluation.success, passPercentage: officialEvaluation.passPercentage }, 'appworld');
+    const projectCompleted = tasks.every((taskItem) => graph.nodes.get(taskItem.id)?.status === 'done');
+    graph.update('project_root', { status: projectCompleted ? 'done' : 'blocked', progress: projectCompleted ? 1 : 0 }, 'ubuddy_A', 'requester_ubuddy');
+    event(projectCompleted ? 'result_accepted' : 'execution_failed', 'requester_ubuddy', 'project_root', projectCompleted ? { acceptance: 'awaiting_official_evaluator' } : { reason: 'incomplete_first_level_tasks' });
+    await progress('official_evaluation_started');
+    const officialEvaluation = await bridge.call({ command: 'evaluate' }); await progress('official_evaluation_completed', { success: officialEvaluation.success, passPercentage: officialEvaluation.passPercentage }); event('project_evaluated', 'environment', 'appworld_official_evaluator', { success: officialEvaluation.success, passPercentage: officialEvaluation.passPercentage }, 'appworld');
     const metrics = evaluateEpisode({ scenario, method, graph, events, officialEvaluation });
     if (janus.enabled && janusDelegationId) { janusArtifacts.push({ stage: 'organization_trace', result: await janus.uploadOrganizationTrace({ evolutionNamespace: evolutionContext?.namespace || 'default', traceId: episodeId, delegationId: janusDelegationId, taskType: 'appworld', events: events.map((item, index) => { const localAgentInstanceId = String(item.metadata?.agentInstanceId || ''); return ({ ...item, idempotencyKey: `${episodeId}:${index}:${item.eventKind}`, payload: { ...item.metadata, localAgentInstanceId, agentInstanceId: cloudAgentId(localAgentInstanceId), officialEvaluation: item.eventKind === 'project_evaluated' ? officialEvaluation : undefined } }); }) }) }); janusArtifacts.push({ stage: 'state_graph', result: await janus.stateGraph({ delegationId: janusDelegationId }) }); janusArtifacts.push({ stage: 'attribution', result: await janus.attribution(janusDelegationId) }); }
     return { episodeId, benchmark: 'AppWorld', taskId: task.taskId, method, seed, round, evolutionNamespace: evolutionContext?.namespace || '', policyVersionId: evolutionContext?.policyVersionId || 'org-policy-baseline-v1', policyRulesApplied: policyApplied.applied, janusDelegationId, protocolOnly: false, officialEvaluation, metrics, graph: graph.project('all'), events, executions, usage, publicProfiles: visibleProfiles, selections, janusArtifacts, scenario, taskInstruction: reset.instruction, createdAt: nowIso() };
@@ -205,19 +263,17 @@ async function doctor() {
     { name: 'node', ok: Number(process.versions.node.split('.')[0]) >= 20, detail: process.versions.node },
     { name: 'appworld', ok: appworld.available, detail: appworld },
     { name: 'theagentcompany', ok: tac.available, detail: tac },
-    { name: 'marble', ok: await exists('D:/Cli-anything/benchmarks/marble/marble'), detail: marbleAdapter().source },
-    { name: 'who_when', ok: await exists('D:/Cli-anything/benchmarks/who-and-when'), detail: whoWhenAdapter().source },
+    { name: 'marble', ok: await exists(process.env.MARBLE_ROOT || path.join(ROOT, 'benchmarks', 'marble')), detail: marbleAdapter().source },
+    { name: 'who_when', ok: await exists(process.env.WHO_AND_WHEN_ROOT || path.join(ROOT, 'benchmarks', 'who-and-when')), detail: whoWhenAdapter().source },
     { name: 'model_endpoint_configured', ok: Boolean(process.env.CRS_OAI_KEY && process.env.OPENAI_BASE_URL), detail: 'CRS_OAI_KEY + OPENAI_BASE_URL (optional for offline canary)' },
   ];
-  const ready = checks.filter((item) => ['node', 'appworld', 'marble', 'who_when'].includes(item.name)).every((item) => item.ok);
+  const ready = checks.filter((item) => ['node', 'appworld'].includes(item.name)).every((item) => item.ok);
   console.log(JSON.stringify({ benchmark: BENCHMARK_VERSION, approvalRequired: false, checks, ready, theAgentCompanyDeferred: !tac.available }, null, 2));
   process.exitCode = ready ? 0 : 1;
 }
 
 async function manifest() {
   const appworld = await readJson(APPWORLD_MANIFEST);
-  const orgAppworldPath = path.join(ORG_ROOT, 'appworld_orgbench_tasks.manifest.json');
-  const orgAppworld = await exists(orgAppworldPath) ? await readJson(orgAppworldPath) : null;
   const tac = await theAgentCompanyAdapter().manifest();
   const output = {
     benchmark: BENCHMARK_VERSION,
@@ -225,21 +281,21 @@ async function manifest() {
     version: 'v2',
     protocol: 'BENCHMARK_PROTOCOL.md',
     approvalRequired: false,
-    primary: orgAppworld ? { name: 'AppWorld', officialEvaluatorRequired: true, strictTaskCount: orgAppworld.strictTaskCount, boundaryTaskCount: orgAppworld.boundaryTaskCount, taskIds: orgAppworld.tasks.map((task) => task.taskId), boundaryTaskIds: orgAppworld.boundarySupplement.map((task) => task.taskId), manifestSha256: orgAppworld.manifestSha256 } : { name: 'AppWorld', officialEvaluatorRequired: true, taskCount: appworld.taskCount, taskIds: appworld.tasks.map((task) => task.taskId), manifestSha256: appworld.manifestSha256 },
+    primary: { name: 'AppWorld', officialEvaluatorRequired: true, strictTaskCount: appworld.strictTaskCount, boundaryTaskCount: appworld.boundaryTaskCount, taskIds: appworld.tasks.map((task) => task.taskId), boundaryTaskIds: appworld.boundarySupplement.map((task) => task.taskId), manifestSha256: appworld.manifestSha256 },
     externalScenarioValidation: { name: 'TheAgentCompany', taskCount: tac.taskCount, status: 'adapter_manifest', taskIds: tac.taskIds },
     organizationReference: marbleAdapter(),
     attributionReference: whoWhenAdapter(),
     externalValidation: swebenchAdapter(),
-    selectionRules: { theAgentCompany: 'six role families, four tasks each, >=3 checkpoints, >=1 deterministic checkpoint', appworld: 'existing audited 12-task manifest; expand to 40 only after compatibility audit' },
+    selectionRules: { appworld: 'test_normal; difficulty>=3; num_apps>=2; strict main requires num_api_calls>=30 and num_apis>=8; boundary tasks are reported separately; no model-result filtering', theAgentCompany: 'external scenario validation only; six role families, four tasks each, >=3 checkpoints, >=1 deterministic checkpoint' },
   };
   output.manifestSha256 = sha256(JSON.stringify(output));
   await writeJson(path.join(ORG_ROOT, 'orgbench.manifest.json'), output);
-  console.log(JSON.stringify({ output: path.join(ORG_ROOT, 'orgbench.manifest.json'), taskCounts: { appworldStrict: orgAppworld?.strictTaskCount ?? appworld.taskCount, appworldBoundary: orgAppworld?.boundaryTaskCount ?? 0, theAgentCompany: tac.taskCount }, manifestSha256: output.manifestSha256 }, null, 2));
+  console.log(JSON.stringify({ output: path.join(ORG_ROOT, 'orgbench.manifest.json'), taskCounts: { appworldStrict: appworld.strictTaskCount, appworldBoundary: appworld.boundaryTaskCount, theAgentCompanyExternal: tac.taskCount }, manifestSha256: output.manifestSha256 }, null, 2));
 }
 
 async function prepare() {
   const generator = path.join(ROOT, 'scripts', 'generate_orgbench_manifests.py');
-  const python = process.env.APPWORLD_PYTHON || 'D:/Cli-anything/benchmarks/appworld-official/.venv313/Scripts/python.exe';
+  const python = process.env.APPWORLD_PYTHON || 'python3';
   const { spawn } = await import('node:child_process');
   await new Promise((resolve, reject) => { const child = spawn(python, [generator], { stdio: 'inherit', windowsHide: true }); child.on('close', (code) => code === 0 ? resolve() : reject(new Error(`orgbench_manifest_generation_failed:${code}`))); child.on('error', reject); });
   await manifest();
@@ -360,8 +416,8 @@ async function canary() {
     const method = String(args.method || 'M3_ours'); const seed = Number(args.seed || 20260826);
     let episode; let runError = null;
     try { episode = await runRealAppWorldEpisode({ task, method, seed, runDir: dir }); } catch (error) { runError = { name: error.name, message: error.message, stack: error.stack }; await writeJsonl(path.join(dir, 'errors.jsonl'), [{ taskId: task.taskId, method, seed, stage: 'real_appworld_episode', ...runError, infrastructureLikely: /fetch failed|timeout|ECONN|model_request/.test(error.message) }]); }
-    if (!episode) { await writeJson(path.join(dir, 'config.json'), { benchmark: BENCHMARK_VERSION, adapter: 'AppWorld', mode: 'real', taskId: task.taskId, method, seed, episodeCount: 0, failed: true }); console.log(JSON.stringify({ runDir: dir, benchmark: 'AppWorld', taskId: task.taskId, method, seed, protocolOnly: false, failed: true, error: runError }, null, 2)); return; }
-    await writeJson(path.join(dir, 'config.json'), { benchmark: BENCHMARK_VERSION, adapter: 'AppWorld', mode: 'real', taskId: task.taskId, method, seed, episodeCount: 1, model: process.env.UBUDDY_ORGBENCH_MODEL || 'gpt-5.4-mini' });
+    if (!episode) { await writeJson(path.join(dir, 'config.json'), { benchmark: BENCHMARK_VERSION, adapter: 'AppWorld', mode: 'real', taskId: task.taskId, method, seed, episodeCount: 0, failed: true, freeze: runtimeFreeze() }); console.log(JSON.stringify({ runDir: dir, benchmark: 'AppWorld', taskId: task.taskId, method, seed, protocolOnly: false, failed: true, error: runError }, null, 2)); return; }
+    await writeJson(path.join(dir, 'config.json'), { benchmark: BENCHMARK_VERSION, adapter: 'AppWorld', mode: 'real', taskId: task.taskId, method, seed, episodeCount: 1, model: process.env.UBUDDY_ORGBENCH_MODEL || 'gpt-5.4-mini', freeze: runtimeFreeze() });
     await writeJson(path.join(dir, 'problem.json'), { taskId: task.taskId, instruction: episode.taskInstruction, benchmark: 'AppWorld' });
     await writeJson(path.join(dir, 'public_ubuddy_profiles.json'), episode.publicProfiles);
     await writeJsonl(path.join(dir, 'selection_snapshots.jsonl'), episode.selections);
@@ -386,7 +442,7 @@ async function pilot() {
   if (args.realAppworld) {
     const manifest = await readJson(path.join(ORG_ROOT, 'appworld_orgbench_tasks.manifest.json')); const tasks = manifest.tasks.slice(0, Number(args.taskCount || 1)); const dir = path.resolve(String(args.runDir || runDir(`orgbench-appworld-pilot-${Date.now()}`))); await fs.mkdir(dir, { recursive: true }); const rows = []; const errors = []; const seeds = csv(args.seeds, ['20260821', '20260822', '20260823']).map(Number); const methods = csv(args.methods, METHODS);
     for (const task of tasks) for (const seed of seeds) for (const method of methods) { try { rows.push(await runRealAppWorldEpisode({ task, method, seed, runDir: dir })); } catch (error) { errors.push({ taskId: task.taskId, method, seed, message: error.message, stack: error.stack, infrastructureLikely: /fetch failed|timeout|ECONN|model_request/.test(error.message) }); } await writeJsonl(path.join(dir, 'episodes.jsonl'), rows.map(safeRealEpisode)); if (errors.length) await writeJsonl(path.join(dir, 'errors.jsonl'), errors); await writeJson(path.join(dir, 'metrics.json'), aggregateMetrics(rows.map((r) => r.metrics))); }
-    await writeJson(path.join(dir, 'config.json'), { benchmark: BENCHMARK_VERSION, adapter: 'AppWorld', mode: 'real', taskCount: tasks.length, episodeCount: rows.length, errorCount: errors.length, methods, seeds }); console.log(JSON.stringify({ runDir: dir, episodeCount: rows.length, errorCount: errors.length, protocolOnly: false }, null, 2)); return;
+    await writeJson(path.join(dir, 'config.json'), { benchmark: BENCHMARK_VERSION, adapter: 'AppWorld', mode: 'real', taskCount: tasks.length, episodeCount: rows.length, errorCount: errors.length, methods, seeds, freeze: runtimeFreeze() }); console.log(JSON.stringify({ runDir: dir, episodeCount: rows.length, errorCount: errors.length, protocolOnly: false }, null, 2)); return;
   }
   await runEpisodes({ name: `orgbench-pilot-${Date.now()}`, tasks: ['pilot_001', 'pilot_002'], seeds: [20260821, 20260822] });
 }
@@ -394,7 +450,7 @@ async function main() {
   if (args.realAppworld) {
     const manifest = await readJson(path.join(ORG_ROOT, 'appworld_orgbench_tasks.manifest.json')); const split = String(args.split || 'locked_test'); const splitTasks = await selectProtocolTasks(manifest, split); const taskLimit = Number(args.taskCount || splitTasks.length); const tasks = splitTasks.slice(0, taskLimit); const seeds = csv(args.seeds, ['20260821', '20260822', '20260823']).map(Number); const methods = csv(args.methods, METHODS); const dir = path.resolve(String(args.runDir || runDir(`orgbench-appworld-main-${Date.now()}`))); await fs.mkdir(dir, { recursive: true }); const rows = []; const errors = [];
     for (const task of tasks) for (const seed of seeds) for (const method of methods) { try { rows.push(await runRealAppWorldEpisode({ task, method, seed, runDir: dir })); } catch (error) { errors.push({ taskId: task.taskId, method, seed, message: error.message, stack: error.stack, infrastructureLikely: /fetch failed|timeout|ECONN|model_request/.test(error.message) }); } await writeJsonl(path.join(dir, 'episodes.jsonl'), rows.map(safeRealEpisode)); if (errors.length) await writeJsonl(path.join(dir, 'errors.jsonl'), errors); await writeJson(path.join(dir, 'metrics.json'), aggregateMetrics(rows.map((r) => r.metrics))); }
-    await writeJson(path.join(dir, 'config.json'), { benchmark: BENCHMARK_VERSION, adapter: 'AppWorld', mode: 'real', split, splitUnit: 'task_family', taskCount: tasks.length, taskIds: tasks.map((task) => task.taskId), episodeCount: rows.length, errorCount: errors.length, methods, seeds }); console.log(JSON.stringify({ runDir: dir, split, episodeCount: rows.length, errorCount: errors.length, protocolOnly: false }, null, 2)); return;
+    await writeJson(path.join(dir, 'config.json'), { benchmark: BENCHMARK_VERSION, adapter: 'AppWorld', mode: 'real', split, splitUnit: 'task_family', taskCount: tasks.length, taskIds: tasks.map((task) => task.taskId), episodeCount: rows.length, errorCount: errors.length, methods, seeds, freeze: runtimeFreeze() }); console.log(JSON.stringify({ runDir: dir, split, episodeCount: rows.length, errorCount: errors.length, protocolOnly: false }, null, 2)); return;
   }
   await runEpisodes({ name: `orgbench-main-${Date.now()}`, tasks: ['appworld_6f4b9a5_1', 'appworld_042a9fc_1', 'tac_pm_assign_issues', 'tac_sde_unit_test'], seeds: [20260821, 20260822, 20260823] });
 }
@@ -491,7 +547,36 @@ async function report() {
   const reportText = `# uBuddy-AppWorld Hybrid Benchmark v2 实验报告\n\n## 实验目的\n\n验证双层 uBuddy 组织协议能否在不预设人员分工和任务树的条件下，完成候选选择、跨人委派、recipient 二次拆解、内部 Agent 执行、共享状态更新、故障恢复和官方验收。\n\n## 实验条件\n\n- benchmark: ${config.adapter || config.benchmark || BENCHMARK_VERSION}\n- protocol: BENCHMARK_PROTOCOL.md\n- mode: ${config.mode || 'protocol'}\n- episodes: ${metrics.episodeCount ?? metrics.traceCount ?? 'n/a'}\n- task: ${config.taskId || 'multiple'}\n- method: ${config.method || 'multiple'}\n- seed: ${config.seed || 'multiple'}\n- official evaluator: ${official ? 'yes' : 'no'}\n\n## 打分机制\n\nAppWorld 官方 evaluator 负责外部任务结果；Janus 状态图和事件链负责八个过程维度。两类分数分开呈现，不定义掩盖失败类型的总分。\n\n## 结果\n\n| 方法 | N | 完整成功率 | 官方 checkpoint rate | 内部分配 regret |\n|---|---:|---:|---:|---:|\n${methodRows || '| n/a | 0 | n/a | n/a | n/a |'}\n\n${official ? `本次官方 evaluator：${official.passCount}/${official.totalCount} checkpoints，通过率 ${official.passPercentage}%，完整成功=${official.success}。` : '本 run 没有官方 evaluator，只能作为协议测试。'}\n\n## 完整性和边界\n\n- artifact verification: ${verification?.valid ?? 'not run'}\n- private leak: ${verification ? !verification.noPrivateLeak : 'not checked'}\n- protocolOnly: ${official ? 'false' : 'true'}\n- attribution/evolution claim eligible: false，需完成带 gold 的归因实验和第二轮迁移实验。\n\n## 结论\n\n${official ? '真实 AppWorld 执行与官方评分链路已经建立；单个 canary 只证明工程链路，不证明 M3 优于对照方法。' : '当前仅证明协议和 artifact 契约可运行，不能报告任务效果。'}\n`;
   await fs.writeFile(path.join(dir, 'report.md'), reportText, 'utf8'); console.log(JSON.stringify({ report: path.join(dir, 'report.md') }, null, 2));
 }
-async function packageCommand() { const manifestFile = path.join(ORG_ROOT, 'orgbench.manifest.json'); if (!(await exists(manifestFile))) await manifest(); const files = ['PACKAGE_README_CN.md', 'schema.mjs', 'orgbench_experiment.mjs', 'core/random.mjs', 'core/stateGraph.mjs', 'core/scenario.mjs', 'core/policy.mjs', 'core/modelPolicy.mjs', 'core/janusClient.mjs', 'core/evolutionCoordinator.mjs', 'core/benchmarkProtocol.mjs', 'core/faultInjection.mjs', 'evaluators/metrics.mjs', 'evaluators/eightDimensions.mjs', 'evaluators/independentVerifier.mjs', 'adapters/appworld.mjs', 'adapters/theagentcompany.mjs', 'adapters/marble.mjs', 'adapters/who_when.mjs', 'adapters/swebench.mjs', 'remote/README.md', 'remote/runRemote.mjs', 'remote/remoteDoctor.mjs', 'remote/remoteInit.mjs', 'remote/remoteInitCore.mjs', 'remote/verifyRemoteInit.mjs', 'remote/roster.mjs', 'remote/remoteInit.test.mjs', 'tests/orgbench_core.test.mjs', 'schemas/task-gold.schema.json', 'schemas/fault-manifest.schema.json', 'schemas/attribution-gold.schema.json', 'schemas/run-config.schema.json', 'BENCHMARK_PROTOCOL.md', 'REMOTE_RUNBOOK_CN.md', 'task_protocol.manifest.json', 'transfer_pairs.manifest.json', 'fault_manifest.example.json', 'benchmark.config.example.json', 'orgbench.manifest.json', 'experiment_plan.json']; const output = path.join(ROOT, 'outputs', 'ubuddy-orgbench-v2-package.json'); await writeJson(output, { benchmark: BENCHMARK_VERSION, sourceRoot: ORG_ROOT, files, note: 'Reviewer bundle only. Execute it from the full Janus repository because the AppWorld bridge, Cloud modules, package scripts, and dependencies live outside this directory. Contains no secrets or run outputs.' }); console.log(JSON.stringify({ manifest: output, fileCount: files.length }, null, 2)); }
+async function packageCommand() {
+  const manifestFile = path.join(ORG_ROOT, 'orgbench.manifest.json');
+  if (!(await exists(manifestFile))) await manifest();
+  const files = [
+    'PACKAGE_README_CN.md', 'schema.mjs', 'orgbench_experiment.mjs',
+    'appworld_bridge.py', 'appworld_setup_remote.sh', 'appworld_orgbench_tasks.manifest.json',
+    'core/random.mjs', 'core/stateGraph.mjs', 'core/scenario.mjs', 'core/policy.mjs',
+    'core/modelPolicy.mjs', 'core/janusClient.mjs', 'core/evolutionCoordinator.mjs',
+    'core/benchmarkProtocol.mjs', 'core/faultInjection.mjs', 'evaluators/metrics.mjs',
+    'evaluators/eightDimensions.mjs', 'evaluators/independentVerifier.mjs',
+    'adapters/appworld.mjs', 'adapters/theagentcompany.mjs', 'adapters/marble.mjs',
+    'adapters/who_when.mjs', 'adapters/swebench.mjs', 'remote/README.md',
+    'remote/runRemote.mjs', 'remote/remoteDoctor.mjs', 'remote/remoteInit.mjs',
+    'remote/remoteInitCore.mjs', 'remote/verifyRemoteInit.mjs', 'remote/roster.mjs',
+    'remote/remoteInit.test.mjs', 'tests/orgbench_core.test.mjs',
+    'schemas/task-gold.schema.json', 'schemas/fault-manifest.schema.json',
+    'schemas/attribution-gold.schema.json', 'schemas/run-config.schema.json',
+    'BENCHMARK_PROTOCOL.md', 'REMOTE_RUNBOOK_CN.md', 'task_protocol.manifest.json',
+    'transfer_pairs.manifest.json', 'fault_manifest.example.json',
+    'benchmark.config.example.json', 'orgbench.manifest.json', 'experiment_plan.json',
+  ];
+  const output = path.join(ROOT, 'outputs', 'ubuddy-orgbench-v2-package.json');
+  await writeJson(output, {
+    benchmark: BENCHMARK_VERSION,
+    sourceRoot: ORG_ROOT,
+    files,
+    note: 'Reviewer bundle only. The AppWorld bridge and remote setup are self-contained here; formal execution still requires the full Janus repository, npm dependencies, Cloud modules, and official AppWorld data. Contains no secrets or run outputs.',
+  });
+  console.log(JSON.stringify({ manifest: output, fileCount: files.length }, null, 2));
+}
 
 if (process.argv[1] && path.resolve(process.argv[1]) === path.resolve(fileURLToPath(import.meta.url))) {
   try {

@@ -3,9 +3,9 @@ import path from 'node:path';
 import { spawn } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 
-export function appworldAdapter({ root = process.env.APPWORLD_ROOT || 'D:/Cli-anything/benchmarks/appworld-runtime', manifestPath = 'D:/Cli-anything/Janus/experiments/ubuddy_appworld/appworld_tasks.manifest.json' } = {}) {
-  const python = process.env.APPWORLD_PYTHON || 'D:/Cli-anything/benchmarks/appworld-official/.venv313/Scripts/python.exe';
-  const bridgeScript = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../../ubuddy_appworld/appworld_bridge.py');
+export function appworldAdapter({ root = process.env.APPWORLD_ROOT || path.resolve(process.cwd(), 'benchmarks', 'appworld-runtime'), manifestPath = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../appworld_orgbench_tasks.manifest.json') } = {}) {
+  const python = process.env.APPWORLD_PYTHON || 'python3';
+  const bridgeScript = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../appworld_bridge.py');
   function startBridge() {
     const child = spawn(python, [bridgeScript], { env: { ...process.env, APPWORLD_ROOT: root }, stdio: ['pipe', 'pipe', 'inherit'], windowsHide: true });
     let buffer = ''; const pending = [];

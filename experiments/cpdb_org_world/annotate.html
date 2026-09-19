@@ -1,0 +1,412 @@
+﻿<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>依赖集束标注</title>
+  <style>
+    :root {
+      --bg: #f3f1eb;
+      --ink: #1c1915;
+      --muted: #6b645b;
+      --line: #ddd6c8;
+      --paper: #fffcf7;
+      --d: #1f5c4d;
+      --s: #6b3a1f;
+      --accent: #243869;
+      --warn: #8a5a00;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      color: var(--ink);
+      background: var(--bg);
+      font: 15px/1.45 "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+    }
+    header {
+      padding: 18px 24px 12px;
+      border-bottom: 1px solid var(--line);
+      background: #fffaf2;
+    }
+    header h1 { margin: 0 0 6px; font-size: 20px; letter-spacing: 0.02em; }
+    header p { margin: 0; color: var(--muted); max-width: 980px; }
+    .bar {
+      display: flex; flex-wrap: wrap; gap: 10px; align-items: center;
+      padding: 12px 24px; border-bottom: 1px solid var(--line);
+    }
+    .bar label { color: var(--muted); font-size: 13px; }
+    input, select, textarea, button, a.btn {
+      font: inherit; color: inherit;
+    }
+    input, select, textarea {
+      border: 1px solid var(--line); background: white; border-radius: 8px; padding: 7px 10px;
+    }
+    textarea { width: 100%; min-height: 64px; resize: vertical; }
+    button, a.btn {
+      border: 0; border-radius: 8px; padding: 8px 14px; cursor: pointer;
+      background: var(--accent); color: white; text-decoration: none; display: inline-block;
+    }
+    button.ghost, a.ghost { background: transparent; color: var(--accent); border: 1px solid #c9d2e6; }
+    button:disabled { opacity: 0.45; cursor: not-allowed; }
+    main { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; padding: 18px 24px 8px; }
+    .card {
+      background: var(--paper); border: 1px solid var(--line); border-radius: 16px; padding: 16px 18px;
+      min-height: 280px;
+    }
+    .card .kicker { color: var(--muted); font-size: 12px; letter-spacing: 0.08em; text-transform: uppercase; }
+    .card h2 { margin: 4px 0 8px; font-size: 22px; }
+    .meta { color: var(--muted); margin-bottom: 10px; }
+    .tags { display: flex; flex-wrap: wrap; gap: 6px; margin: 10px 0; }
+    .tag { background: #efe8da; border-radius: 999px; padding: 3px 8px; font-size: 12px; }
+    .io { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 12px; font-size: 13px; }
+    .io div { background: #f7f1e6; border-radius: 10px; padding: 8px 10px; }
+    .digest { margin-top: 12px; color: #3b342c; }
+    .ask { padding: 0 24px 24px; }
+    .q {
+      background: white; border: 1px solid var(--line); border-radius: 16px;
+      padding: 14px 16px; margin-top: 12px;
+    }
+    .q h3 { margin: 0 0 8px; font-size: 16px; }
+    .q.d h3 { color: var(--d); }
+    .q.s h3 { color: var(--s); }
+    .scale { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; }
+    .scale button {
+      background: #f4efe6; color: var(--ink); border: 1px solid transparent; min-height: 58px;
+    }
+    .scale button small { display: block; color: var(--muted); font-size: 11px; }
+    .q.d .scale button.picked { background: #1f5c4d; color: white; }
+    .q.s .scale button.picked { background: #6b3a1f; color: white; }
+    .foot { display: flex; gap: 10px; align-items: center; margin-top: 12px; flex-wrap: wrap; }
+    .stats { color: var(--muted); font-size: 13px; }
+    .err { color: #9b1c1c; }
+    .pill {
+      display: inline-block; border-radius: 999px; padding: 3px 10px; font-size: 12px;
+      background: #efe8da;
+    }
+    .pill.agreed { background: #d9ece3; color: #14483c; }
+    .pill.needs { background: #f6e3c8; color: #7a4c00; }
+    .pill.adjudicated { background: #dbe3f5; color: #1f3060; }
+    .pill.prelabel { background: #ece7dc; color: #6b645b; }
+    .context { padding: 0 24px; }
+    .notice {
+      background: #fdf6e3; border: 1px solid #efdfb4; color: var(--warn);
+      border-radius: 12px; padding: 10px 14px; font-size: 13px;
+    }
+    .peers { margin-top: 10px; font-size: 13px; }
+    .peers table { border-collapse: collapse; width: 100%; }
+    .peers th, .peers td { text-align: left; padding: 6px 8px; border-bottom: 1px solid var(--line); }
+    .peers th { color: var(--muted); font-weight: 500; }
+    .refs { margin-top: 8px; color: var(--muted); font-size: 13px; }
+    @media (max-width: 900px) {
+      main, .io, .scale { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>能力画像依赖集束标注</h1>
+    <p>
+      三人流程：甲、乙在 <b>test</b> 上各自盲标一遍（互相看不到对方，也不看预标），丙只仲裁分歧，并顺手复核 train / development 的预标。
+      依赖分和相似度分开打，任何时候都不要合成一个总分。
+    </p>
+  </header>
+  <div class="bar">
+    <label>标注人 <input id="annotator" placeholder="姓名或工号" /></label>
+    <label>角色
+      <select id="role">
+        <option value="reviewer">标注员</option>
+        <option value="adjudicator">仲裁员</option>
+      </select>
+    </label>
+    <label>切分
+      <select id="split">
+        <option value="test">test（盲标）</option>
+        <option value="development">development</option>
+        <option value="train">train</option>
+        <option value="">全部</option>
+      </select>
+    </label>
+    <label>类型
+      <select id="kind">
+        <option value="">全部类型</option>
+        <option value="within_owner_directed">组内互补</option>
+        <option value="cross_owner_similar">跨人相近</option>
+        <option value="cross_owner_complement">跨人互补</option>
+        <option value="hard_negative">硬负例</option>
+        <option value="facet_twin">细节近邻</option>
+      </select>
+    </label>
+    <label>队列
+      <select id="queue">
+        <option value="todo">我的待标</option>
+        <option value="adjudicate">待仲裁</option>
+        <option value="prelabel">待复核预标</option>
+        <option value="open">全部待办</option>
+        <option value="mine">我的已标</option>
+        <option value="reviewed">已有人标过</option>
+        <option value="">全部</option>
+      </select>
+    </label>
+    <label><input id="showTeacher" type="checkbox" /> 对照参考分</label>
+    <button class="ghost" id="prev" type="button">上一条</button>
+    <button class="ghost" id="next" type="button">跳过</button>
+    <a class="btn ghost" id="agreement" href="/api/agreement?split=test" target="_blank" rel="noreferrer">看一致性</a>
+    <span class="stats" id="stats"></span>
+  </div>
+  <main>
+    <article class="card" id="left"></article>
+    <article class="card" id="right"></article>
+  </main>
+  <section class="context">
+    <p><span class="pill" id="status">—</span> <span class="stats" id="statusNote"></span></p>
+    <p class="notice" id="blindNote" hidden></p>
+    <div class="peers" id="peers" hidden></div>
+    <p class="refs" id="teacher"></p>
+  </section>
+  <section class="ask">
+    <div class="q d">
+      <h3>依赖分 D：规划时，左方产出是否适合作为右方输入？</h3>
+      <p class="stats">看产出 → 输入，不看他们像不像。整理进写作高；两个演示文稿低。</p>
+      <div class="scale" id="dep"></div>
+    </div>
+    <div class="q s">
+      <h3>相似度 S：若左方执行不佳，右方是否适合做最小能力改动替换？</h3>
+      <p class="stats">看职能是否邻近，不看他们该不该协作。两个文案近邻高；整理和写作低。</p>
+      <div class="scale" id="sim"></div>
+    </div>
+    <label>可选备注（能力差、拿不准的点）<textarea id="rationale" placeholder="例如：只差品牌语气，可以换；但规划上不该互相依赖。"></textarea></label>
+    <div class="foot">
+      <button id="save" type="button">保存并下一条（Enter）</button>
+      <span class="stats">A–G 打依赖分，Z–B 打相似度</span>
+      <span class="err" id="err"></span>
+    </div>
+  </section>
+  <script>
+    const SCALE = [
+      { v: 0, d: '无', ds: '不该作为输入', s: '不可替换', ss: '完全不同活' },
+      { v: 0.25, d: '弱', ds: '偶尔沾边', s: '远', ss: '勉强同领域' },
+      { v: 0.5, d: '中', ds: '能用但不自然', s: '部分', ss: '相关但改动大' },
+      { v: 0.75, d: '强', ds: '明显该协作', s: '近邻', ss: '同职只差细节' },
+      { v: 1, d: '必须', ds: '标准上游输入', s: '几乎同一', ss: '可直接替换' },
+    ];
+    const STATUS_TEXT = {
+      unlabeled: '未标',
+      prelabel: '预标（AI）',
+      single: '已单标',
+      agreed: '双人一致',
+      needs_adjudication: '待仲裁',
+      adjudicated: '已仲裁',
+    };
+    const state = { card: null, dep: null, sim: null, req: 0 };
+    const $ = (id) => document.getElementById(id);
+    const esc = (value) => String(value || '').replace(/[&<>"]/g, (ch) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[ch]));
+
+    function renderScale(el, kind) {
+      el.innerHTML = SCALE.map((item) => {
+        const title = kind === 'd' ? item.d : item.s;
+        const sub = kind === 'd' ? item.ds : item.ss;
+        return `<button type="button" data-v="${item.v}"><b>${title} ${item.v}</b><small>${sub}</small></button>`;
+      }).join('');
+      el.querySelectorAll('button').forEach((btn) => {
+        btn.addEventListener('click', () => pick(kind, Number(btn.dataset.v)));
+      });
+    }
+    renderScale($('dep'), 'd');
+    renderScale($('sim'), 's');
+
+    function pick(kind, value) {
+      if (kind === 'd') state.dep = value; else state.sim = value;
+      paintPicked();
+    }
+    function paintPicked() {
+      $('dep').querySelectorAll('button').forEach((btn) => btn.classList.toggle('picked', Number(btn.dataset.v) === state.dep));
+      $('sim').querySelectorAll('button').forEach((btn) => btn.classList.toggle('picked', Number(btn.dataset.v) === state.sim));
+    }
+
+    function side(el, agent, label) {
+      if (!agent) { el.innerHTML = ''; return; }
+      el.innerHTML = `
+        <div class="kicker">${label}</div>
+        <h2>${esc(agent.name)}</h2>
+        <div class="meta">${esc(agent.ownerName)} · ${esc(agent.family)} · ${esc(agent.facet)}</div>
+        <div class="tags">${(agent.tags || []).map((tag) => `<span class="tag">${esc(tag)}</span>`).join('')}</div>
+        <div class="io">
+          <div><b>产出</b><br>${esc((agent.produces || []).join('、') || '无')}</div>
+          <div><b>输入</b><br>${esc((agent.consumes || []).join('、') || '任务简报')}</div>
+        </div>
+        <div class="digest">${esc(agent.skillDigest || '')}</div>
+      `;
+    }
+
+    function reviewer() { return $('annotator').value.trim(); }
+    function role() { return $('role').value; }
+
+    async function loadStats() {
+      const params = new URLSearchParams();
+      if (reviewer()) params.set('reviewer', reviewer());
+      const res = await fetch('/api/stats?' + params.toString());
+      const data = await res.json();
+      const t = data.splits?.test || {};
+      const dev = data.splits?.development || {};
+      const train = data.splits?.train || {};
+      $('stats').textContent = [
+        `test 我已标 ${t.mine || 0}/${t.total || 0}`,
+        `一致 ${t.agreed || 0}`,
+        `待仲裁 ${t.needs_adjudication || 0}`,
+        `已仲裁 ${t.adjudicated || 0}`,
+        `· dev 预标 ${dev.prelabel || 0} · train 预标 ${train.prelabel || 0}`,
+      ].join(' ');
+      return data;
+    }
+
+    function query() {
+      const params = new URLSearchParams();
+      if ($('split').value) params.set('split', $('split').value);
+      if ($('kind').value) params.set('kind', $('kind').value);
+      if ($('queue').value) params.set('queue', $('queue').value);
+      if (reviewer()) params.set('reviewer', reviewer());
+      if ($('showTeacher').checked) params.set('teacher', '1');
+      if (state.card?.id) params.set('after', state.card.id);
+      return params;
+    }
+
+    function renderContext(card, teacher) {
+      const status = card.status || 'unlabeled';
+      const pill = $('status');
+      pill.textContent = STATUS_TEXT[status] || status;
+      pill.className = `pill ${status}`;
+      $('statusNote').textContent = card.raterCount
+        ? `已有 ${card.raterCount} 位独立标注员打过。`
+        : '';
+
+      const blindNote = $('blindNote');
+      if (card.blind) {
+        blindNote.hidden = false;
+        blindNote.textContent = card.mine
+          ? `盲标模式：你已经标过这条（D=${card.mine.dependency} S=${card.mine.similarity}），改完可直接重存；别人的分不会显示。`
+          : '盲标模式：预标、参考分和其他标注员的结果都已隐藏。请独立打两个分，别去猜 AI 会怎么打。';
+      } else {
+        blindNote.hidden = true;
+        blindNote.textContent = '';
+      }
+
+      const peers = $('peers');
+      if (!card.peers || !card.peers.length) {
+        peers.hidden = true;
+        peers.innerHTML = '';
+      } else {
+        peers.hidden = false;
+        peers.innerHTML = `
+          <table>
+            <thead><tr><th>标注人</th><th>角色</th><th>依赖分 D</th><th>相似度 S</th><th>备注</th></tr></thead>
+            <tbody>${card.peers.map((row) => `
+              <tr>
+                <td>${esc(row.reviewerId)}</td>
+                <td>${row.role === 'adjudicator' ? '仲裁' : row.role === 'prelabel' ? '预标' : '标注'}</td>
+                <td>${row.dependency}</td>
+                <td>${row.similarity}</td>
+                <td>${esc(row.rationale)}</td>
+              </tr>`).join('')}</tbody>
+          </table>`;
+      }
+
+      const isAdjudicating = role() === 'adjudicator' && status === 'needs_adjudication';
+      const reasons = [];
+      if (!card.blind && card.human?.rationale) reasons.push(card.human.rationale);
+      if (teacher) reasons.push(`参考分 D=${teacher.dependency} S=${teacher.similarity}`);
+      if (isAdjudicating) reasons.push('你是仲裁：看上面的分歧，定一个最终值。');
+      $('teacher').textContent = reasons.join(' ');
+    }
+
+    async function loadCard(direction = 'next') {
+      $('err').textContent = '';
+      const my = ++state.req;
+      const params = query();
+      params.set('dir', direction);
+      const res = await fetch('/api/card?' + params.toString());
+      const data = await res.json();
+      if (my !== state.req) return;
+      if (!data.card) {
+        $('left').innerHTML = '<p>这一筛选下没有更多卡片。</p>';
+        $('right').innerHTML = '';
+        $('peers').hidden = true;
+        $('blindNote').hidden = true;
+        $('status').textContent = '—';
+        $('statusNote').textContent = '';
+        $('teacher').textContent = '';
+        state.card = null;
+        state.dep = null;
+        state.sim = null;
+        paintPicked();
+        await loadStats();
+        return;
+      }
+      state.card = data.card;
+      state.dep = data.card.human?.dependency ?? null;
+      state.sim = data.card.human?.similarity ?? null;
+      $('rationale').value = data.card.human?.rationale || '';
+      $('showTeacher').disabled = Boolean(data.card.blind);
+      const mineId = data.card.mine?.reviewerId;
+      if (mineId && !mineId.startsWith('prelabel')) $('annotator').value = mineId;
+      side($('left'), data.card.left, '左方 A');
+      side($('right'), data.card.right, '右方 B');
+      paintPicked();
+      renderContext(data.card, data.teacher);
+      $('save').textContent = role() === 'adjudicator' ? '提交仲裁并下一条（Enter）' : '保存并下一条（Enter）';
+      await loadStats();
+    }
+
+    async function save() {
+      const who = reviewer();
+      if (!state.card) return;
+      if (!who) { $('err').textContent = '先填标注人'; return; }
+      if (who.startsWith('prelabel')) { $('err').textContent = '这个标注人名字被预标保留了，换一个'; return; }
+      if (state.dep == null || state.sim == null) { $('err').textContent = '依赖分和相似度都要打，不能只打一个'; return; }
+      const res = await fetch('/api/label', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          id: state.card.id,
+          reviewerId: who,
+          role: role(),
+          dependency: state.dep,
+          similarity: state.sim,
+          rationale: $('rationale').value.trim(),
+          blind: Boolean(state.card.blind),
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok) { $('err').textContent = data.error || '保存失败'; return; }
+      localStorage.setItem('cpdb_annotator', who);
+      localStorage.setItem('cpdb_role', role());
+      await loadCard('next');
+    }
+
+    $('save').addEventListener('click', save);
+    $('next').addEventListener('click', () => loadCard('next'));
+    $('prev').addEventListener('click', () => loadCard('prev'));
+    ['split', 'kind', 'queue', 'showTeacher', 'role'].forEach((id) => {
+      $(id).addEventListener('change', () => {
+        if (id === 'role') { $('save').textContent = role() === 'adjudicator' ? '提交仲裁并下一条（Enter）' : '保存并下一条（Enter）'; }
+        state.card = null;
+        loadCard('next');
+      });
+    });
+    $('annotator').addEventListener('change', () => { state.card = null; loadCard('next'); });
+    $('agreement').href = '/api/agreement?split=test';
+    document.addEventListener('keydown', (event) => {
+      if (event.target.matches('input, textarea, select')) return;
+      const depKeys = { a: 0, s: 0.25, d: 0.5, f: 0.75, g: 1 };
+      const simKeys = { z: 0, x: 0.25, c: 0.5, v: 0.75, b: 1 };
+      const key = event.key.toLowerCase();
+      if (key in depKeys) { pick('d', depKeys[key]); event.preventDefault(); }
+      if (key in simKeys) { pick('s', simKeys[key]); event.preventDefault(); }
+      if (event.key === 'Enter') { event.preventDefault(); save(); }
+    });
+    $('annotator').value = localStorage.getItem('cpdb_annotator') || '';
+    $('role').value = localStorage.getItem('cpdb_role') || 'reviewer';
+    $('agreement').addEventListener('click', () => { $('agreement').href = `/api/agreement?split=${$('split').value}`; });
+    loadCard('next');
+  </script>
+</body>
+</html>

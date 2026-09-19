@@ -1,0 +1,19 @@
+{
+  "stage": "A",
+  "date": "2026-09-07",
+  "status": "passed_after_fix",
+  "checks": {
+    "test_utility_training_leakage": "passed: training functions reject non-train rows",
+    "abstain_scoring": "fixed: evaluator now scores abstain as noop",
+    "regret_includes_noop_and_actions": "passed",
+    "hidden_labels_in_embedding": "fixed: condition excluded from embedding input",
+    "initial_state_hash": "passed: runner regression test",
+    "na_and_infrastructure": "passed by protocol tests",
+    "independent_evaluator": "passed: evaluator receives output/spec only",
+    "family_split": "passed: family leakage test"
+  },
+  "severity": "medium",
+  "fixed_files": ["scripts/evaluate_uplift.py", "scripts/build_text_embeddings.py"],
+  "regression": "node --test experiments/tdb_probe_benchmark/runner.test.mjs",
+  "evidence": {"tests_passed": 13, "tests_failed": 0}
+}

@@ -1,7 +1,7 @@
 import fs from 'node:fs/promises';
 import path from 'node:path';
 
-const DEFAULT_ROOT = process.env.THE_AGENT_COMPANY_ROOT || 'D:/Cli-anything/benchmarks/the-agent-company';
+const DEFAULT_ROOT = process.env.THE_AGENT_COMPANY_ROOT || 'benchmarks/the-agent-company';
 export const THE_AGENT_COMPANY_TASKS = [
   'pm-ask-for-issue-and-create-in-gitlab-image', 'pm-assign-issues-image', 'pm-update-gitlab-issue-from-plane-status-image', 'pm-update-plane-issue-from-gitlab-status-image',
   'ds-answer-spreadsheet-questions-image', 'ds-calculate-spreadsheet-stats-image', 'ds-merge-multiple-sheets-image', 'ds-organise-report-sus-data-image',

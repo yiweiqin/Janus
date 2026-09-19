@@ -1,0 +1,16 @@
+{
+  "version": "tdb-protocol-review-evidence-v2",
+  "reviewedFiles": {
+    "experiments/tdb_probe_benchmark/TDB_TRAINING_PROTOCOL_REVIEW_READY_V2.zh-CN.md": "1c6a82620ba812e01d05b5b36b877ead8bdc88803be15eed960d2f5831581ba",
+    "experiments/tdb_probe_benchmark/tdb_training_protocol_v2.json": "e51cde7819be77b66539b67dcb413b976e29de00be1bf1ced498a1af5ceda5e9",
+    "experiments/tdb_probe_benchmark/tdb_multitask_label_contract_v2.json": "10aea2a12a1390a728163fd6cf2e47d4e1c7966cb5841d1446afd550207f6e43",
+    "experiments/tdb_probe_benchmark/TDB_MODEL_CARD_V2.zh-CN.md": "698d6ebe5a0c134bc5cdfe950d80bc9debba637be15915c8ec6e646302de3193",
+    "experiments/tdb_probe_benchmark/TDB_REVIEWER_READINESS_CHECKLIST_V2.zh-CN.md": "6c834af29c03a61398715c4e2e1bb48afb8fcc50ee46b50582f3a40301f7700b",
+    "experiments/tdb_probe_benchmark/TDB_TRAINING_PROTOCOL_REVIEW_AUDIT_V2.zh-CN.md": "b39c2089efe2999038eee418e2ab62ad0d514c583f0fd51f0dc39beae081b774"
+  },
+  "protocolValidator": "passed",
+  "labelValidator": "passed",
+  "focusedContractTests": 40,
+  "probeBenchmarkTests": 16,
+  "evidenceLevel": "method-ready-not-real-world-validated"
+}

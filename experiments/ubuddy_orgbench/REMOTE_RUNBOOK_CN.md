@@ -7,6 +7,8 @@
 ```bash
 git clone <repo> Janus && cd Janus
 npm ci
+bash experiments/ubuddy_orgbench/appworld_setup_remote.sh
+source .orgbench_env
 export UBUDDY_ORGBENCH_REMOTE=1
 export UBUDDY_ORGBENCH_OUTPUT_ROOT=/data/janus-runs/orgbench
 export APPWORLD_ROOT=/data/benchmarks/appworld-runtime
@@ -19,5 +21,7 @@ npm run experiment:ubuddy:orgbench:remote-run -- experiments/ubuddy_orgbench/ben
 npm run experiment:ubuddy:orgbench:verify -- --run-dir "$UBUDDY_ORGBENCH_OUTPUT_ROOT/main"
 npm run experiment:ubuddy:orgbench:report -- --run-dir "$UBUDDY_ORGBENCH_OUTPUT_ROOT/main"
 ```
+
+`appworld_setup_remote.sh` 会安装官方 AppWorld、下载数据并生成 v2 任务 manifest。MARBLE、Who&When 和 TheAgentCompany 都是可选外部参考，缺失时不应阻塞 AppWorld 主实验。
 
 正式运行前先执行 1 个任务、1 个 seed 的远程 canary，再运行 pilot，最后锁定 test。输出目录支持逐 episode 落盘和断点续跑；密钥只从环境变量读取，不进入 artifact。

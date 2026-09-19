@@ -1,0 +1,44 @@
+{
+    "updatedAt":  "2026-09-08T20:41:02.6577931Z",
+    "seeds":  {
+                  "20260915":  {
+                                   "machine":  "archive/local",
+                                   "sufficiency":  0.5833333333333334,
+                                   "schema_valid_rate":  1.0,
+                                   "eval_progress":  "180/180",
+                                   "checkpoint":  "checkpoint-114",
+                                   "decision_agreement":  0.5611111111111111,
+                                   "name":  "seed20260915",
+                                   "training_process":  "not observed",
+                                   "gpu":  "n/a",
+                                   "status":  "completed",
+                                   "hard_violations":  0
+                               },
+                  "20260914":  {
+                                   "machine":  "archive/local",
+                                   "sufficiency":  0.5722222222222222,
+                                   "schema_valid_rate":  1.0,
+                                   "eval_progress":  "180/180",
+                                   "checkpoint":  "checkpoint-114",
+                                   "decision_agreement":  0.5111111111111111,
+                                   "name":  "seed20260914",
+                                   "training_process":  "not observed",
+                                   "gpu":  "n/a",
+                                   "status":  "completed",
+                                   "hard_violations":  0
+                               },
+                  "20260916":  {
+                                   "machine":  "archive/local",
+                                   "sufficiency":  0.6111111111111112,
+                                   "schema_valid_rate":  1.0,
+                                   "eval_progress":  "180/180",
+                                   "checkpoint":  "checkpoint-114",
+                                   "decision_agreement":  0.6055555555555555,
+                                   "name":  "seed20260916",
+                                   "training_process":  "not observed",
+                                   "gpu":  "n/a",
+                                   "status":  "completed",
+                                   "hard_violations":  0
+                               }
+              }
+}

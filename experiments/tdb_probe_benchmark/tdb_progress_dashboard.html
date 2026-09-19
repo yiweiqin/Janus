@@ -1,0 +1,10 @@
+<!doctype html><meta charset="utf-8"><title>TDB Progress Dashboard</title>
+<style>body{font:15px system-ui;margin:24px;background:#0f172a;color:#e2e8f0}h1{margin:0 0 6px}.muted{color:#94a3b8}.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:14px;margin-top:20px}.card{background:#1e293b;border:1px solid #334155;border-radius:12px;padding:16px}.ok{color:#4ade80}.warn{color:#facc15}.bad{color:#f87171}.metric{display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px solid #334155}button{background:#38bdf8;border:0;border-radius:7px;padding:8px 12px;cursor:pointer}#updated{margin-left:12px}</style>
+<h1>TDB Progress Dashboard</h1><div class="muted">44930 实时 SSH 状态 · <span id="updated">尚未读取</span></div><p><button onclick="load()">立即刷新</button> <span class="muted">后台每 10 秒更新</span></p><div id="app" class="grid"></div>
+<script>
+const esc=x=>String(x??'—').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+function card(s){let cls=s.status==='running'?'warn':s.status==='completed'?'ok':'muted';return `<section class="card"><h2>${esc(s.name||s.seed||'TDB')}</h2><div class="${cls}">${esc(s.status||'unknown')}</div>${[['机器',s.machine],['GPU',s.gpu],['训练进程',s.training_process],['评估进度',s.eval_progress],['checkpoint',s.checkpoint],['schemaValidRate',s.schema_valid_rate],['sufficiency',s.sufficiency],['decision agreement',s.decision_agreement],['hard violations',s.hard_violations]].map(x=>`<div class="metric"><span>${esc(x[0])}</span><b>${esc(x[1])}</b></div>`).join('')}</section>`}
+function render(d){let a=d.seeds||d;document.querySelector('#app').innerHTML=Object.values(a).map(card).join('');document.querySelector('#updated').textContent='更新于 '+new Date().toLocaleString()}
+async function load(){try{let r=await fetch('/api/status?ts='+Date.now());render(await r.json())}catch(e){document.querySelector('#app').innerHTML='<section class="card bad">状态服务未启动，请运行 tdb_dashboard_server.py。</section>'}}
+load();setInterval(load,10000);
+</script>
