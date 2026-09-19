@@ -1,0 +1,287 @@
+{
+  "schema": "ubuddy_sim_task_group_v1/tpm",
+  "requesterUserId": "user_sim_tpm_requester",
+  "ownerUserId": "user_sim_task_group",
+  "cases": 3,
+  "persisted": {
+    "tables": [
+      "cloud_tpm_raw_access_requests",
+      "cloud_tpm_raw_access_grants",
+      "cloud_work_memory_access_audits"
+    ],
+    "memoryBody": "not_persisted_by_design"
+  },
+  "graphsWrittenByTpm": [],
+  "observations": [
+    {
+      "taskId": "sim_sim_brief_org_01_consumer_p_01_00__missing_dependency",
+      "briefId": "brief_org_01_consumer_p_01_00",
+      "window": [
+        "n28",
+        "n15"
+      ],
+      "stateReset": "cleared_previous_run:1",
+      "memory": {
+        "planNodes": 32,
+        "execNodes": 34,
+        "elevationAccepted": 24,
+        "elevationRejected": 0,
+        "rawItems": 24
+      },
+      "steps": [
+        {
+          "step": "locked_before_request",
+          "layers": [],
+          "denied": [
+            "not_participant_and_no_grant"
+          ],
+          "rawItems": 0
+        },
+        {
+          "step": "request_granted",
+          "ai": "pass",
+          "aiReasons": [],
+          "status": "granted",
+          "grantId": "tpm_grant_tpm_req_sim_sim_brief_org_01_consumer_p_01_00__missing_dependency_ok",
+          "readOnly": true,
+          "revocable": true
+        },
+        {
+          "step": "unlocked_after_grant",
+          "layers": [
+            "foundation",
+            "elevation",
+            "raw"
+          ],
+          "rawNodeIds": [
+            "n28",
+            "n15"
+          ],
+          "rawItems": 2,
+          "maxContentLength": 105
+        },
+        {
+          "step": "ai_rejected_no_purpose",
+          "ai": "reject",
+          "aiReasons": [
+            "missing_purpose"
+          ],
+          "status": "rejected_by_ai",
+          "grantsInDb": 1
+        },
+        {
+          "step": "ungrounded_needs_human_then_denied",
+          "ai": "need_human",
+          "aiReasons": [
+            "purpose_not_grounded"
+          ],
+          "status": "denied_by_owner"
+        },
+        {
+          "step": "revoked_relocks",
+          "layers": [],
+          "grantRows": 1,
+          "liveGrants": 0
+        }
+      ],
+      "graphCrossLink": "ok:24/24",
+      "db": {
+        "requests": 3,
+        "requestStatuses": {
+          "tpm_req_sim_sim_brief_org_01_consumer_p_01_00__missing_dependency_ungrounded": "denied_by_owner",
+          "tpm_req_sim_sim_brief_org_01_consumer_p_01_00__missing_dependency_nopurpose": "rejected_by_ai",
+          "tpm_req_sim_sim_brief_org_01_consumer_p_01_00__missing_dependency_ok": "granted"
+        },
+        "grantsIncludingRevoked": 1,
+        "auditRowsByResultCode": {
+          "denied_by_owner": 1,
+          "granted": 4,
+          "raw_requires_grant": 6,
+          "rejected_by_ai": 1,
+          "revoked": 1
+        }
+      },
+      "graphSource": "existing"
+    },
+    {
+      "taskId": "sim_sim_brief_org_01_consumer_p_01_00__wrong_agent",
+      "briefId": "brief_org_01_consumer_p_01_00",
+      "window": [
+        "n20",
+        "n8"
+      ],
+      "stateReset": "cleared_previous_run:1",
+      "memory": {
+        "planNodes": 32,
+        "execNodes": 33,
+        "elevationAccepted": 24,
+        "elevationRejected": 0,
+        "rawItems": 24
+      },
+      "steps": [
+        {
+          "step": "locked_before_request",
+          "layers": [],
+          "denied": [
+            "not_participant_and_no_grant"
+          ],
+          "rawItems": 0
+        },
+        {
+          "step": "request_granted",
+          "ai": "pass",
+          "aiReasons": [],
+          "status": "granted",
+          "grantId": "tpm_grant_tpm_req_sim_sim_brief_org_01_consumer_p_01_00__wrong_agent_ok",
+          "readOnly": true,
+          "revocable": true
+        },
+        {
+          "step": "unlocked_after_grant",
+          "layers": [
+            "foundation",
+            "elevation",
+            "raw"
+          ],
+          "rawNodeIds": [
+            "n20",
+            "n8"
+          ],
+          "rawItems": 2,
+          "maxContentLength": 114
+        },
+        {
+          "step": "ai_rejected_no_purpose",
+          "ai": "reject",
+          "aiReasons": [
+            "missing_purpose"
+          ],
+          "status": "rejected_by_ai",
+          "grantsInDb": 1
+        },
+        {
+          "step": "ungrounded_needs_human_then_denied",
+          "ai": "need_human",
+          "aiReasons": [
+            "purpose_not_grounded"
+          ],
+          "status": "denied_by_owner"
+        },
+        {
+          "step": "revoked_relocks",
+          "layers": [],
+          "grantRows": 1,
+          "liveGrants": 0
+        }
+      ],
+      "graphCrossLink": "ok:24/24",
+      "db": {
+        "requests": 3,
+        "requestStatuses": {
+          "tpm_req_sim_sim_brief_org_01_consumer_p_01_00__wrong_agent_ungrounded": "denied_by_owner",
+          "tpm_req_sim_sim_brief_org_01_consumer_p_01_00__wrong_agent_nopurpose": "rejected_by_ai",
+          "tpm_req_sim_sim_brief_org_01_consumer_p_01_00__wrong_agent_ok": "granted"
+        },
+        "grantsIncludingRevoked": 1,
+        "auditRowsByResultCode": {
+          "denied_by_owner": 1,
+          "granted": 4,
+          "raw_requires_grant": 6,
+          "rejected_by_ai": 1,
+          "revoked": 1
+        }
+      },
+      "graphSource": "existing"
+    },
+    {
+      "taskId": "sim_sim_brief_org_01_consumer_p_01_00__wrong_version",
+      "briefId": "brief_org_01_consumer_p_01_00",
+      "window": [
+        "n8",
+        "n9"
+      ],
+      "stateReset": "cleared_previous_run:1",
+      "memory": {
+        "planNodes": 32,
+        "execNodes": 33,
+        "elevationAccepted": 24,
+        "elevationRejected": 0,
+        "rawItems": 24
+      },
+      "steps": [
+        {
+          "step": "locked_before_request",
+          "layers": [],
+          "denied": [
+            "not_participant_and_no_grant"
+          ],
+          "rawItems": 0
+        },
+        {
+          "step": "request_granted",
+          "ai": "pass",
+          "aiReasons": [],
+          "status": "granted",
+          "grantId": "tpm_grant_tpm_req_sim_sim_brief_org_01_consumer_p_01_00__wrong_version_ok",
+          "readOnly": true,
+          "revocable": true
+        },
+        {
+          "step": "unlocked_after_grant",
+          "layers": [
+            "foundation",
+            "elevation",
+            "raw"
+          ],
+          "rawNodeIds": [
+            "n8",
+            "n9"
+          ],
+          "rawItems": 2,
+          "maxContentLength": 114
+        },
+        {
+          "step": "ai_rejected_no_purpose",
+          "ai": "reject",
+          "aiReasons": [
+            "missing_purpose"
+          ],
+          "status": "rejected_by_ai",
+          "grantsInDb": 1
+        },
+        {
+          "step": "ungrounded_needs_human_then_denied",
+          "ai": "need_human",
+          "aiReasons": [
+            "purpose_not_grounded"
+          ],
+          "status": "denied_by_owner"
+        },
+        {
+          "step": "revoked_relocks",
+          "layers": [],
+          "grantRows": 1,
+          "liveGrants": 0
+        }
+      ],
+      "graphCrossLink": "ok:24/24",
+      "db": {
+        "requests": 3,
+        "requestStatuses": {
+          "tpm_req_sim_sim_brief_org_01_consumer_p_01_00__wrong_version_ungrounded": "denied_by_owner",
+          "tpm_req_sim_sim_brief_org_01_consumer_p_01_00__wrong_version_nopurpose": "rejected_by_ai",
+          "tpm_req_sim_sim_brief_org_01_consumer_p_01_00__wrong_version_ok": "granted"
+        },
+        "grantsIncludingRevoked": 1,
+        "auditRowsByResultCode": {
+          "denied_by_owner": 1,
+          "granted": 4,
+          "raw_requires_grant": 6,
+          "rejected_by_ai": 1,
+          "revoked": 1
+        }
+      },
+      "graphSource": "existing"
+    }
+  ]
+}

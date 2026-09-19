@@ -1,0 +1,264 @@
+{
+  "schema": "ubuddy_sim_task_group_v1/collect/report",
+  "expected": 176,
+  "scored": 176,
+  "notTerminal": 0,
+  "authRejected": 0,
+  "driftCases": 144,
+  "noDriftCases": 16,
+  "multiInjectCases": 16,
+  "model": {
+    "nodeTop1Rate": 0.9792,
+    "typeTop1Rate": 0.9861,
+    "bothRate": 0.9722,
+    "edgeTop1Rate": 0,
+    "abstainRate": 0,
+    "rightTypeWrongNodeRate": 0.0139,
+    "noDriftAccuracy": 1,
+    "noDriftFalsePositiveRate": 0,
+    "multiInjectAbstainRate": 1
+  },
+  "baseline": {
+    "nodeTop1Rate": 0,
+    "typeTop1Rate": 0.0417,
+    "abstainRate": 0.5833,
+    "noDriftFalsePositiveRate": 0,
+    "multiInjectAbstainRate": 0.6875,
+    "note": "规则侦探（detectMinimalDrift）在同一批 case 上。它的上限就是\"唯一根因\"那些 case，所以在 step 层与 subtle 层会明显掉 —— 那正是模型该赢的地方。"
+  },
+  "byGoldType": {
+    "missing_dependency": {
+      "n": 32,
+      "correct": 29,
+      "nodeTop1": 29,
+      "typeTop1": 31,
+      "abstained": 0,
+      "correctRate": 0.9063,
+      "nodeTop1Rate": 0.9063,
+      "typeTop1Rate": 0.9688,
+      "abstainRate": 0
+    },
+    "wrong_agent": {
+      "n": 48,
+      "correct": 48,
+      "nodeTop1": 48,
+      "typeTop1": 48,
+      "abstained": 0,
+      "correctRate": 1,
+      "nodeTop1Rate": 1,
+      "typeTop1Rate": 1,
+      "abstainRate": 0
+    },
+    "wrong_version": {
+      "n": 32,
+      "correct": 31,
+      "nodeTop1": 32,
+      "typeTop1": 31,
+      "abstained": 0,
+      "correctRate": 0.9688,
+      "nodeTop1Rate": 1,
+      "typeTop1Rate": 0.9688,
+      "abstainRate": 0
+    },
+    "wrong_acceptance": {
+      "n": 16,
+      "correct": 16,
+      "nodeTop1": 16,
+      "typeTop1": 16,
+      "abstained": 0,
+      "correctRate": 1,
+      "nodeTop1Rate": 1,
+      "typeTop1Rate": 1,
+      "abstainRate": 0
+    },
+    "local_replan": {
+      "n": 16,
+      "correct": 16,
+      "nodeTop1": 16,
+      "typeTop1": 16,
+      "abstained": 0,
+      "correctRate": 1,
+      "nodeTop1Rate": 1,
+      "typeTop1Rate": 1,
+      "abstainRate": 0
+    }
+  },
+  "byTier": {
+    "agent_task": {
+      "n": 80,
+      "correct": 79,
+      "nodeTop1": 80,
+      "typeTop1": 79,
+      "abstained": 0,
+      "correctRate": 0.9875,
+      "nodeTop1Rate": 1,
+      "typeTop1Rate": 0.9875,
+      "abstainRate": 0
+    },
+    "agent_step": {
+      "n": 64,
+      "correct": 61,
+      "nodeTop1": 61,
+      "typeTop1": 63,
+      "abstained": 0,
+      "correctRate": 0.9531,
+      "nodeTop1Rate": 0.9531,
+      "typeTop1Rate": 0.9844,
+      "abstainRate": 0
+    }
+  },
+  "byVisibility": {
+    "visible": {
+      "n": 84,
+      "correct": 81,
+      "nodeTop1": 81,
+      "typeTop1": 83,
+      "abstained": 0,
+      "correctRate": 0.9643,
+      "nodeTop1Rate": 0.9643,
+      "typeTop1Rate": 0.9881,
+      "abstainRate": 0
+    },
+    "subtle": {
+      "n": 60,
+      "correct": 59,
+      "nodeTop1": 60,
+      "typeTop1": 59,
+      "abstained": 0,
+      "correctRate": 0.9833,
+      "nodeTop1Rate": 1,
+      "typeTop1Rate": 0.9833,
+      "abstainRate": 0
+    }
+  },
+  "byHop": {
+    "3": {
+      "n": 136,
+      "correct": 132,
+      "nodeTop1": 133,
+      "typeTop1": 134,
+      "abstained": 0,
+      "correctRate": 0.9706,
+      "nodeTop1Rate": 0.9779,
+      "typeTop1Rate": 0.9853,
+      "abstainRate": 0
+    },
+    "4": {
+      "n": 8,
+      "correct": 8,
+      "nodeTop1": 8,
+      "typeTop1": 8,
+      "abstained": 0,
+      "correctRate": 1,
+      "nodeTop1Rate": 1,
+      "typeTop1Rate": 1,
+      "abstainRate": 0
+    }
+  },
+  "baselineByTier": {
+    "agent_task": {
+      "n": 80,
+      "correct": 0,
+      "nodeTop1": 0,
+      "typeTop1": 0,
+      "abstained": 37,
+      "correctRate": 0,
+      "nodeTop1Rate": 0,
+      "typeTop1Rate": 0,
+      "abstainRate": 0.4625
+    },
+    "agent_step": {
+      "n": 64,
+      "correct": 0,
+      "nodeTop1": 0,
+      "typeTop1": 6,
+      "abstained": 47,
+      "correctRate": 0,
+      "nodeTop1Rate": 0,
+      "typeTop1Rate": 0.0938,
+      "abstainRate": 0.7344
+    }
+  },
+  "baselineByVisibility": {
+    "visible": {
+      "n": 84,
+      "correct": 0,
+      "nodeTop1": 0,
+      "typeTop1": 3,
+      "abstained": 60,
+      "correctRate": 0,
+      "nodeTop1Rate": 0,
+      "typeTop1Rate": 0.0357,
+      "abstainRate": 0.7143
+    },
+    "subtle": {
+      "n": 60,
+      "correct": 0,
+      "nodeTop1": 0,
+      "typeTop1": 3,
+      "abstained": 24,
+      "correctRate": 0,
+      "nodeTop1Rate": 0,
+      "typeTop1Rate": 0.05,
+      "abstainRate": 0.4
+    }
+  },
+  "byJobStatus": {
+    "completed": 176
+  },
+  "actions": {
+    "model": {
+      "actions": {
+        "minimal_plan_edit": 95,
+        "similar_swap": 48,
+        "record_only": 33
+      },
+      "reasons": {
+        "missing_dependency": 31,
+        "wrong_agent": 48,
+        "wrong_version": 31,
+        "wrong_acceptance": 16,
+        "local_replan": 17,
+        "no_drift": 17,
+        "unknown_drift": 16
+      }
+    },
+    "baseline": {
+      "actions": {
+        "record_only": 111,
+        "minimal_plan_edit": 65
+      },
+      "reasons": {
+        "unknown_drift": 95,
+        "local_replan": 65,
+        "no_drift": 16
+      }
+    }
+  },
+  "shadow": {
+    "cases": 176,
+    "reachedRate": 1,
+    "alreadySatisfied": 176,
+    "alreadySatisfiedRate": 1,
+    "opDistribution": {
+      "none": 176
+    },
+    "note": "影子提案是本地算的、**绝不应用**。「改一处即停」是防过拟合：无限向执行图靠拢等于把这一次的现实当成普遍规律。"
+  },
+  "baselineDiagnostics": {
+    "driftCases": 144,
+    "ruleHitWithDecoys": 0,
+    "ruleHitWithoutDecoys": 0.7778,
+    "unreachableEvenWithoutDecoys": 32,
+    "ofWhichSubtle": 32,
+    "subtleDriftCases": 60,
+    "subtleFieldsWipedRate": 0.6333,
+    "note": "`ruleHitWithDecoys` 衡量的是**语料任务难度**（decoy 是训练装置，真实投影图里没有）；`ruleHitWithoutDecoys` 更接近规则在生产里的水平。两个数一起看才知道模型的提升有多少来自\"抗 decoy\"、多少来自\"读富文本\"。"
+  },
+  "caveats": [
+    "`no_drift` 样本的 `G_prime` 与 `G_star` 逐字节相等（实测），因此它的正确率是**平凡可分**的：任何\"永远说没漂移\"的判定都能拿满分。这个数字**不能**当作模型能力的证据，只能当作\"链路没坏\"的烟雾测试。",
+    "相近度阈值 0.8 是为真实漂移量标定的；单点注入只占约 3–5% 加权质量，所以 `minimalPlanEdits` 恒报 `alreadySatisfied`，「影子提案」在当前数据上测不出东西。",
+    "模拟任务群出的判定不是真实用户任务，只证明链路成立与量级可比。"
+  ],
+  "orphanJobs": 0
+}

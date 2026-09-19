@@ -1,0 +1,496 @@
+
+############ 0. 前置检查 ############
+node        = v22.23.2
+SIM_ROOT    = /root/autodl-tmp/sim_run/Janus
+SIM_MODE    = offline  SIM_LIMIT=16  SIM_SUBMIT_DRY=0
+RDMD_API    = http://127.0.0.1:8787
+
+############ 1. 裸包可解析性（bundle 不带 node_modules） ############
+ok  pg
+
+############ 2. 起云 API（幂等：先停后起，确保后端就是我们要的那个） ############
+目标后端 RDMD_BACKEND=gpu_worker
+盒子上没有 _rdmd_cloud_start.sh → 用内置配方（镜像 scripts/_rdmd_cloud_start.sh）
+cloud root = /root/Janus
+started pid=201486 log=/root/autodl-tmp/sim_run/cloud_api.log
+
+############ 3. 云 API 就绪 + rdmd 路由存在 ############
+/healthz -> 200
+ok  database.ready=true  migrationHead=099_ubuddy_task_public_memory.sql
+注意：不影响 rdmd 链路 —— objectStorage(S3) 未配置 / readyz 整体 not_ready
+POST /api/rdmd/jobs -> 401
+ok  路由在（未认证被拒）
+
+############ 4. 起 GPU worker（adapter 无默认值，必须显式给） ############
+worker ctl = /root/autodl-tmp/Janus/scripts/_rdmd_worker_daemon.sh
+RDMD_ADAPTER = /root/autodl-tmp/rdmd_runs/qlora-v4/adapter
+worker 已在跑，且权重与源码都正是要的那份（82855e1ea12723b7 / 5e145cb6d13a99f1）
+--- worker 状态 ---
+running pid=136950 device=cuda:0
+adapter(running)=82855e1ea12723b7…
+adapter(last start)=82855e1ea12723b7…
+worker_src(running)=5e145cb6d13a99f1…
+queue: 0 queued, 0 claimed, 245 completed
+ok  worker 权重 = 82855e1ea12723b7…，源码 = 5e145cb6d13a99f1…（都与要的一致）
+
+############ 4.5 worker↔云的协议版本（回传必须带 workerId） ############
+ok  worker 回传协议带 workerId（/root/autodl-tmp/Janus/scripts/rdmd_gpu_worker.py）
+device grant = dgr_xINYE4Jr…
+
+############ 5. 生成模拟任务群（offline） ############
+[sim-group] mode=offline briefs=16 cases=176 dropped=0
+[sim-group] kinds={"missing_dependency":16,"wrong_agent":16,"wrong_version":16,"wrong_acceptance":16,"local_replan_step":16,"missing_dependency_step":16,"wrong_agent_step":16,"wrong_version_step":16,"no_drift":16,"multi_inject":16,"twin_swap":16}
+[sim-group] visibility={"visible":116,"subtle":60} hop={"3":136,"4":8,"no_drift":16,"UNKNOWN":16}
+[sim-group] decoys={"0":16,"1":111,"2":49}
+[sim-group] wrote /root/autodl-tmp/sim_run/Janus/experiments/sim_task_group/out/generated.jsonl
+cases = 176
+
+############ 6. 写库 + 提交到 /api/rdmd/jobs ############
+[sim-submit] 100/176 已提交
+[sim-submit] 提交 176 条，写图 176 张
+[sim-submit] status={"queued":176} kinds={"missing_dependency":16,"wrong_agent":16,"wrong_version":16,"wrong_acceptance":16,"local_replan_step":16,"missing_dependency_step":16,"wrong_agent_step":16,"wrong_version_step":16,"no_drift":16,"multi_inject":16,"twin_swap":16}
+[sim-submit] jobs -> /root/autodl-tmp/sim_run/Janus/experiments/sim_task_group/out/jobs.jsonl
+{
+  "api": "http://127.0.0.1:8787",
+  "submitted": 176,
+  "stored": 176,
+  "skipStore": false,
+  "jobsPath": "/root/autodl-tmp/sim_run/Janus/experiments/sim_task_group/out/jobs.jsonl",
+  "kinds": {
+    "missing_dependency": 16,
+    "wrong_agent": 16,
+    "wrong_version": 16,
+    "wrong_acceptance": 16,
+    "local_replan_step": 16,
+    "missing_dependency_step": 16,
+    "wrong_agent_step": 16,
+    "wrong_version_step": 16,
+    "no_drift": 16,
+    "multi_inject": 16,
+    "twin_swap": 16
+  },
+  "byStatus": {
+    "queued": 176
+  },
+  "byVisibility": {
+    "visible": 116,
+    "subtle": 60
+  },
+  "skippedEdgeTotal": 0,
+  "droppedFields": {
+    "graph_id": 352,
+    "domain": 352,
+    "title": 352,
+    "topic": 352,
+    "role": 11489
+  },
+  "graphReadback": [
+    {
+      "graphId": "sim_sim_brief_org_01_consumer_p_01_00__missing_dependency",
+      "graphs": 1,
+      "nodeCount": 32,
+      "edgeCount": 31,
+      "eventCount": 32,
+      "byKind": [
+        {
+          "kind": "agent_step",
+          "n": 25
+        },
+        {
+          "kind": "agent_task",
+          "n": 5
+        },
+        {
+          "kind": "root",
+          "n": 1
+        },
+        {
+          "kind": "ubuddy",
+          "n": 1
+        }
+      ],
+      "byEdgeKind": [
+        {
+          "kind": "dependency_of",
+          "n": 4
+        },
+        {
+          "kind": "parent_of",
+          "n": 7
+        },
+        {
+          "kind": "sequence_of",
+          "n": 20
+        }
+      ]
+    },
+    {
+      "graphId": "sim_sim_brief_org_01_consumer_p_01_00__wrong_agent",
+      "graphs": 1,
+      "nodeCount": 32,
+      "edgeCount": 31,
+      "eventCount": 32,
+      "byKind": [
+        {
+          "kind": "agent_step",
+          "n": 25
+        },
+        {
+          "kind": "agent_task",
+          "n": 5
+        },
+        {
+          "kind": "root",
+          "n": 1
+        },
+        {
+          "kind": "ubuddy",
+          "n": 1
+        }
+      ],
+      "byEdgeKind": [
+        {
+          "kind": "dependency_of",
+          "n": 4
+        },
+        {
+          "kind": "parent_of",
+          "n": 7
+        },
+        {
+          "kind": "sequence_of",
+          "n": 20
+        }
+      ]
+    },
+    {
+      "graphId": "sim_sim_brief_org_01_consumer_p_01_00__wrong_version",
+      "graphs": 1,
+      "nodeCount": 32,
+      "edgeCount": 31,
+      "eventCount": 32,
+      "byKind": [
+        {
+          "kind": "agent_step",
+          "n": 25
+        },
+        {
+          "kind": "agent_task",
+          "n": 5
+        },
+        {
+          "kind": "root",
+          "n": 1
+        },
+        {
+          "kind": "ubuddy",
+          "n": 1
+        }
+      ],
+      "byEdgeKind": [
+        {
+          "kind": "dependency_of",
+          "n": 4
+        },
+        {
+          "kind": "parent_of",
+          "n": 7
+        },
+        {
+          "kind": "sequence_of",
+          "n": 20
+        }
+      ]
+    },
+    {
+      "graphId": "sim_sim_brief_org_01_consumer_p_01_00__wrong_acceptance",
+      "graphs": 1,
+      "nodeCount": 32,
+      "edgeCount": 31,
+      "eventCount": 32,
+      "byKind": [
+        {
+          "kind": "agent_step",
+          "n": 25
+        },
+        {
+          "kind": "agent_task",
+          "n": 5
+        },
+        {
+          "kind": "root",
+          "n": 1
+        },
+        {
+          "kind": "ubuddy",
+          "n": 1
+        }
+      ],
+      "byEdgeKind": [
+        {
+          "kind": "dependency_of",
+          "n": 4
+        },
+        {
+          "kind": "parent_of",
+          "n": 7
+        },
+        {
+          "kind": "sequence_of",
+          "n": 20
+        }
+      ]
+    },
+    {
+      "graphId": "sim_sim_brief_org_01_consumer_p_01_00__local_replan_step",
+      "graphs": 1,
+      "nodeCount": 32,
+      "edgeCount": 31,
+      "eventCount": 32,
+      "byKind": [
+        {
+          "kind": "agent_step",
+          "n": 25
+        },
+        {
+          "kind": "agent_task",
+          "n": 5
+        },
+        {
+          "kind": "root",
+          "n": 1
+        },
+        {
+          "kind": "ubuddy",
+          "n": 1
+        }
+      ],
+      "byEdgeKind": [
+        {
+          "kind": "dependency_of",
+          "n": 4
+        },
+        {
+          "kind": "parent_of",
+          "n": 7
+        },
+        {
+          "kind": "sequence_of",
+          "n": 20
+        }
+      ]
+    }
+  ],
+  "problems": []
+}
+SIM_SUBMIT_OK
+
+############ 6.5 TPM 原始层申请链（申请→AI 预审→Owner 终审→读→撤回） ############
+[sim-tpm] sim_sim_brief_org_01_consumer_p_01_00__missing_dependency 申请=granted 解锁层=foundation+elevation+raw raw=2/24 审计={"denied_by_owner":1,"granted":4,"raw_requires_grant":6,"rejected_by_ai":1,"revoked":1}
+[sim-tpm] sim_sim_brief_org_01_consumer_p_01_00__wrong_agent 申请=granted 解锁层=foundation+elevation+raw raw=2/24 审计={"denied_by_owner":1,"granted":4,"raw_requires_grant":6,"rejected_by_ai":1,"revoked":1}
+[sim-tpm] sim_sim_brief_org_01_consumer_p_01_00__wrong_version 申请=granted 解锁层=foundation+elevation+raw raw=2/24 审计={"denied_by_owner":1,"granted":4,"raw_requires_grant":6,"rejected_by_ai":1,"revoked":1}
+[sim-tpm] 3 个任务的申请链全部成立 -> /root/autodl-tmp/sim_run/Janus/experiments/sim_task_group/out/tpm_report.json
+SIM_TPM_OK
+{
+  "cases": 3,
+  "graphsWrittenByTpm": [],
+  "observations": [
+    {
+      "taskId": "sim_sim_brief_org_01_consumer_p_01_00__missing_dependency",
+      "stateReset": "cleared_previous_run:1",
+      "window": [
+        "n28",
+        "n15"
+      ],
+      "graphCrossLink": "ok:24/24",
+      "statuses": {
+        "tpm_req_sim_sim_brief_org_01_consumer_p_01_00__missing_dependency_ungrounded": "denied_by_owner",
+        "tpm_req_sim_sim_brief_org_01_consumer_p_01_00__missing_dependency_nopurpose": "rejected_by_ai",
+        "tpm_req_sim_sim_brief_org_01_consumer_p_01_00__missing_dependency_ok": "granted"
+      },
+      "audits": {
+        "denied_by_owner": 1,
+        "granted": 4,
+        "raw_requires_grant": 6,
+        "rejected_by_ai": 1,
+        "revoked": 1
+      },
+      "memory": {
+        "planNodes": 32,
+        "execNodes": 34,
+        "elevationAccepted": 24,
+        "elevationRejected": 0,
+        "rawItems": 24
+      }
+    },
+    {
+      "taskId": "sim_sim_brief_org_01_consumer_p_01_00__wrong_agent",
+      "stateReset": "cleared_previous_run:1",
+      "window": [
+        "n20",
+        "n8"
+      ],
+      "graphCrossLink": "ok:24/24",
+      "statuses": {
+        "tpm_req_sim_sim_brief_org_01_consumer_p_01_00__wrong_agent_ungrounded": "denied_by_owner",
+        "tpm_req_sim_sim_brief_org_01_consumer_p_01_00__wrong_agent_nopurpose": "rejected_by_ai",
+        "tpm_req_sim_sim_brief_org_01_consumer_p_01_00__wrong_agent_ok": "granted"
+      },
+      "audits": {
+        "denied_by_owner": 1,
+        "granted": 4,
+        "raw_requires_grant": 6,
+        "rejected_by_ai": 1,
+        "revoked": 1
+      },
+      "memory": {
+        "planNodes": 32,
+        "execNodes": 33,
+        "elevationAccepted": 24,
+        "elevationRejected": 0,
+        "rawItems": 24
+      }
+    },
+    {
+      "taskId": "sim_sim_brief_org_01_consumer_p_01_00__wrong_version",
+      "stateReset": "cleared_previous_run:1",
+      "window": [
+        "n8",
+        "n9"
+      ],
+      "graphCrossLink": "ok:24/24",
+      "statuses": {
+        "tpm_req_sim_sim_brief_org_01_consumer_p_01_00__wrong_version_ungrounded": "denied_by_owner",
+        "tpm_req_sim_sim_brief_org_01_consumer_p_01_00__wrong_version_nopurpose": "rejected_by_ai",
+        "tpm_req_sim_sim_brief_org_01_consumer_p_01_00__wrong_version_ok": "granted"
+      },
+      "audits": {
+        "denied_by_owner": 1,
+        "granted": 4,
+        "raw_requires_grant": 6,
+        "rejected_by_ai": 1,
+        "revoked": 1
+      },
+      "memory": {
+        "planNodes": 32,
+        "execNodes": 33,
+        "elevationAccepted": 24,
+        "elevationRejected": 0,
+        "rawItems": 24
+      }
+    }
+  ]
+}
+
+############ 7. 回收判定并算指标 ############
+token 已签（owner=user_sim_task_group，TTL=21600s）
+{
+  "expected": 176,
+  "scored": 176,
+  "notTerminal": 0,
+  "model": {
+    "nodeTop1Rate": 0.9792,
+    "typeTop1Rate": 0.9861,
+    "bothRate": 0.9722,
+    "edgeTop1Rate": 0,
+    "abstainRate": 0,
+    "rightTypeWrongNodeRate": 0.0139,
+    "noDriftAccuracy": 1,
+    "noDriftFalsePositiveRate": 0,
+    "multiInjectAbstainRate": 1
+  },
+  "baseline": {
+    "nodeTop1Rate": 0,
+    "typeTop1Rate": 0.0417,
+    "abstainRate": 0.5833,
+    "noDriftFalsePositiveRate": 0,
+    "multiInjectAbstainRate": 0.6875,
+    "note": "规则侦探（detectMinimalDrift）在同一批 case 上。它的上限就是\"唯一根因\"那些 case，所以在 step 层与 subtle 层会明显掉 —— 那正是模型该赢的地方。"
+  },
+  "baselineDiagnostics": {
+    "driftCases": 144,
+    "ruleHitWithDecoys": 0,
+    "ruleHitWithoutDecoys": 0.7778,
+    "unreachableEvenWithoutDecoys": 32,
+    "ofWhichSubtle": 32,
+    "subtleDriftCases": 60,
+    "subtleFieldsWipedRate": 0.6333,
+    "note": "`ruleHitWithDecoys` 衡量的是**语料任务难度**（decoy 是训练装置，真实投影图里没有）；`ruleHitWithoutDecoys` 更接近规则在生产里的水平。两个数一起看才知道模型的提升有多少来自\"抗 decoy\"、多少来自\"读富文本\"。"
+  },
+  "byTier": {
+    "agent_task": {
+      "n": 80,
+      "correct": 79,
+      "nodeTop1": 80,
+      "typeTop1": 79,
+      "abstained": 0,
+      "correctRate": 0.9875,
+      "nodeTop1Rate": 1,
+      "typeTop1Rate": 0.9875,
+      "abstainRate": 0
+    },
+    "agent_step": {
+      "n": 64,
+      "correct": 61,
+      "nodeTop1": 61,
+      "typeTop1": 63,
+      "abstained": 0,
+      "correctRate": 0.9531,
+      "nodeTop1Rate": 0.9531,
+      "typeTop1Rate": 0.9844,
+      "abstainRate": 0
+    }
+  },
+  "byVisibility": {
+    "visible": {
+      "n": 84,
+      "correct": 81,
+      "nodeTop1": 81,
+      "typeTop1": 83,
+      "abstained": 0,
+      "correctRate": 0.9643,
+      "nodeTop1Rate": 0.9643,
+      "typeTop1Rate": 0.9881,
+      "abstainRate": 0
+    },
+    "subtle": {
+      "n": 60,
+      "correct": 59,
+      "nodeTop1": 60,
+      "typeTop1": 59,
+      "abstained": 0,
+      "correctRate": 0.9833,
+      "nodeTop1Rate": 1,
+      "typeTop1Rate": 0.9833,
+      "abstainRate": 0
+    }
+  },
+  "actions": {
+    "minimal_plan_edit": 95,
+    "similar_swap": 48,
+    "record_only": 33
+  },
+  "shadow": {
+    "cases": 176,
+    "reachedRate": 1,
+    "alreadySatisfied": 176,
+    "alreadySatisfiedRate": 1,
+    "opDistribution": {
+      "none": 176
+    },
+    "note": "影子提案是本地算的、**绝不应用**。「改一处即停」是防过拟合：无限向执行图靠拢等于把这一次的现实当成普遍规律。"
+  },
+  "caveats": [
+    "`no_drift` 样本的 `G_prime` 与 `G_star` 逐字节相等（实测），因此它的正确率是**平凡可分**的：任何\"永远说没漂移\"的判定都能拿满分。这个数字**不能**当作模型能力的证据，只能当作\"链路没坏\"的烟雾测试。",
+    "相近度阈值 0.8 是为真实漂移量标定的；单点注入只占约 3–5% 加权质量，所以 `minimalPlanEdits` 恒报 `alreadySatisfied`，「影子提案」在当前数据上测不出东西。",
+    "模拟任务群出的判定不是真实用户任务，只证明链路成立与量级可比。"
+  ]
+}
+[run_remote] 终态作业 176/176（未终态 0，其中鉴权被拒 0）
+
+############ 8. 打包回收 ############
+report_tar_bytes=205232
+
+############ 完成 ############
+SIM_DONE=1
+SIM_REPORT_TAR=/root/autodl-tmp/sim_run/sim_out.tar.gz

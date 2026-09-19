@@ -35,11 +35,30 @@ config/codex/auth.json
 # `test-artifacts/` 是 electron-builder 的输出与分阶段快照（~1GB）。两者都可重建，不进版本库。
 /build-runtime/
 /test-artifacts/
-# sim_task_group 的派生件：\.bundle*\ 是 stage 出来的上传包（_sim_stage.mjs 可复跑重建），
-# \out/\ 是每次跑完的产物与报告（simulate/collect 每次整份重建，盒子上也一样）。
+# sim_task_group 的派生件：\.bundle*\ 是 stage 出来的上传包（_sim_stage.mjs 可复跑重建）。
 experiments/sim_task_group/.bundle/
 experiments/sim_task_group/.bundle.tar.gz
-experiments/sim_task_group/out/
+# \out/\ 里的**大件**（generated.jsonl 4.7MB、briefs、sim_out.tar.gz）照样忽略 —— 可复跑重建。
+experiments/sim_task_group/out/**
+!experiments/sim_task_group/out/
+experiments/sim_task_group/out/*
+!experiments/sim_task_group/out/remote/
+experiments/sim_task_group/out/remote/*
+!experiments/sim_task_group/out/remote/out/
+experiments/sim_task_group/out/remote/out/*
+# **但报告本身是锚点，要进库。** 理由与 CPDB 的 BUNDLE.json 是同一条：
+# `docs/ubuddy-v4-closed-loop-report.zh-CN.md` 里的每个数字都出自下面这几份，
+# 而它们是**当时那一轮**的结果 —— 读的人得能自己核对，不能只信那页散文。
+# 不钉的话，盒子一关、本机这份一丢，报告里的数字就再没有第二处可查。
+# 注意：`.gitignore` 不允许"父目录被忽略、子文件再放行"，所以上面是一层层往前放行的。
+!experiments/sim_task_group/out/remote/out/collect_report.json
+!experiments/sim_task_group/out/remote/out/tpm_report.json
+!experiments/sim_task_group/out/remote/out/jobs.jsonl
+!experiments/sim_task_group/out/remote/out/verdicts.jsonl
+!experiments/sim_task_group/out/remote/out/collect_rows.jsonl
+# 八步闸门的逐行输出（worker 权重/源码 sha、migrationHead、协议版本检查都在这里）。
+# 报告页第 1 节那张「步 → 验的是什么 → 结论」的表，出处就是它。
+!experiments/sim_task_group/out/remote/run_remote.stdout.log
 
 # ---------------------------------------------------------------------------
 # cpdb_org_world：与 rdmd 语料同一条纪律 —— **派生语料不进库，锚点进库**
