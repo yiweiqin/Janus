@@ -251,7 +251,15 @@ mtime），`status` 把它打出来，`run_remote.sh` 发现与将要跑的那�
 ## 10. 版本与出处
 
 本轮的全部代码、契约、迁移、文档与实验轨道已进版本库并推到 `origin/main`
-（`c4907e2`、`cf0dc49`、`c7e483b`、`2cc3e3c` 四个提交）。派生语料（CPDB 的
-`annotation_cards.jsonl` / `pairs.jsonl` / `export/`）按 `.gitignore` 里的规则**不入库**，
-理由与再生成方式写在 `.gitignore` 的注释里；**人工标注 `human_labels.jsonl` 入库**
-（它是标注，不是派生量，丢了不可重建）。
+（`c4907e2`、`cf0dc49`、`c7e483b`、`2cc3e3c`、`d3544bf`、`67bf9da` 六个提交）。
+
+**本页的每个数字都可以在仓库里核对，不必上盒子**：报告锚点已入库 ——
+`experiments/sim_task_group/out/remote/out/` 下的 `collect_report.json`（指标与四道闸门）、
+`tpm_report.json`（TPM 三种结局与审计计数）、`jobs.jsonl`（提交台账）、
+`verdicts.jsonl` 与 `collect_rows.jsonl`（逐条判定与计分），以及
+`out/remote/run_remote.stdout.log`（八步闸门的逐行输出，worker 权重/源码 sha、
+`migrationHead=099`、step 4.5 协议检查都在里面）。同一轮的大件（`generated.jsonl` 4.7MB、
+`briefs.jsonl`、`sim_out.tar.gz`）不入库，理由与再生成方式写在 `.gitignore` 的注释里。
+
+派生语料（CPDB 的 `annotation_cards.jsonl` / `pairs.jsonl` / `export/`）按同一条规则**不入库**；
+**人工标注 `human_labels.jsonl` 入库**（它是标注，不是派生量，丢了不可重建）。
