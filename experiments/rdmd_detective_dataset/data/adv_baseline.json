@@ -1,0 +1,173 @@
+{
+  "version": 1,
+  "probe": "adv",
+  "note": "基线（rules A–E）的计数参考。由 score_ood.py --write-reference 从一次真实跑导出；`model_*` 刻意不在里面（那需要 GPU 与具体权重）。改这个文件等于改门的判据，所以它必须来自一次真实跑，而不是手改。",
+  "corpus": {
+    "labels": {
+      "sha256": "ffa8e73ffd958122a49251f98f2b5c3b17a391dbe5e8c9486fcfa177d96025a6",
+      "bytes": 18199
+    },
+    "sft": {
+      "sha256": "bf6dcd1f5b5fccb15226a39b85b66d42fc2e2aa886ae1079d96a44edf3ba940c",
+      "bytes": 1346019
+    },
+    "cases": {
+      "sha256": "1b91a49238e6889fe869762bb89e1b2dc7ed8dd3946792049bb0da80ad00f34a",
+      "bytes": 1164982
+    }
+  },
+  "counters": [
+    "n",
+    "drift_n",
+    "base_node",
+    "base_type",
+    "base_status",
+    "abstain_n",
+    "base_abstain"
+  ],
+  "sections": [
+    "byScale",
+    "byKind",
+    "byDifficulty"
+  ],
+  "baseline": {
+    "byScale": {
+      "20": {
+        "n": 17,
+        "drift_n": 17,
+        "base_node": 17,
+        "model_node": 0,
+        "base_type": 17,
+        "model_type": 0,
+        "base_status": 17,
+        "model_status": 0,
+        "abstain_n": 0,
+        "base_abstain": 0,
+        "model_abstain": 0,
+        "invalid": 0,
+        "errors": []
+      },
+      "28": {
+        "n": 14,
+        "drift_n": 4,
+        "base_node": 4,
+        "model_node": 0,
+        "base_type": 4,
+        "model_type": 0,
+        "base_status": 14,
+        "model_status": 0,
+        "abstain_n": 10,
+        "base_abstain": 10,
+        "model_abstain": 0,
+        "invalid": 0,
+        "errors": []
+      },
+      "29": {
+        "n": 15,
+        "drift_n": 4,
+        "base_node": 4,
+        "model_node": 0,
+        "base_type": 4,
+        "model_type": 0,
+        "base_status": 14,
+        "model_status": 0,
+        "abstain_n": 11,
+        "base_abstain": 10,
+        "model_abstain": 0,
+        "invalid": 0,
+        "errors": []
+      },
+      "27": {
+        "n": 14,
+        "drift_n": 5,
+        "base_node": 4,
+        "model_node": 0,
+        "base_type": 4,
+        "model_type": 0,
+        "base_status": 13,
+        "model_status": 0,
+        "abstain_n": 9,
+        "base_abstain": 9,
+        "model_abstain": 0,
+        "invalid": 0,
+        "errors": []
+      }
+    },
+    "byKind": {
+      "single_control": {
+        "n": 30,
+        "drift_n": 30,
+        "base_node": 29,
+        "model_node": 0,
+        "base_type": 29,
+        "model_type": 0,
+        "base_status": 29,
+        "model_status": 0,
+        "abstain_n": 0,
+        "base_abstain": 0,
+        "model_abstain": 0,
+        "invalid": 0,
+        "errors": []
+      },
+      "two_derived_cause": {
+        "n": 30,
+        "drift_n": 0,
+        "base_node": 0,
+        "model_node": 0,
+        "base_type": 0,
+        "model_type": 0,
+        "base_status": 29,
+        "model_status": 0,
+        "abstain_n": 30,
+        "base_abstain": 29,
+        "model_abstain": 0,
+        "invalid": 0,
+        "errors": []
+      }
+    },
+    "byDifficulty": {
+      "drift: cause field": {
+        "n": 30,
+        "drift_n": 30,
+        "base_node": 29,
+        "model_node": 0,
+        "base_type": 29,
+        "model_type": 0,
+        "base_status": 29,
+        "model_status": 0,
+        "abstain_n": 0,
+        "base_abstain": 0,
+        "model_abstain": 0,
+        "invalid": 0,
+        "errors": []
+      },
+      "UNKNOWN": {
+        "n": 30,
+        "drift_n": 0,
+        "base_node": 0,
+        "model_node": 0,
+        "base_type": 0,
+        "model_type": 0,
+        "base_status": 29,
+        "model_status": 0,
+        "abstain_n": 30,
+        "base_abstain": 29,
+        "model_abstain": 0,
+        "invalid": 0,
+        "errors": []
+      }
+    }
+  },
+  "labelDisagreements": [
+    {
+      "id": "rdmd_adv_two_derived_cause_23__two_derived_cause__20291578",
+      "label": "UNKNOWN",
+      "baseline": "drift"
+    },
+    {
+      "id": "rdmd_adv_single_control_31__single_control__20307586",
+      "label": "drift",
+      "baseline": "UNKNOWN"
+    }
+  ]
+}

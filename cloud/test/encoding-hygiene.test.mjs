@@ -66,6 +66,13 @@ function walk(root, extensions) {
   return found;
 }
 
+function topLevelFiles(root, extensions) {
+  return fs.readdirSync(root, { withFileTypes: true })
+    .filter((entry) => entry.isFile())
+    .map((entry) => path.join(root, entry.name))
+    .filter((file) => extensions.some((extension) => file.endsWith(extension)));
+}
+
 function hasBom(file) {
   const handle = fs.openSync(file, 'r');
   try {
@@ -118,6 +125,25 @@ test('the GPU-box deployment bundle carries no UTF-8 BOM', () => {
   ];
   assert.ok(files.length > 40, `扫描到的 bundle 文件太少（${files.length}），说明遍历逻辑坏了而不是没问题`);
   assertNoBom(files, 'GPU 盒部署 bundle（scripts/、cloud/test、deploy/）');
+});
+
+test('the dataset generator and scoring sources carry no UTF-8 BOM', () => {
+  // 为什么单独收窄一层：`score_ood.py` 现在是 OOD/对抗基线门的入口
+  // （见 PLAN_EXEC_TRUTH §14），它一红就意味着"§12–13 的基线数字不再成立"。
+  // 一个 BOM 在这里的表现是最坏的那种 —— `python score_ood.py` **照样能跑**
+  // （Python 3 容忍开头 BOM），但如果它被 `bash`/别的方式拼进一条更长的命令里，
+  // 报错会指向别处。门自己不干净，"门说通过"就不值得相信。
+  //
+  // 只收**顶层与 lib/**：这个目录下还有 data/（语料与 label/summary）与
+  // ubuddy_recon/（另有单独一条测试）。递归进来会把语料 JSON 也扫进去 ——
+  // 那不是源码，扫它只是把这条测试变慢而不变强。
+  const dir = path.join(REPO_ROOT, 'experiments', 'rdmd_detective_dataset');
+  const files = [
+    ...topLevelFiles(dir, ['.py', '.mjs']),
+    ...walk(path.join(dir, 'lib'), ['.mjs']),
+  ];
+  assert.ok(files.length > 10, `扫描到的数据集聚类文件太少（${files.length}）`);
+  assertNoBom(files, 'experiments/rdmd_detective_dataset 顶层与 lib/');
 });
 
 test('the desktop sources carry no UTF-8 BOM', () => {

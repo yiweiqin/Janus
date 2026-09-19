@@ -401,6 +401,13 @@ development 复核 Drift n=1480 `nodeHit 1.0000 / typeHit 0.9986`，no_drift n=1
 
 ## 12. 分布外探针：换一种流程还行不行
 
+> **2026-09-19 更正指向（P4）**：本节的分组表来自 `data/ood_summary.json`，
+> 它描述的是**当时那一版探针**。探针后来被重造过（43 行 → **45 行**，
+> 刻意造的派生字段行 10 → **13**），而汇总没有跟着重跑。
+> 基线列已由 `data/ood_baseline.json` + `npm run experiment:rdmd-ood:gate` 重新钉住；
+> **模型列需要用当前探针重跑一次模型才能刷新**（那一步要 GPU）。
+> 详见 `ubuddy_recon/PLAN_EXEC_TRUTH.zh-CN.md` §14。
+
 第 11 节是**同分布**留出集（同生成器、同结构家族）的成绩。本节回答一个不同的问题：
 把图换成**训练时从未出现过的规模与形状**，模型会不会散架。
 
@@ -532,6 +539,14 @@ python experiments/rdmd_detective_dataset/score_ood.py \
 `ood_verdicts.jsonl`（模型原始判定）、`ood_predict.log`（逐条日志）、`data/ood_summary.json`（汇总）。
 
 ## 13. 对抗探针：该弃权的时候会不会硬猜
+
+> **2026-09-19 更正指向（P4）**：同上，本节的分组表来自 `data/adv_summary.json`，
+> 它来自一个更早的探针版本（`byScale` 当时只有一组 `20`，今天的 `scale` 是真节点数
+> `20/27/28/29`）。更要紧的是：`adv_verdicts.jsonl` 的 60 个 id 里**有 35 个
+> 在今天 60 行的标签里不存在**（旧命名 `_220.._249` vs 今天 `_2.._60`），
+> 所以本节的模型列**无法**用今天的语料复现。基线列已由 `data/adv_baseline.json` +
+> `npm run experiment:rdmd-ood:gate` 重新钉住，其中「2 行标签与基线不一致」是
+> 被显式记下的不变量。详见 `ubuddy_recon/PLAN_EXEC_TRUTH.zh-CN.md` §14。
 
 第 12 节测的是**规模、形状、长度**换掉之后散不散架。它有一个共同点：每行都仍然满足训练数据的
 **「唯一级联根」**保证。本节问一个更尖锐的问题 —— **把这条保证打破会怎样**。

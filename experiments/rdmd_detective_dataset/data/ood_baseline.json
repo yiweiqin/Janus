@@ -1,0 +1,237 @@
+{
+  "version": 1,
+  "probe": "ood",
+  "note": "基线（rules A–E）的计数参考。由 score_ood.py --write-reference 从一次真实跑导出；`model_*` 刻意不在里面（那需要 GPU 与具体权重）。改这个文件等于改门的判据，所以它必须来自一次真实跑，而不是手改。",
+  "corpus": {
+    "labels": {
+      "sha256": "8a82e92e5da58592853e7c957048c59e1195f027b7d5205d9449ae168ac67cc5",
+      "bytes": 18867
+    },
+    "sft": {
+      "sha256": "97e68b8f9225b3a54cc76d20b2ba622562b1c894971246bf97e0ed338f2efb6a",
+      "bytes": 1853221
+    },
+    "cases": {
+      "sha256": "9603770095811801f6a6226d31e20404bc01cd54636424291b084f54eeb003ba",
+      "bytes": 1661865
+    }
+  },
+  "counters": [
+    "n",
+    "drift_n",
+    "base_node",
+    "base_type",
+    "base_status",
+    "abstain_n",
+    "base_abstain"
+  ],
+  "sections": [
+    "byScale",
+    "byKind",
+    "byDifficulty"
+  ],
+  "baseline": {
+    "byScale": {
+      "16": {
+        "n": 6,
+        "drift_n": 1,
+        "base_node": 1,
+        "model_node": 0,
+        "base_type": 1,
+        "model_type": 0,
+        "base_status": 6,
+        "model_status": 0,
+        "abstain_n": 1,
+        "base_abstain": 1,
+        "model_abstain": 0,
+        "invalid": 0,
+        "errors": []
+      },
+      "24": {
+        "n": 13,
+        "drift_n": 8,
+        "base_node": 8,
+        "model_node": 0,
+        "base_type": 4,
+        "model_type": 0,
+        "base_status": 13,
+        "model_status": 0,
+        "abstain_n": 1,
+        "base_abstain": 1,
+        "model_abstain": 0,
+        "invalid": 0,
+        "errors": []
+      },
+      "32": {
+        "n": 13,
+        "drift_n": 8,
+        "base_node": 8,
+        "model_node": 0,
+        "base_type": 4,
+        "model_type": 0,
+        "base_status": 13,
+        "model_status": 0,
+        "abstain_n": 1,
+        "base_abstain": 1,
+        "model_abstain": 0,
+        "invalid": 0,
+        "errors": []
+      },
+      "48": {
+        "n": 7,
+        "drift_n": 4,
+        "base_node": 4,
+        "model_node": 0,
+        "base_type": 1,
+        "model_type": 0,
+        "base_status": 7,
+        "model_status": 0,
+        "abstain_n": 1,
+        "base_abstain": 1,
+        "model_abstain": 0,
+        "invalid": 0,
+        "errors": []
+      },
+      "80": {
+        "n": 6,
+        "drift_n": 4,
+        "base_node": 4,
+        "model_node": 0,
+        "base_type": 2,
+        "model_type": 0,
+        "base_status": 6,
+        "model_status": 0,
+        "abstain_n": 0,
+        "base_abstain": 0,
+        "model_abstain": 0,
+        "invalid": 0,
+        "errors": []
+      }
+    },
+    "byKind": {
+      "chain_side": {
+        "n": 13,
+        "drift_n": 6,
+        "base_node": 6,
+        "model_node": 0,
+        "base_type": 3,
+        "model_type": 0,
+        "base_status": 13,
+        "model_status": 0,
+        "abstain_n": 3,
+        "base_abstain": 3,
+        "model_abstain": 0,
+        "invalid": 0,
+        "errors": []
+      },
+      "wide_fan": {
+        "n": 7,
+        "drift_n": 4,
+        "base_node": 4,
+        "model_node": 0,
+        "base_type": 2,
+        "model_type": 0,
+        "base_status": 7,
+        "model_status": 0,
+        "abstain_n": 0,
+        "base_abstain": 0,
+        "model_abstain": 0,
+        "invalid": 0,
+        "errors": []
+      },
+      "nested_diamond": {
+        "n": 10,
+        "drift_n": 6,
+        "base_node": 6,
+        "model_node": 0,
+        "base_type": 3,
+        "model_type": 0,
+        "base_status": 10,
+        "model_status": 0,
+        "abstain_n": 0,
+        "base_abstain": 0,
+        "model_abstain": 0,
+        "invalid": 0,
+        "errors": []
+      },
+      "layered_mesh": {
+        "n": 15,
+        "drift_n": 9,
+        "base_node": 9,
+        "model_node": 0,
+        "base_type": 4,
+        "model_type": 0,
+        "base_status": 15,
+        "model_status": 0,
+        "abstain_n": 1,
+        "base_abstain": 1,
+        "model_abstain": 0,
+        "invalid": 0,
+        "errors": []
+      }
+    },
+    "byDifficulty": {
+      "no_drift": {
+        "n": 16,
+        "drift_n": 0,
+        "base_node": 0,
+        "model_node": 0,
+        "base_type": 0,
+        "model_type": 0,
+        "base_status": 16,
+        "model_status": 0,
+        "abstain_n": 0,
+        "base_abstain": 0,
+        "model_abstain": 0,
+        "invalid": 0,
+        "errors": []
+      },
+      "UNKNOWN": {
+        "n": 4,
+        "drift_n": 0,
+        "base_node": 0,
+        "model_node": 0,
+        "base_type": 0,
+        "model_type": 0,
+        "base_status": 4,
+        "model_status": 0,
+        "abstain_n": 4,
+        "base_abstain": 4,
+        "model_abstain": 0,
+        "invalid": 0,
+        "errors": []
+      },
+      "drift: cause field": {
+        "n": 12,
+        "drift_n": 12,
+        "base_node": 12,
+        "model_node": 0,
+        "base_type": 12,
+        "model_type": 0,
+        "base_status": 12,
+        "model_status": 0,
+        "abstain_n": 0,
+        "base_abstain": 0,
+        "model_abstain": 0,
+        "invalid": 0,
+        "errors": []
+      },
+      "drift: derived-only": {
+        "n": 13,
+        "drift_n": 13,
+        "base_node": 13,
+        "model_node": 0,
+        "base_type": 0,
+        "model_type": 0,
+        "base_status": 13,
+        "model_status": 0,
+        "abstain_n": 0,
+        "base_abstain": 0,
+        "model_abstain": 0,
+        "invalid": 0,
+        "errors": []
+      }
+    }
+  },
+  "labelDisagreements": []
+}

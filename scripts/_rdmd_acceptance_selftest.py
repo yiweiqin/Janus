@@ -12,6 +12,13 @@
 顺便回答一个 P3 前必须知道的数量问题：**test split 里有多少行真凶落在 step 层**。
 如果这个数很小（个位数），第 7 项就是在很小的样本上做的判断，必须如实标注。
 
+与 `test_rdmd_acceptance.py` 的分工
+----------------------------------
+`test_rdmd_acceptance.py` 已改成**自足夹具**，在干净 clone 上也能跑（那是"门的逻辑对不对"）。
+这个脚本不同：它要回答的是"**真语料**上这三项算出来是多少"，所以它**必须**有真语料。
+以前语料缺失时它的表现是 `step_layer_node=None (expected 1.0)` —— 读起来像"接线错了"，
+其实是"没测到"。现在改成显式退出 3：未测到不是通过，更不是失败。
+
 这是本机开发工具（下划线前缀，不进产品路径）。
 """
 
@@ -30,6 +37,19 @@ import rdmd_acceptance as acc  # noqa: E402
 def main() -> None:
     sft_dir = acc.DEFAULT_SFT
     data_dir = acc.DEFAULT_DATA
+    # 先证"语料在不在"，再谈指标。以前这里直接 read_jsonl，缺失时它返回 []，
+    # 于是一路跑到最后才以 `step_layer_node=None (expected 1.0)` 报错 —— 那句话把
+    # "没测到"说成了"接线错了"，是最容易被误读成 bug 的那种失败。
+    missing = [path for path in (sft_dir / "test.jsonl", data_dir / "test.jsonl") if not path.is_file()]
+    if missing:
+        print("UNMEASURED: 真语料不在，这个脚本量不了（未测到不是通过）", file=sys.stderr)
+        for path in missing:
+            print(f"  缺: {path}", file=sys.stderr)
+        print("语料由 generate.mjs / prepare_sft.mjs 派生、不进版本库（体积）。"
+              "要跑这一份就得先把它生成出来；只想验门的逻辑请跑 scripts/test_rdmd_acceptance.py。",
+              file=sys.stderr)
+        raise SystemExit(3)
+
     rows = acc.read_jsonl(sft_dir / "test.jsonl")
     print(f"test.jsonl rows: {len(rows)}")
 
