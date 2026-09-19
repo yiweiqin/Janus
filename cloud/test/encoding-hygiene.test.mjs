@@ -173,8 +173,29 @@ test('the simulated task group sources carry no UTF-8 BOM', () => {
   assertNoBom(files, 'experiments/sim_task_group/');
 });
 
-test('the reconnaissance harness sources carry no UTF-8 BOM', () => {
-  // 加这一条的原因是一次真实的手滑：改 `gplanGexecLib.mjs` / `route_evolution_e2e.mjs`
+test('the CPDB org world sources and scorer artifacts carry no UTF-8 BOM', () => {
+  // 为什么这个目录要单独一条：它是**唯一同时被 node 与 python 执行**的实验目录 ——
+  // `*.mjs` 由 node 加载（`features.mjs`/`scorer.mjs`/`export_training_matrix.mjs`），
+  // `*.py` 在盒子上由 python 跑（`train_scorer.py`/`judge_with_local_llm.py`）。
+  //
+  // 更直接的理由是 `weights.json`：`scorer.mjs` 用 `JSON.parse(readFileSync(...))` 读它，
+  // 与文件头第 1 条（package.json 带 BOM 让云 API 起不来）是**同一行代码、同一种失败**。
+  // 这份权重是训练产物、机器写的，恰恰是最容易被工具顺手加上 BOM 的一类文件。
+  //
+  // 加这条的直接起因：本轮新写的 5 个文件（features.mjs / scorer.mjs / scorer.test.mjs /
+  // features.test.mjs / export_training_matrix.mjs）全部带上了 BOM，而上面所有条目
+  // 都没覆盖这个目录，于是**测试全绿** —— 正是本文件反复警告的那个形态。
+  //
+  // `.jsonl` 也收：`read_matrix` 是「按行 split 后逐行 JSON.parse」，首行的 BOM 会让
+  // 第一行的 parse 直接抛异常（标签文件的第 1 行读不出来）。`hasBom` 只读开头 3 个字节，
+  // 所以把 2~12MB 的语料也扫进来不会变慢。
+  const dir = path.join(REPO_ROOT, 'experiments', 'cpdb_org_world');
+  const files = walk(dir, [...SOURCE_EXTS, '.jsonl']);
+  assert.ok(files.length > 20, `扫描到的 CPDB 文件太少（${files.length}），说明遍历逻辑坏了而不是没问题`);
+  assertNoBom(files, 'experiments/cpdb_org_world/');
+});
+
+test('the reconnaissance harness sources carry no UTF-8 BOM', () => {  // 加这一条的原因是一次真实的手滑：改 `gplanGexecLib.mjs` / `route_evolution_e2e.mjs`
   // 时被写入了 BOM，而上面四条都没覆盖 ubuddy_recon/**，于是**测试全绿**。
   //
   // 为什么这个目录值得单独一条：它是**探针与投影的唯一实现**，而它的产物是结论的

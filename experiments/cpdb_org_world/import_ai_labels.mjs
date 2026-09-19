@@ -1,4 +1,4 @@
-﻿/**
+/**
  * 把外部 AI 的判分收回来的那道闸。
  *
  * 为什么不能直接调 `applyLabels`：`apply_labels.mjs` 的标尺检查是
