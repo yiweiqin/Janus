@@ -36,6 +36,26 @@ const LEGACY_PPT_AGENT_ID_SET = new Set(LEGACY_PPT_AGENT_IDS);
 const canonicalEmployeeAgentFamilyId = (value = '') => canonicalGeneralAgentId(canonicalPptAgentId(value));
 const DESKTOP_APP_VERSION = readDesktopPackageVersion();
 
+/**
+ * 「RDMD 的 case 到底发去哪」——**纯函数**，单独导出是为了能被直接测到。
+ *
+ * 为什么需要它：`planExecDriftService.resolveRdmdInferenceConfig` 一直把
+ * `RDMD_CLOUD_URL` 算进「云通道可不可用」，但真正的提交走 `cloud_sync_state.server_url`。
+ * 两者不一致时结果是：**判成 cloud 可用 → 每条都发去另一个地址 → 404**，
+ * 落成 `record_only` + `cloud_http_404`，看起来像云不认得我们，实际是两台机器。
+ *
+ * 语义：`RDMD_CLOUD_URL` 是**显式覆盖**（用于把 RDMD 单独指向一台盒子，而不动整条同步链路）。
+ * 只有**空白**才退回 `stateUrl` —— 也就是说 `RDMD_CLOUD_URL=not-a-url` 会被原样采纳，
+ * 然后在拼 URL 时**炸得很响**。这是刻意的：如果这里"宽容地"退回 `server_url`，
+ * 就会重新造出这个 bug 本身（判可用时读覆盖、提交时读另一处），而且这次连报错都没有。
+ * 宁可炸响，也不要静默发错机器。
+ */
+export function resolveRdmdTargetUrl(env = process.env, stateUrl = '') {
+  const override = String(env?.RDMD_CLOUD_URL || '').trim();
+  if (override) return normalizeServerUrl(override);
+  return normalizeServerUrl(stateUrl);
+}
+
 const DEFAULT_STATE_ID = 'default';
 const EMPLOYEE_CLOUD_POLICY_VERSION = 'employee_cloud_authority_v1';
 const MAX_DEFERRED_V6_CHANGE_ATTEMPTS = 50;
@@ -1899,11 +1919,33 @@ export class CloudSyncService {
   }
 
   /**
+   * 把「RDMD 到底发去哪」解析成一个可以交给 `client` 的 state。
+   *
+   * 不改 `cloud_sync_state`，只改这一份快照 —— `RDMD_CLOUD_URL` 是**通道级覆盖**，
+   * 不该有同步副作用（对比 `saveConfig`：一旦同步目标变了，它会清掉
+   * evolution/device grant 并重置同步身份与游标）。
+   *
+   * 覆盖为空串 / 解析不出合法 URL 时退回 `server_url`，所以「不设它」与「设成废字符串」
+   * 都等价于今天的行为，不会把一个原本可用的部署关掉。
+   */
+  rdmdTargetState() {
+    const current = this.state();
+    const currentUrl = normalizeServerUrl(current.server_url);
+    const target = resolveRdmdTargetUrl(process.env, current.server_url);
+    if (!target || target === currentUrl) return current;
+    return { ...current, server_url: target };
+  }
+
+  /**
    * RDMD 云侧推理：提交一条 case，必要时轮询到终态判定。
    *
    * 为什么轮询放在这一层而不是 `planExecDriftService` 里：轮询要用的凭据刷新
    * （`withAuthenticatedCloudIdentity` 会在 401 时换一次 token）、服务器地址、HTTP 客户端
    * 都在这一层。放到上层去重写一遍，就会得到两份必然会分叉的实现。
+   *
+   * **提交目标与「通道可用性判断」必须用同一个地址** —— 见 `resolveRdmdTargetUrl`。
+   * 这两者曾经不一致，症状是「判成 cloud 可用、然后每条都 404」，看起来像云不认得我们，
+   * 实际是发去了另一台机器。
    *
    * **失败一律抛**，由上层归一成 `record_only` 的原因。这一层不做"降级"决定 ——
    * 它没有资格替产品决定"云不可用时该干什么"。
@@ -1913,8 +1955,11 @@ export class CloudSyncService {
    */
   async rdmdInfer({ taskRunId = '', case: caseValue = {}, conversationKind = '' } = {}) {
     const payload = { taskRunId: String(taskRunId || ''), case: caseValue, conversationKind: String(conversationKind || '') };
+    // 每次 IO 前重新解析：`RDMD_CLOUD_URL` 可以在进程生命周期内被设/被清，
+    // 而 `server_url` 会随登录/换服务器变化 —— 缓存住任何一个都会分叉。
+    const targetState = () => this.rdmdTargetState();
     const submitted = await this.withAuthenticatedCloudIdentity(
-      (authState) => this.client.submitRdmdJob(this.state(), payload, { accessToken: authState.access_token }),
+      (authState) => this.client.submitRdmdJob(targetState(), payload, { accessToken: authState.access_token }),
     );
     const jobId = String(submitted?.jobId || '');
     const submittedStatus = String(submitted?.status || '');
@@ -1932,7 +1977,7 @@ export class CloudSyncService {
     while (Date.now() < deadline) {
       await sleep(Math.min(pollMs, Math.max(0, deadline - Date.now())));
       const polled = await this.withAuthenticatedCloudIdentity(
-        (authState) => this.client.rdmdJob(this.state(), jobId, { accessToken: authState.access_token }),
+        (authState) => this.client.rdmdJob(targetState(), jobId, { accessToken: authState.access_token }),
       );
       const status = String(polled?.status || '');
       // 还在路上的一律继续等。`failed_retryable` 也等 —— 那是 worker 侧的暂时失败，

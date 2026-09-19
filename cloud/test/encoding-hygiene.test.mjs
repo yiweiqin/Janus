@@ -157,6 +157,22 @@ test('the desktop sources carry no UTF-8 BOM', () => {
   assertNoBom(files, 'src/ 与 network/');
 });
 
+test('the simulated task group sources carry no UTF-8 BOM', () => {
+  // 为什么补这一条：`experiments/sim_task_group/` 是**另一条被执行的路径** ——
+  // `run_remote.sh` 在盒子上由 `bash` 跑，`simulate/submit/collect/tpm.mjs` 由 node 跑，
+  // 而它原本不在上面任何一条的范围内。本轮就真的写进了一个 BOM 而**测试全绿**：
+  // 只因为那条调用是 `bash run_remote.sh`（不是 `./run_remote.sh`），BOM 不会变成
+  // `No such file or directory`，于是它**看起来能用** —— 正好是这个文件头警告过的形态。
+  //
+  // 收 `.mjs`/`.sh`/`.js`：这个目录下还有 out/ 与 .bundle/（每次跑完的产物，
+  // 由 .gitignore 排除），它们不是源码，按扩展名收窄正好把两者分开。
+  const files = [
+    ...walk(path.join(REPO_ROOT, 'experiments', 'sim_task_group'), ['.mjs', '.sh', '.js']),
+  ];
+  assert.ok(files.length >= 8, `扫描到的模拟群任务文件太少（${files.length}）`);
+  assertNoBom(files, 'experiments/sim_task_group/');
+});
+
 test('the reconnaissance harness sources carry no UTF-8 BOM', () => {
   // 加这一条的原因是一次真实的手滑：改 `gplanGexecLib.mjs` / `route_evolution_e2e.mjs`
   // 时被写入了 BOM，而上面四条都没覆盖 ubuddy_recon/**，于是**测试全绿**。

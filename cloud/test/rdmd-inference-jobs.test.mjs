@@ -276,7 +276,7 @@ test('a job whose final attempt is still being worked on is not declared dead ea
 
   // 它仍然来得及把判定交回来 —— 这正是我们不肯提前收尾的原因。
   const provenance = { adapterSha256: 'a'.repeat(64), baseModelId: 'Qwen/Qwen3-8B', contractVersion: RDMD_PLAN_EXEC_CONTRACT_VERSION };
-  await service.recordVerdict({ jobId: submitted.jobId, payload: { verdict: { status: 'no_drift', valid: true }, provenance } });
+  await service.recordVerdict({ jobId: submitted.jobId, workerId: 'worker-slow', payload: { verdict: { status: 'no_drift', valid: true }, provenance } });
   const done = (await pool.query('SELECT * FROM cloud_rdmd_inference_jobs')).rows[0];
   assert.equal(done.status, 'completed');
 });
@@ -341,7 +341,7 @@ test('a valid verdict is stored with full provenance, and a replay is idempotent
       contractVersion: 'ubuddy_plan_exec_v2', ruleVersion: RDMD_RULE_VERSION, workerVersion: 'rdmd-gpu-worker/1',
     },
   };
-  const first = await service.recordVerdict({ jobId: submitted.jobId, payload });
+  const first = await service.recordVerdict({ jobId: submitted.jobId, workerId: 'worker-1', payload });
   assert.equal(first.status, 'completed');
   assert.equal(first.replay, false);
   assert.equal(first.verdict.provenance.adapterSha256, ADAPTER_SHA);
@@ -356,7 +356,7 @@ test('a valid verdict is stored with full provenance, and a replay is idempotent
   assert.equal(row.lease_expires_at, null, '终态必须释放租约');
 
   // worker 重试是常态（租约到期后别人接走），回传必须幂等而不是覆盖。
-  const replay = await service.recordVerdict({ jobId: submitted.jobId, payload: {
+  const replay = await service.recordVerdict({ jobId: submitted.jobId, workerId: 'worker-1', payload: {
     verdict: { status: 'no_drift', valid: true }, provenance: payload.provenance,
   } });
   assert.equal(replay.replay, true);
@@ -396,7 +396,7 @@ test('an abstention carries no type even if the worker sends one', async () => {
   const { service } = await fixture({ env: { RDMD_CLOUD_BACKEND: 'gpu_worker' } });
   const submitted = await service.submit({ userId: 'bob', payload: { taskRunId: 'task_abstain', case: caseValue() } });
   await service.claim({ workerId: 'worker-1' });
-  const result = await service.recordVerdict({ jobId: submitted.jobId, payload: {
+  const result = await service.recordVerdict({ jobId: submitted.jobId, workerId: 'worker-1', payload: {
     verdict: { status: 'UNKNOWN', nodeId: '', type: 'wrong_agent', valid: true },
     provenance: { adapterSha256: ADAPTER_SHA, baseModelId: 'Qwen/Qwen3-8B', contractVersion: 'v2' },
   } });
@@ -418,7 +418,7 @@ test('a new task run gets its own job, and a finished one is not reused', async 
   const { pool, service } = await fixture({ env: { RDMD_CLOUD_BACKEND: 'gpu_worker' } });
   const first = await service.submit({ userId: 'alice', payload: { taskRunId: 'task_seq', case: caseValue() } });
   await service.claim({ workerId: 'worker-1' });
-  await service.recordVerdict({ jobId: first.jobId, payload: {
+  await service.recordVerdict({ jobId: first.jobId, workerId: 'worker-1', payload: {
     verdict: { status: 'no_drift', valid: true },
     provenance: { adapterSha256: 'b'.repeat(64), baseModelId: 'Qwen/Qwen3-8B', contractVersion: 'v2' },
   } });
@@ -439,6 +439,72 @@ test('reads are scoped to the owner', async () => {
   await assert.rejects(
     () => service.read({ userId: 'mallory', jobId: submitted.jobId }),
     (error) => error.code === 'rdmd_job_not_found',
+  );
+});
+
+test('a verdict may only be returned by the worker holding the lease', async () => {
+  // 没有这一条，任何一个持 `rdmd:infer` 的 grant 就能凭 job id 终结**队列里任何一条在飞作业**
+  // —— 包括别的用户的。`owner_user_id` 挡不住这一侧（worker 是跨用户的服务身份，见 097 迁移注释），
+  // 所以唯一有意义的绑定是租约：谁领的活，谁才能判。
+  const { pool, service } = await fixture({ env: { RDMD_CLOUD_BACKEND: 'gpu_worker' } });
+  const submitted = await service.submit({ userId: 'bob', payload: { taskRunId: 'task_lease', case: caseValue() } });
+  await service.claim({ workerId: 'worker-rightful' });
+
+  const provenance = { adapterSha256: 'c'.repeat(64), baseModelId: 'Qwen/Qwen3-8B', contractVersion: RDMD_PLAN_EXEC_CONTRACT_VERSION };
+  const verdict = { status: 'no_drift', valid: true };
+
+  // (a) 不带 workerId —— 拒收，否则这个校验就是可选的（可选的校验不是校验）。
+  await assert.rejects(
+    () => service.recordVerdict({ jobId: submitted.jobId, payload: { verdict, provenance } }),
+    (error) => error.code === 'rdmd_worker_id_required',
+  );
+  // (b) 带别人的 workerId —— 拒收。
+  await assert.rejects(
+    () => service.recordVerdict({ jobId: submitted.jobId, workerId: 'worker-rogue', payload: { verdict, provenance } }),
+    (error) => error.code === 'rdmd_job_claimed_by_other_worker',
+  );
+
+  // 两次拒绝都不许动到作业：它必须仍然是 claimed、仍然租给 rightful。
+  const after = (await pool.query('SELECT * FROM cloud_rdmd_inference_jobs WHERE id=$1', [submitted.jobId])).rows[0];
+  assert.equal(after.status, 'claimed', '被拒的回传不该消耗租约');
+  assert.equal(after.claimed_by, 'worker-rightful');
+  assert.equal(after.verdict_json, null, '被拒的回传不该写进任何判定');
+
+  // (c) 持租约者本人 —— 通过。
+  const accepted = await service.recordVerdict({ jobId: submitted.jobId, workerId: 'worker-rightful', payload: { verdict, provenance } });
+  assert.equal(accepted.status, 'completed');
+});
+
+test('a verdict from a worker whose lease already expired is rejected', async () => {
+  // 租约过期的意思是「这条 case 已经（或将）被别人接走重跑」。此时原 worker 迟到的判定
+  // 必须被拒 —— 否则它会覆盖接任者的结果，而两个人跑的可能根本不是同一轮。
+  const { pool, service } = await fixture({ env: { RDMD_CLOUD_BACKEND: 'gpu_worker' } });
+  const submitted = await service.submit({ userId: 'bob', payload: { taskRunId: 'task_late', case: caseValue() } });
+  await service.claim({ workerId: 'worker-slow' });
+  await pool.query("UPDATE cloud_rdmd_inference_jobs SET lease_expires_at = now() - interval '1 second' WHERE id=$1", [submitted.jobId]);
+
+  await assert.rejects(
+    () => service.recordVerdict({
+      jobId: submitted.jobId, workerId: 'worker-slow',
+      payload: {
+        verdict: { status: 'no_drift', valid: true },
+        provenance: { adapterSha256: 'd'.repeat(64), baseModelId: 'Qwen/Qwen3-8B', contractVersion: RDMD_PLAN_EXEC_CONTRACT_VERSION },
+      },
+    }),
+    (error) => error.code === 'rdmd_job_lease_expired',
+  );
+
+  // 接任者拿走后，同一个（过期的）worker 依然判不了 —— 现在是被"不是持租约者"挡住的。
+  await service.claim({ workerId: 'worker-next' });
+  await assert.rejects(
+    () => service.recordVerdict({
+      jobId: submitted.jobId, workerId: 'worker-slow',
+      payload: {
+        verdict: { status: 'no_drift', valid: true },
+        provenance: { adapterSha256: 'd'.repeat(64), baseModelId: 'Qwen/Qwen3-8B', contractVersion: RDMD_PLAN_EXEC_CONTRACT_VERSION },
+      },
+    }),
+    (error) => error.code === 'rdmd_job_claimed_by_other_worker',
   );
 });
 

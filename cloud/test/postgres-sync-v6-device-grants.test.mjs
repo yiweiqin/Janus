@@ -5,7 +5,7 @@ import { test } from 'node:test';
 import { newDb } from 'pg-mem';
 
 import { migrate } from '../src/db.mjs';
-import { createDeviceGrantService, routeWithDeviceGrant } from '../src/modules/sync/deviceGrants.mjs';
+import { createDeviceGrantService, routeWithDeviceGrant, DEFAULT_RDMD_WORKER_USER } from '../src/modules/sync/deviceGrants.mjs';
 import { deviceGrantProofMessage, rsaPublicKeyFingerprint } from '../../src/shared/taskMemoryCrypto.js';
 
 test('Sync V6 Device Grants support strict cross-device approval and enforce revocation', async (t) => {
@@ -88,6 +88,90 @@ test('authenticated device registration automatically authorizes new, replacemen
     userId: 'user_login', deviceId: 'device_reinstalled', requestedScopes: ['sync:read'],
     proof: signProof(replacementKey, 'user_login', 'device_reinstalled', ['sync:read']),
   })).status, 'approved');
+});
+
+test('the cross-user rdmd:infer scope is issued only to a configured service identity', async (t) => {
+  // `rdmd:infer` 与其余 scope 的本质区别：它是**跨用户**的。一个 worker 池替所有用户领活、
+  // 回传判定，所以拿到它等于拿到"给任意一条推理作业写判定"的权力。而通用签发端点只要求
+  // 登录态、scope 直接来自请求体 —— 没有这道闸，任何登录用户都能给自己的设备签出它。
+  //
+  // 这条测试盯住的是**签发**，不是消费：消费侧（claim/verdict）本来就该跨用户，
+  // 所以唯一能收口的地方就是这里。
+  const memory = newDb({ autoCreateForeignKeyIndices: true, noAstCoverageCheck: true });
+  const adapter = memory.adapters.createPg();
+  const pool = new adapter.Pool();
+  t.after(() => pool.end());
+  await migrate(pool);
+  await insertUsers(pool, ['user_plain', DEFAULT_RDMD_WORKER_USER]);
+
+  const service = createDeviceGrantService({ pool, apiError });
+
+  // ---- 普通用户自取 rdmd:infer：必须被拒 ----
+  const plainKey = deviceIdentity();
+  assert.equal((await service.register({ userId: 'user_plain', input: { deviceId: 'device_plain', publicKey: plainKey.publicKey } })).status, 'approved');
+  await assert.rejects(
+    service.issueToken({ userId: 'user_plain', deviceId: 'device_plain', requestedScopes: ['rdmd:infer'],
+      proof: signProof(plainKey, 'user_plain', 'device_plain', ['rdmd:infer']) }),
+    (error) => error.code === 'device_grant_scope_reserved' && error.status === 403,
+  );
+  // 被拒之后不该留下任何凭据。
+  assert.equal((await pool.query('SELECT * FROM cloud_sync_grants WHERE user_id=$1', ['user_plain'])).rows.length, 0);
+
+  // 混在普通 scope 里也不行 —— 否则"顺手带一个"就能绕过。
+  await assert.rejects(
+    service.issueToken({ userId: 'user_plain', deviceId: 'device_plain', requestedScopes: ['sync:read', 'rdmd:infer'],
+      proof: signProof(plainKey, 'user_plain', 'device_plain', ['sync:read', 'rdmd:infer']) }),
+    (error) => error.code === 'device_grant_scope_reserved',
+  );
+
+  // ---- 收口之前签出去的残留也要兜住 ----
+  // 判据取的是**合并后**的 scope 集合：只看本次请求的话，一个已经把这行写成 rdmd:infer 的
+  // 身份，之后每次续签都会被原样合并回来，闸门等于没关。
+  await service.issueToken({ userId: 'user_plain', deviceId: 'device_plain', requestedScopes: ['sync:read'],
+    proof: signProof(plainKey, 'user_plain', 'device_plain', ['sync:read']) });
+  await pool.query('UPDATE cloud_sync_grants SET scopes_json=$1::jsonb WHERE user_id=$2 AND device_id=$3',
+    [JSON.stringify(['sync:read', 'rdmd:infer']), 'user_plain', 'device_plain']);
+  await assert.rejects(
+    service.issueToken({ userId: 'user_plain', deviceId: 'device_plain', requestedScopes: ['sync:read'],
+      proof: signProof(plainKey, 'user_plain', 'device_plain', ['sync:read']) }),
+    (error) => error.code === 'device_grant_scope_reserved',
+  );
+
+  // ---- 服务身份：正常签发，且签出来的 grant 真的能过消费侧那道 scope 检查 ----
+  const workerKey = deviceIdentity();
+  await service.register({ userId: DEFAULT_RDMD_WORKER_USER, input: { deviceId: 'device_gpu', publicKey: workerKey.publicKey } });
+  const workerGrant = await service.issueToken({
+    userId: DEFAULT_RDMD_WORKER_USER, deviceId: 'device_gpu', requestedScopes: ['rdmd:infer'],
+    proof: signProof(workerKey, DEFAULT_RDMD_WORKER_USER, 'device_gpu', ['rdmd:infer']),
+  });
+  assert.deepEqual(workerGrant.scopes, ['rdmd:infer']);
+  assert.equal((await authorize(pool, workerGrant.token, 'rdmd:infer')).userId, DEFAULT_RDMD_WORKER_USER);
+});
+
+test('the service identity allowlist is configurable, and is the only thing that grants the reserved scope', async (t) => {
+  const memory = newDb({ autoCreateForeignKeyIndices: true, noAstCoverageCheck: true });
+  const adapter = memory.adapters.createPg();
+  const pool = new adapter.Pool();
+  t.after(() => pool.end());
+  await migrate(pool);
+  await insertUsers(pool, ['user_custom_worker', DEFAULT_RDMD_WORKER_USER]);
+
+  // 换一份 env：名单里是 user_custom_worker，于是**默认**那个服务身份反而拿不到了。
+  // 这条同时钉住两件事：名单确实生效，且它不是"写死的白名单"。
+  const service = createDeviceGrantService({ pool, apiError, env: { RDMD_WORKER_USER: 'user_custom_worker' } });
+  const customKey = deviceIdentity();
+  await service.register({ userId: 'user_custom_worker', input: { deviceId: 'device_custom', publicKey: customKey.publicKey } });
+  const grant = await service.issueToken({ userId: 'user_custom_worker', deviceId: 'device_custom', requestedScopes: ['rdmd:infer'],
+    proof: signProof(customKey, 'user_custom_worker', 'device_custom', ['rdmd:infer']) });
+  assert.deepEqual(grant.scopes, ['rdmd:infer']);
+
+  const defaultKey = deviceIdentity();
+  await service.register({ userId: DEFAULT_RDMD_WORKER_USER, input: { deviceId: 'device_default', publicKey: defaultKey.publicKey } });
+  await assert.rejects(
+    service.issueToken({ userId: DEFAULT_RDMD_WORKER_USER, deviceId: 'device_default', requestedScopes: ['rdmd:infer'],
+      proof: signProof(defaultKey, DEFAULT_RDMD_WORKER_USER, 'device_default', ['rdmd:infer']) }),
+    (error) => error.code === 'device_grant_scope_reserved',
+  );
 });
 
 function apiError(code, message, status) {

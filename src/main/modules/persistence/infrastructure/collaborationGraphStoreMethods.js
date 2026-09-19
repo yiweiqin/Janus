@@ -352,7 +352,11 @@ export function installCollaborationGraphStoreMethods(prototype) {
       }
       const graphs = buildPlanExecGraphs({ graphNodes: snapshot.nodes, graphEdges: snapshot.edges,
         proposalNodesByTaskRun, firstPlanStepsByTaskNode, resultTextByTaskNode });
-      const caseId = String(groupId || delegationId || taskRunId || snapshot.graphId);
+      // case id 与 scope 同源：群作用域取**解析出来的**那个，而不是回抄入参。
+      // 回抄的话按 taskRunId 读会得到 run id —— 同一类任务的 case 身份每轮都不同，
+      // 而 scope 里明明写着真正的群 id。两处口径不一致比两处都错更难查。
+      const resolvedGroupId = String(snapshot.groupId || groupId || '');
+      const caseId = String(resolvedGroupId || delegationId || taskRunId || snapshot.graphId);
       const modelCase = planExecCase({ id: caseId, plan: graphs.plan, exec: graphs.exec });
       const gaps = planExecContractGaps(modelCase);
       const participantUserIds = [...new Set([
@@ -361,8 +365,17 @@ export function installCollaborationGraphStoreMethods(prototype) {
       ].filter(Boolean))];
       return {
         scope: { graphId: snapshot.graphId, revision: snapshot.revision,
-          taskRunId: String(taskRunId || ''), delegationId: String(delegationId || ''),
-          groupId: String(groupId || ''), taskRunIds },
+          taskRunId: String(taskRunId || ''),
+          delegationId: String(delegationId || ''),
+          // 群作用域必须取**快照解析出来的**那一个，而不是回抄调用方的入参。
+          //
+          // 回抄是一个静默失败：`planExecDriftService.record()` 是按 taskRunId 调进来的
+          // （不带 groupId），于是 `scope.groupId` 恒为空串 → `planExecTaskFamily` 的 anchor
+          // 退化成 `task_run` → 记录里的 `taskFamily.degenerate` 恒为 true。后果是
+          // 「提案数在涨」永远不可能变成「样本在积累」，而且**不会报任何错**。
+          // 这与 `getCollaborationGraph` 里那句「群作用域必须随快照出去」是同一个坑。
+          groupId: String(snapshot.groupId || groupId || ''),
+          taskRunIds },
         plan: graphs.plan,
         exec: graphs.exec,
         mapping: graphs.mapping,

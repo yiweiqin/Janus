@@ -7,6 +7,7 @@ import { newDb } from 'pg-mem';
 
 import { openDatabase } from '../../src/main/db.js';
 import { Store } from '../../src/main/store.js';
+import { planExecTaskFamily } from '../../src/main/modules/collaboration/application/planExecDriftService.js';
 import { stableCollaborationNodeId } from '../../src/shared/contracts/uBuddyCollaborationGraph.js';
 import {
   PLAN_EXEC_NODE_FIELDS,
@@ -236,6 +237,37 @@ test('the product-side reader assembles G_plan from the proposal and G_exec from
     assert.equal(read.memory.foundation.plan.nodes.length, read.plan.nodes.length);
     assert.deepEqual(read.memory.participantUserIds, ['alice']);
     assert.equal(JSON.stringify(read.plan).includes('PRIVATE prompt'), false);
+  } finally {
+    db.close();
+    fs.rmSync(root, { recursive: true, force: true });
+  }
+});
+
+// 核实项：`readPlanExecGraphs` 按 taskRunId 读时，群作用域是否还在。
+//
+// `planExecDriftService.record()` 就是这么调的（`{ taskRunId, viewerUserId, skipAuthorization }`，
+// 不带 groupId），而 `scope.groupId` 是 `planExecTaskFamily` 的**第一顺位 anchor**。
+// 回抄入参的话它会恒为空串 → 族退化成 `task_run` → `degenerate: true`，于是
+// 「提案数在涨」永远变不成「样本在积累」。这条路径此前完全没有被断言过：
+// 上面那条读图测试**显式传了** `groupId: 'group_pe'`，所以回抄入参也照样绿。
+test('the group scope survives a taskRunId-only read, so the drift task family is not degenerate', () => {
+  const { root, db, store } = fixture();
+  try {
+    store.ensureCollaborationGraph({ groupId: 'group_scope', ownerWorkspaceId: 'workspace_personal', ownerUserId: 'alice', title: 'Scope' });
+    const task = store.createTaskRun({ id: 'task_scope', title: 'Scope task', prompt: 'p', userId: 'alice', metadata: { collaborationGroupId: 'group_scope' } });
+    const node = store.createTaskNode({ taskRunId: task.id, title: 'Work', objective: 'o', agentId: 'research_agent', status: 'completed' });
+    store.recordTaskEvent({ taskRunId: task.id, taskNodeId: node.id, eventType: 'node_activity',
+      payload: { activityType: 'plan', plan: { steps: [{ label: '查资料', status: 'completed' }] } } });
+    store.projectTaskRunToCollaborationGraph(task.id, { type: 'node_running' });
+
+    // 关键：**不传 groupId**。这正是 `record()` 的形状。
+    const read = store.readPlanExecGraphs({ taskRunId: task.id, viewerUserId: 'alice' });
+    assert.equal(read.scope.groupId, 'group_scope', '按 taskRunId 读也必须带出真正的群作用域');
+    assert.equal(read.case.id, 'group_scope', 'case id 也要落在群上，而不是退化成 run id');
+
+    const family = planExecTaskFamily({ groupId: read.scope.groupId, taskRunId: task.id, plan: read.plan });
+    assert.equal(family.anchorKind, 'group');
+    assert.equal(family.degenerate, false, '退化族会让每一轮同类任务都换族，样本永远不积累');
   } finally {
     db.close();
     fs.rmSync(root, { recursive: true, force: true });

@@ -12,6 +12,9 @@ export function registerSyncRoutes({ app, pool, auth, route, apiError, env = pro
     pool,
     apiError,
     approvalMode: String(env.JANUS_DEVICE_APPROVAL_MODE || 'automatic').trim().toLowerCase(),
+    // 服务级 scope（`rdmd:infer`）的授权名单由 env 决定，所以要把它传进去；否则
+    // `createDeviceGrantService` 会退回 `process.env`，在多环境部署里读到的是错的那一份。
+    env,
   });
   const sync = createSyncV6Service({ pool, apiError, env });
   const taskKeys = createTaskKeyRecoveryService({ pool, apiError, env });

@@ -9,11 +9,42 @@ const VALID_SCOPES = new Set([
   // 领活（claim）与回传判定（verdict）—— 所以这个 scope 不附带任何读取用户数据的权力，
   // 拿到它的进程也只能看见**已经过隐私白名单**的 case 载荷。
   // 命名沿用 `<namespace>:<verb>`，所以 `rdmd:*` 的通配行为与其余 scope 一致。
+  //
+  // **但它是「服务级」scope，签发另有一道闸**：见 `SERVICE_ONLY_SCOPES`。留在本表里是
+  // 必要的（否则 `normalizeScopes` 会把它过滤掉、`scopeAllowed` 也认不出它），
+  // 但"在本表里"绝不等于"谁都能签"。
   'rdmd:infer',
 ]);
 
-export function createDeviceGrantService({ pool, apiError, approvalMode = 'automatic' }) {
+/**
+ * 「只有服务身份才配持有」的 scope。
+ *
+ * 这几个 scope 与其余 scope 有**本质**区别：它们是**跨用户**的。一个 worker 池替所有用户
+ * 领活、回传判定（云侧 `claim` 本来就不按用户过滤，见 `scripts/_rdmd_worker_provision.mjs`），
+ * 所以拿到 `rdmd:infer` 就等于拿到"给系统里任意一条推理作业写判定"的权力。
+ *
+ * 而通用签发端点 `POST /api/device-grants/:deviceId/token` 只要求登录态、scope 直接来自
+ * 请求体（`sync/index.mjs`）—— 若不加这道闸，**任何登录用户**都能给自己的设备签出
+ * `rdmd:infer`，然后跨用户回传判定。那是这条链上真正的越权面。
+ *
+ * 所以授权的判据不是"这个 scope 合不合法"，而是"这个**身份**配不配"。默认身份与
+ * `scripts/_rdmd_worker_provision.mjs` 的 `RDMD_WORKER_USER` 同源，两边不会各写一份而漂移。
+ */
+const SERVICE_ONLY_SCOPES = new Set(['rdmd:infer']);
+
+/** 与 `scripts/_rdmd_worker_provision.mjs` 的默认同源。 */
+export const DEFAULT_RDMD_WORKER_USER = 'svc_rdmd_inference_worker';
+
+/** 允许持有服务级 scope 的身份。`RDMD_WORKER_USER` 可写多个（逗号分隔）。 */
+export function rdmdWorkerIdentities(env = process.env) {
+  const raw = String(env?.RDMD_WORKER_USER || '').trim();
+  return new Set((raw || DEFAULT_RDMD_WORKER_USER)
+    .split(',').map((value) => value.trim()).filter(Boolean));
+}
+
+export function createDeviceGrantService({ pool, apiError, approvalMode = 'automatic', env = process.env }) {
   const crossDeviceApproval = approvalMode === 'cross_device';
+  const serviceIdentities = rdmdWorkerIdentities(env);
   return {
     async register({ userId, input = {} }) {
       const deviceId = requiredDeviceId(input.deviceId, apiError);
@@ -98,9 +129,24 @@ export function createDeviceGrantService({ pool, apiError, approvalMode = 'autom
       )).rows[0];
       if (!device) throw apiError('device_not_approved', 'Device approval is required before a Sync Grant can be issued.', 409);
       const scopes = normalizeScopes(requestedScopes, apiError);
-      await verifyDeviceProof(pool, apiError, device, { userId, deviceId, scopes, proof, allowLegacyNoKey });
+      // 先读既有 grant：服务级 scope 的判据是**合并后**的集合，而不是本次请求的那几个。
+      // 差别很关键 —— 只看本次请求的话，一个在这次收口之前就已经把 `rdmd:infer` 签进自己
+      // grant 行的身份，之后每次续签都会被"合并"原样带回来，闸门等于没关。判据取合并集，
+      // 才既能挡新请求，也能兜住改动前留下的残留。
       const existing = (await pool.query('SELECT scopes_json FROM cloud_sync_grants WHERE user_id=$1 AND device_id=$2', [userId, deviceId])).rows[0];
       const merged = [...new Set([...(Array.isArray(existing?.scopes_json) ? existing.scopes_json : []), ...scopes])];
+      // 服务级 scope 的授权闸。放在这里而不是放在某一条路由上，是因为**这里是唯一的签发
+      // 出口** —— 将来无论谁再开一条签发路径，都绕不过这道判断。
+      //
+      // 判据是"身份"而不是"scope 合不合法"：`rdmd:infer` 是跨用户的，一个 worker 池替所有
+      // 用户回传判定，所以它只该签给配置在册的服务身份（默认与 `_rdmd_worker_provision.mjs`
+      // 同源）。通用端点只要求登录态，若不设这道闸，任何登录用户都能自取它。
+      const reserved = merged.filter((scope) => SERVICE_ONLY_SCOPES.has(scope));
+      if (reserved.length && !serviceIdentities.has(String(userId))) {
+        throw apiError('device_grant_scope_reserved',
+          `Scope ${reserved.join(', ')} may only be held by a configured service identity.`, 403);
+      }
+      await verifyDeviceProof(pool, apiError, device, { userId, deviceId, scopes, proof, allowLegacyNoKey });
       const token = `dgr_${crypto.randomBytes(32).toString('base64url')}`;
       const expiresAt = new Date(Date.now() + Math.max(1, Math.min(90, Number(ttlDays || 30))) * 86400000);
       await pool.query(`INSERT INTO cloud_sync_grants (

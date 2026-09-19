@@ -28,7 +28,7 @@ import { migrate } from '../../../../../cloud/src/db.mjs';
 import { readConfig } from '../../../../../cloud/src/config.mjs';
 import { createApp } from '../../../../../cloud/src/server.mjs';
 import { signAccessToken } from '../../../../../cloud/src/security.mjs';
-import { createDeviceGrantService } from '../../../../../cloud/src/modules/sync/deviceGrants.mjs';
+import { createDeviceGrantService, DEFAULT_RDMD_WORKER_USER } from '../../../../../cloud/src/modules/sync/deviceGrants.mjs';
 import { CloudSyncClient } from '../../../../../network/clients/cloudSyncClient.js';
 import { deviceGrantProofMessage } from '../../../../shared/taskMemoryCrypto.js';
 import { RDMD_DRIFT_TYPES } from '../../../../shared/contracts/uBuddyReverseDetective.js';
@@ -68,27 +68,39 @@ async function startCloudApi({ backend = 'gpu_worker' } = {}) {
   };
 }
 
-/** 建一个真的用户 + 带 rdmd:infer 的 device grant（worker 侧凭据）。 */
+/**
+ * 建一个真的用户 + 带 rdmd:infer 的 device grant（worker 侧凭据）。
+ *
+ * 注意两个身份是**分开**的，因为这正是生产里的形态：`userId` 是任务的属主，
+ * 而 worker 凭据属于**服务身份**（`svc_rdmd_inference_worker`，见
+ * `scripts/_rdmd_worker_provision.mjs`）。一个 worker 池替所有用户领活、回传判定，
+ * 所以它的 grant 不可能属于某个具体用户 —— `rdmd:infer` 是跨用户的 scope，
+ * 云侧只把它签给配置在册的服务身份（`deviceGrants.mjs#SERVICE_ONLY_SCOPES`）。
+ * 这里若图省事把 grant 签给 `userId`，测的就不是生产形态，而且会被云侧 403 拒掉。
+ */
 async function provisionUser(pool, { userId, deviceId }) {
   const apiError = (code, message, status = 400) => Object.assign(new Error(message), { code, status });
-  await pool.query(
-    `INSERT INTO users (id,email,display_name,password_hash,email_verified,role)
-     VALUES ($1,$2,$3,$4,true,'member') ON CONFLICT (id) DO NOTHING`,
-    [userId, `${userId}@transport.invalid`, 'RDMD Transport', 'not-a-real-hash'],
-  );
+  const workerUserId = DEFAULT_RDMD_WORKER_USER;
+  for (const [id, label] of [[userId, 'RDMD Transport'], [workerUserId, 'RDMD Inference Worker']]) {
+    await pool.query(
+      `INSERT INTO users (id,email,display_name,password_hash,email_verified,role)
+       VALUES ($1,$2,$3,$4,true,'member') ON CONFLICT (id) DO NOTHING`,
+      [id, `${id}@transport.invalid`, label, 'not-a-real-hash'],
+    );
+  }
   const { privateKey, publicKey } = crypto.generateKeyPairSync('rsa', {
     modulusLength: 2048,
     publicKeyEncoding: { type: 'spki', format: 'pem' },
     privateKeyEncoding: { type: 'pkcs8', format: 'pem' },
   });
   const service = createDeviceGrantService({ pool, apiError });
-  await service.register({ userId, input: { deviceId, displayName: 'rdmd-worker', platform: 'linux', arch: 'x64', publicKey } });
+  await service.register({ userId: workerUserId, input: { deviceId, displayName: 'rdmd-worker', platform: 'linux', arch: 'x64', publicKey } });
   const scopes = ['rdmd:infer'];
   const timestamp = new Date().toISOString();
   const nonce = crypto.randomUUID();
   const signature = crypto.sign('sha256',
-    Buffer.from(deviceGrantProofMessage({ userId, deviceId, scopes, timestamp, nonce }), 'utf8'), privateKey).toString('base64');
-  const grant = await service.issueToken({ userId, deviceId, requestedScopes: scopes, proof: { timestamp, nonce, signature } });
+    Buffer.from(deviceGrantProofMessage({ userId: workerUserId, deviceId, scopes, timestamp, nonce }), 'utf8'), privateKey).toString('base64');
+  const grant = await service.issueToken({ userId: workerUserId, deviceId, requestedScopes: scopes, proof: { timestamp, nonce, signature } });
   assert.equal(grant.status, 'approved');
   return grant.token;
 }
@@ -180,9 +192,15 @@ async function claimJobs({ api, grant, workerId = 'transport-worker', limit = 4 
   return body;
 }
 
-/** 领活 + 回传判定，返回云侧的应答（用来断言 HTTP 语义）。 */
-async function runWorker({ api, grant, verdict, provenance }) {
-  const claimed = await claimJobs({ api, grant });
+/**
+ * 领活 + 回传判定，返回云侧的应答（用来断言 HTTP 语义）。
+ *
+ * `workerId` 必须与 `claimJobs` 用的是**同一个**：云侧现在校验租约归属
+ * （回传者必须是持租约的那个 worker），这是"任何一个 rdmd:infer grant 都能终结
+ * 任何一条在飞作业"那个口子的封堵。这条 seam 测试第一次跑就把它抓出来了 —— 值得。
+ */
+async function runWorker({ api, grant, verdict, provenance, workerId = 'transport-worker' }) {
+  const claimed = await claimJobs({ api, grant, workerId });
   const jobs = claimed.jobs || [];
   if (!jobs.length) return { claimed: 0 };
   const job = jobs[0];
@@ -190,6 +208,7 @@ async function runWorker({ api, grant, verdict, provenance }) {
     method: 'POST',
     headers: { Authorization: `Bearer ${grant}`, 'Content-Type': 'application/json' },
     body: JSON.stringify({
+      workerId,
       verdict,
       provenance: {
         adapterSha256: 'b'.repeat(64), baseModelId: 'Qwen/Qwen3-8B',
@@ -268,6 +287,68 @@ test('a real verdict travels the whole seam intact', async () => {
     assert.equal(outcome.verdict.nodeId, 'n_step');
     assert.equal(outcome.verdict.type, 'wrong_agent');
     assert.ok(RDMD_DRIFT_TYPES.includes(outcome.verdict.type), 'type 必须是桌面侧标定集里的值');
+  } finally {
+    await api.close();
+  }
+});
+
+test('a verdict from a worker that does not hold the lease is refused at the seam', async () => {
+  // 这条防的是"任何一个持 rdmd:infer 的 grant 都能终结任何一条在飞作业"。
+  // 用一个**真实的、持合法 grant 的** worker（它只是没领这条活）去回传，
+  // 断言云侧 409 且作业不受影响 —— 桌面端随后仍能拿到 rightful worker 的判定。
+  const api = await startCloudApi({ backend: 'gpu_worker' });
+  try {
+    const userId = 'user_seam_lease';
+    const grant = await provisionUser(api.pool, { userId, deviceId: 'device_seam_lease' });
+    const userToken = signAccessToken({ userId, secret: JWT_SECRET, expiresInSeconds: 900 });
+    const client = new CloudSyncClient();
+
+    const worker = (async () => {
+      for (let attempt = 0; attempt < 400; attempt += 1) {
+        const claimed = await claimJobs({ api, grant, workerId: 'worker-rightful' });
+        const job = (claimed.jobs || [])[0];
+        if (!job) { await new Promise((resolve) => setTimeout(resolve, 25)); continue; }
+
+        // 抢答：另一个 worker 用同一个合法 grant 回传这条不属于它的作业。
+        const stolen = await fetch(`${api.baseUrl}/api/rdmd/jobs/${encodeURIComponent(job.jobId)}/verdict`, {
+          method: 'POST',
+          headers: { Authorization: `Bearer ${grant}`, 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            workerId: 'worker-thief',
+            verdict: { status: 'no_drift', valid: true, warnings: [], reason: '' },
+            provenance: { adapterSha256: 'b'.repeat(64), baseModelId: 'Qwen/Qwen3-8B', contractVersion: claimed.contractVersion, ruleVersion: claimed.ruleVersion },
+          }),
+        });
+        assert.equal(stolen.status, 409, `非持租约者应被拒 409，得到 ${stolen.status}`);
+        assert.equal((await stolen.json())?.error?.code, 'rdmd_job_claimed_by_other_worker');
+
+        // 抢答失败后作业必须仍然可判：持租约者回传照常 200。
+        // 注意这里**不能**再调 `runWorker` —— 它会去 claim 下一条，而此时队列里
+        // 只有我们手上这一条（已被我们领走），于是它会拿到 0 条、什么都不回传。
+        const rightful = await fetch(`${api.baseUrl}/api/rdmd/jobs/${encodeURIComponent(job.jobId)}/verdict`, {
+          method: 'POST',
+          headers: { Authorization: `Bearer ${grant}`, 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            workerId: 'worker-rightful',
+            verdict: { status: 'drift', nodeId: 'n_step', type: 'wrong_agent', valid: true, warnings: [], reason: '' },
+            provenance: { adapterSha256: 'b'.repeat(64), baseModelId: 'Qwen/Qwen3-8B', contractVersion: claimed.contractVersion, ruleVersion: claimed.ruleVersion },
+          }),
+        });
+        return { claimed: 1, jobId: job.jobId, status: rightful.status, body: await rightful.json() };
+      }
+      return { claimed: 0 };
+    })();
+
+    const outcome = await runCloudRdmdInference({
+      case: realCase(),
+      config: cloudConfig({ cloudInfer: cloudInferVia(client, { server_url: api.baseUrl }, { userToken }) }),
+    });
+    const done = await worker;
+
+    assert.equal(done.claimed, 1);
+    assert.equal(done.status, 200, `持租约者回传应得 200，得到 ${done.status}: ${JSON.stringify(done.body)}`);
+    assert.equal(outcome.ok, true, `被拒的抢答不该影响正常判定，reason=${outcome.reason}`);
+    assert.equal(outcome.verdict.nodeId, 'n_step');
   } finally {
     await api.close();
   }

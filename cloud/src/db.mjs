@@ -12,7 +12,7 @@ const MIGRATIONS_DIR = path.join(DATABASE_DIR, 'migrations');
 const PG_MEM_BASELINE_PATH = path.resolve(__dirname, '../test/fixtures/pg-mem-baseline.sql');
 
 export const CLOUD_DATABASE_BASELINE_ID = 'baseline_sync8_081';
-export const CLOUD_DATABASE_MIGRATION_HEAD = '097_rdmd_inference_jobs.sql';
+export const CLOUD_DATABASE_MIGRATION_HEAD = '099_ubuddy_task_public_memory.sql';
 const CLOUD_REQUIRED_RELATIONS = Object.freeze([
   'accounts',
   'account_memberships_v8',
@@ -86,7 +86,15 @@ export async function applyMigrationFiles(pool, migrationsDir, { pgMem = pool?.c
     // （编辑器/工具写的），所以这里必须容错，不能假设迁移文件一定没有 BOM。
     let sql = (await fs.readFile(path.join(migrationsDir, file), 'utf8')).replace(/^\uFEFF/, '');
     if (pgMem && sql.includes('requires-real-postgres:')) {
+      // pg-mem 里跑不了这条（角色、PL/pgSQL、动态改引用之类）。
+      //
+      // **但仍然要记一笔账**：`schema_migrations` 记的是「这条迁移被处理过了吗」，
+      // 不是「它的 SQL 在这里跑过吗」。不记账的后果很具体：`cloudDatabaseReadiness`
+      // 会把一条**故意**跳过的迁移读成「还没上」，于是同一个仓库在 pg-mem 夹具里
+      // readiness 永远为红、在真 PG 上为绿 —— 两边对同一个常量给出相反结论。
+      // `requires-real-postgres-tail:` 那条分支本来就是记账的，这里与它对齐。
       console.info(`[janus-cloud] skipped real-PostgreSQL migration ${file} under pg-mem`);
+      await pool.query('INSERT INTO public.schema_migrations (filename) VALUES ($1) ON CONFLICT (filename) DO NOTHING', [file]);
       continue;
     }
     if (pgMem && sql.includes('requires-real-postgres-tail:')) {

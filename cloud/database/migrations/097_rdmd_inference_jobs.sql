@@ -25,8 +25,14 @@
 
 CREATE TABLE IF NOT EXISTS public.cloud_rdmd_inference_jobs (
     id text NOT NULL,
-    -- 作业归属。`owner_user_id` 是发起任务的用户；worker 判定回传时用它做交叉校验，
-    -- 防止一个 device grant 把判定写到别人的作业上。
+    -- 作业归属：发起任务的用户。它有两个**真实**用途 ——
+    --   1. 去重键的一半（见下面 uq_cloud_rdmd_jobs_open_task_run）；
+    --   2. `read()` 的作用域（桌面端只允许读自己的作业）。
+    -- **不要**指望用它来限制 worker 回传：worker 是一个跨用户的服务身份
+    -- （scripts/_rdmd_worker_provision.mjs），它替所有用户领活与回传判定，
+    -- 所以 grant 的用户与这里**天然不等**。回传侧的越权面收在**签发端**，
+    -- 见 cloud/src/modules/sync/deviceGrants.mjs#SERVICE_ONLY_SCOPES：
+    -- `rdmd:infer` 只签给配置在册的服务身份，普通用户自取不到。
     owner_user_id text NOT NULL,
     -- 去重键：同一个 task run 在同一次终态上可能被重复提交（notifyTaskUpdated 会在终态上被多次调用）。
     -- 唯一索引保证"一次 task run 只入队一个作业"，重放命中同一行。
@@ -88,3 +94,15 @@ CREATE UNIQUE INDEX IF NOT EXISTS uq_cloud_rdmd_jobs_open_task_run
 
 CREATE INDEX IF NOT EXISTS idx_cloud_rdmd_jobs_provenance
     ON public.cloud_rdmd_inference_jobs (adapter_sha256, base_model_id, contract_version);
+
+-- requires-real-postgres-tail: role grants are intentionally skipped by pg-mem fixtures.
+--
+-- 少了这一段，表在**应用角色**眼里等于不存在：迁移用 janus_migrator 跑，建出来的表属主是
+-- 它，而云 API 用 janus_api 连库 —— 没有授权就是 `permission denied for table
+-- cloud_rdmd_inference_jobs`，且**只在第一次真的入队时才暴露**（迁移本身全绿）。
+--
+-- 为什么是 SELECT,INSERT,UPDATE 而没有 DELETE：RDMD 的作业是审计记录，任何一条终态都
+-- 要留痕，代码里也没有任何删除路径。不给 DELETE 是刻意的 —— 少一项权力，就少一种
+-- "判定被悄悄抹掉"的可能。这与 094 给事件表只发 SELECT,INSERT 是同一种取舍。
+GRANT SELECT,INSERT,UPDATE ON TABLE public.cloud_rdmd_inference_jobs TO janus_api;
+GRANT SELECT,INSERT,UPDATE,DELETE ON TABLE public.cloud_rdmd_inference_jobs TO janus_migrator;

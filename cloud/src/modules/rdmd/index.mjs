@@ -76,9 +76,13 @@ export function registerRdmdRoutes({ app, pool, auth, route, apiError, deviceGra
     res.json(await service.claim({ workerId: req.body?.workerId, payload: req.body || {} }));
   }));
 
-  // 回传判定。**必须**带全出处，否则拒收。
+  // 回传判定。**必须**带全出处，否则拒收；且**必须是当前持有租约的那个 worker** 回传。
   app.post('/api/rdmd/jobs/:id/verdict', requireInferGrant(async (req, res) => {
-    res.json(await service.recordVerdict({ jobId: req.params.id, payload: req.body || {} }));
+    res.json(await service.recordVerdict({
+      jobId: req.params.id,
+      payload: req.body || {},
+      workerId: req.body?.workerId,
+    }));
   }));
 
   // 桌面端轮询取判定（gpu_worker 后端下提交时还没有判定）。
@@ -175,7 +179,22 @@ export function createPostgresRdmdService({ pool, apiError = defaultApiError, en
     /**
      * 回传判定。出处不全一律拒收。
      */
-    async recordVerdict({ jobId = '', payload = {} } = {}) {
+    /**
+     * 回传判定。
+     *
+     * **为什么必须校验 `workerId`：** 在这之前，只要手里有一个 `rdmd:infer` 的 grant，
+     * 就能凭 job id 终结**队列里任何一条在飞作业** —— 包括别的用户的。`owner_user_id` 挡不住
+     * 这一侧（worker 是跨用户的服务身份，见 097 迁移的注释），所以唯一有意义的绑定是
+     * **租约**：领活时 `claimed_by` 记下了是谁拿的，回传时就该是同一个 worker。
+     *
+     * 这不是密码学意义上的证明（`workerId` 是 worker 自述的），但它把越权面从
+     * 「任何一个 grant 能终结任何一条作业」收窄到「必须知道并冒用持租约者的 id」——
+     * 而后者在租约到期后就会失效（见下面的过期检查）。
+     *
+     * 校验顺序是刻意的：形状/出处的校验在前，所以既有的错误码语义不变；
+     * 租约校验在**落库之前**，所以被拒的回传不消耗作业、也不覆盖已完成的判定。
+     */
+    async recordVerdict({ jobId = '', payload = {}, workerId = '' } = {}) {
       const verdict = normalizeVerdict(payload.verdict || {}, apiError);
       const provenance = normalizeProvenance(payload.provenance || payload.verdict?.provenance || {}, apiError);
       const job = (await pool.query('SELECT * FROM cloud_rdmd_inference_jobs WHERE id=$1', [jobId])).rows[0];
@@ -183,11 +202,16 @@ export function createPostgresRdmdService({ pool, apiError = defaultApiError, en
       if (job.status === 'completed') {
         // 重放：同一作业的第二次回传按"已完成"返回，不覆盖。worker 重试是常态
         // （租约到期后别人接走），这里必须是幂等的。
+        //
+        // 重放**也要**校验租约归属：否则"已经终结的作业"就成了另一个可以随便写的口子。
+        // 但已完成的行租约已释放（`lease_expires_at=NULL`），所以这里只比 `claimed_by`。
+        assertVerdictLease({ job, workerId, apiError, allowReleasedLease: true });
         return { status: 'completed', jobId: job.id, verdict: publicVerdict(job), replay: true };
       }
       if (!['claimed', 'running'].includes(job.status)) {
         throw apiError('rdmd_job_not_claimed', `RDMD job is ${job.status}; claim it before returning a verdict.`, 409);
       }
+      assertVerdictLease({ job, workerId, apiError, allowReleasedLease: false });
       const updated = await finalizeJob(pool, { jobId: job.id, status: 'completed', verdict, provenance });
       return { status: 'completed', jobId: updated.id, verdict: publicVerdict(updated), replay: false };
     },
@@ -230,6 +254,36 @@ async function upsertOpenJob(pool, { jobId = '', userId = '', taskRunId = '', ca
       ORDER BY created_at DESC LIMIT 1`, [userId, taskRunId])).rows[0];
     if (!raced) throw error;
     return raced;
+  }
+}
+
+/**
+ * 回传判定的租约归属校验。见 `recordVerdict` 的注释。
+ *
+ * 两种拒绝要分得清，因为排查方向完全不同：
+ *   - `rdmd_worker_id_required` —— 回传者根本没说自己是谁（客户端没升级 / 忘了带）；
+ *   - `rdmd_job_claimed_by_other_worker` —— 说了，但不是持租约的那个（发错了 worker，或有人在越权）；
+ *   - `rdmd_job_lease_expired` —— 是持租约者，但租约已经过期（很可能是这条作业已经被别人接走重跑）。
+ *
+ * `allowReleasedLease`：已完成的作业租约已经被释放（`lease_expires_at=NULL`），
+ * 幂等重放时不能因此被拒，所以那种情况下只比 `claimed_by`。
+ */
+function assertVerdictLease({ job = {}, workerId = '', apiError, allowReleasedLease = false } = {}) {
+  const claimant = String(job.claimed_by || '');
+  const claimedBy = String(workerId || '').trim().slice(0, 200);
+  if (!claimedBy) {
+    throw apiError('rdmd_worker_id_required',
+      'A verdict must carry the workerId that claimed the job: without it any rdmd:infer grant could finalize any in-flight job.', 400);
+  }
+  if (!claimant || claimant !== claimedBy) {
+    throw apiError('rdmd_job_claimed_by_other_worker',
+      `RDMD job ${job.id} is leased to a different worker; a verdict may only be returned by the worker that claimed it.`, 409);
+  }
+  if (allowReleasedLease) return;
+  const expiresAt = job.lease_expires_at ? new Date(job.lease_expires_at).getTime() : 0;
+  if (!expiresAt || expiresAt <= Date.now()) {
+    throw apiError('rdmd_job_lease_expired',
+      `RDMD job ${job.id} is no longer leased; the case has been (or will be) handed to another worker.`, 409);
   }
 }
 
