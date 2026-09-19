@@ -130,6 +130,11 @@ after:  {"replaced": {... "status":"cancelled" ...}, "fallback": {...}, "updated
 
 > **顺序链 ≠ 依赖 DAG。** 这是真实执行顺序的投影，不是任务依赖。要得到 DAG，
 > 仍需一个「这一步为何必需」的映射规则，**尚未定义**（见第 4 节）。
+>
+> **2026-09-19 起该映射已定义**：见 [`SEQUENCE_TO_DAG.zh-CN.md`](SEQUENCE_TO_DAG.zh-CN.md)
+> （规则 `stepDependencyMapLib.mjs` + 纪律测试 + 真实链形状验证）。定义出来之后的结论是
+> **门仍然关着**：真实 rollout 链上可以因果归因的图 **0 / 22**，771 条边全是「假设」。
+> 所以第 4 节那条约束**不解除**，只是从「没有定义」变成「有定义、且它说不」。
 
 ### 2.3 实测结果
 
@@ -145,6 +150,16 @@ after:  {"replaced": {... "status":"cancelled" ...}, "fallback": {...}, "updated
 
 **这是本轮唯一已实测「尺度与交互性都够」的长程图源。** 对照 RDMD 训练语料的 16–28 节点：
 **19 个图里有 13 个落在或超过这个区间**，另有 6 个显著超过。
+
+> **2026-09-19 复测（同一台机器、同一目录），上面这张表已过期：**
+> 22 个 rollout / **792** 节点 / **771** 边 / 链长 p50 **13**、max **180** / 链长 ≥51 仍为 6 个 /
+> agent 间交互记录 **0**（当前 22 个文件里 `inter_agent_communication_metadata` 一条都没有）。
+>
+> - 「长程结构真实存在、尺度够」**不变**（max 从 110 涨到 180）；
+> - 「**交互性**也够」这半句的依据**目前不成立**，需要重新实测或撤回；
+> - 另有 1 个空图（2 行的 rollout，投影出 0 节点）与 2 个单节点图。
+>
+> 复测口径与逐图明细见 [`SEQUENCE_TO_DAG.zh-CN.md`](SEQUENCE_TO_DAG.zh-CN.md) §3.1。
 
 ---
 
@@ -174,8 +189,22 @@ after:  {"replaced": {... "status":"cancelled" ...}, "fallback": {...}, "updated
 
 1. **长程层没有 G_plan。** 组织层有 plan/exec 但零边；长程层有真实结构但没有「计划」。
    两边都缺一半 —— 这是当前构造最大的缺口。
+   > **2026-09-19 收窄**：这句话要分成两半读。长程层确实没有 **uBuddy 规划层**的计划快照
+   > （`turn/plan/updated` 那一路）；但 agent **自己**的计划以 `update_plan` 工具调用的形式
+   > 真实存在（参数里带 `plan: [{ step, status }]`），实测覆盖 **2 / 22** 个 rollout、3 次调用 / 15 个步骤。
+   > 它不能当 G_plan 用（覆盖率太低、语义是 agent 内部待办、节点 id 与执行步不同源），
+   > 但它是「长程层将来能不能有 plan 侧」目前唯一的实测线索。见 `SEQUENCE_TO_DAG.zh-CN.md` §3.4。
 2. **顺序链 → 依赖 DAG 的映射未定义。** 链式投影会**系统性高估**级联（任何顺序都变成因果）。
    在定义清楚之前，**不得**用长程层链条去训练/评测 RDMD。
+   > **2026-09-19 已定义**：`stepDependencyMapLib.mjs`（规则 R0–R3）+
+   > `stepDependencyMap.test.mjs`（9 条纪律测试）+ `_probe_chain_to_dag.mjs`（真实链形状验证），
+   > 全文见 `SEQUENCE_TO_DAG.zh-CN.md`。
+   >
+   > **但约束不解除**，因为定义给出的答案是「不能用」：真实链上
+   > `causalAttributionReadiness` 对 **22/22** 个图都给否（771 条边全是 `sequence`，0 条证据）；
+   > 就算把「提到过同一路径」全认成证据（**上限**诊断），仍有 19/22 个图留着顺序边、
+   > 可选归因的图仍为 0，而且边的密度会涨到链条的 **10.6 倍** ——「最小漂移」反而失去唯一候选。
+   > `assertNotForTraining` 把这条约束做成了会抛的代码。
 3. **`version` / `acceptance` 无语义来源**，填的是常量。若将来要在此数据上重训，必须先解决。
 4. **`model_executions` 与 rollout 双向缺失**（第 2.1 节），导致无法把「哪次模型调用产生了哪一步」
    稳定对上。
@@ -206,3 +235,4 @@ SQLite **全程 `readOnly: true`**，未对用户应用库做任何写入。产�
 | `_probe_linkage.mjs` | 表结构与 `codex_thread_id` 链路 |
 | `_verify_rollout_join.mjs` | `codex_thread_id` join 闭合率（2/24） |
 | `_verify_session_dirs.mjs` | session 目录 join 闭合率（6/6） |
+| `_probe_chain_to_dag.mjs` | 长程层「顺序链 → 依赖 DAG」形状验证（只读，见 `SEQUENCE_TO_DAG.zh-CN.md`） |

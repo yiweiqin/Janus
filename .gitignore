@@ -1,4 +1,4 @@
-.DS_Store
+﻿.DS_Store
 assets/.DS_Store
 experiments/runs/
 assets/.DS_Store
@@ -16,6 +16,9 @@ experiments/rdmd_detective_dataset/sft/smoke/
 # data/ 下的语料与 sft/ 同性质：由 generate.mjs / prepare_sft.mjs 派生，动辄 200MB+。
 # 只提交 manifest/labels/summary 这类小文件作为出处锚点，不提交语料本体。
 experiments/rdmd_detective_dataset/data/*.jsonl
+# 探针写出的派生图与逐图明细（`_graphs/` 下的 json）：可复跑重建，别进版本库。
+# 真的需要钉住某次结果时，把它的 `generatedAt` 与关键计数抄进受追踪的 md，而不是提交 json。
+experiments/rdmd_detective_dataset/ubuddy_recon/_graphs/
 *.orig
 *.bak
 *.bak-*

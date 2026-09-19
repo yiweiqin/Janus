@@ -90,7 +90,7 @@ export function walkRollouts(dir) {
   return out.sort();
 }
 
-const STEP_SUBTYPES = new Set(['reasoning', 'message', 'agent_message', 'function_call', 'custom_tool_call']);
+export const STEP_SUBTYPES = new Set(['reasoning', 'message', 'agent_message', 'function_call', 'custom_tool_call']);
 
 /**
  * 把 Codex rollout 的 turn 序列投影成链式图。

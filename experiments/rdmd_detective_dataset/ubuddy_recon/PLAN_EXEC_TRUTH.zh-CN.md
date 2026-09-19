@@ -572,3 +572,561 @@ node experiments/rdmd_detective_dataset/ubuddy_recon/_probe_real_gate_from_db.mj
 
 两个探针都**只读**真实库，不改产品代码；产物写在被 gitignore 的目录里
 （含真实任务标题，不入库），本节是它们的受追踪结论。
+﻿
+---
+
+## 11. P2 输入侧诊断：三处断点的实测定位（2026-09-19）
+
+§前文把输入侧概括为「计划侧真实数据为 0 / 组织层零边 / 协作图表缺失」。逐个查完之后，
+**三处的性质完全不同**：一处是测量 bug、一处是半 bug、只有第三处是真的缺口 ——
+而第三处恰好是三者里唯一无法靠改代码解决的。
+
+### 11.1 断点 1：plan 事件「0 条」——不是数据问题，是探针 bug
+
+旧结论（写在两处**产品源码**注释里）：`activityType='plan'` 事件 **0** 条，所以
+`agent_step` 层从未物化。
+
+**真因是一行 SQL 加一个吞异常的 catch：**
+
+```js
+// _probe_task_events_plan.mjs（修改前）
+const q = (sql, params = []) => { try { return db.prepare(sql).all(...params); } catch { return []; } };
+...
+WHERE activityType = 'plan' OR payload_json LIKE '%"plan":%'   // <-- 别名用在 WHERE
+```
+
+- SQLite 只在 `GROUP BY` 那种形式上容忍 SELECT 别名；`WHERE activityType = 'plan'` 直接抛
+  `no such column: activityType`。
+- `q()` 把异常吞成 `[]`，于是「SQL 写错了」和「表里没有这类数据」变成**同一个输出**。
+
+**最能说明问题的一点**：同一个文件里的直方图查询**也**用了别名，但它恰好是
+`WHERE aliAS IS NOT NULL GROUP BY alias` 这种形式、**不抛**。所以修前的输出里同时有
+`activityTypeHistogram` 里的 `plan: 6` 和 `planEventRows: 0` —— 两个数字互相矛盾，
+而因为两者都"看起来正常"，这个矛盾没被任何人发现。
+
+**修好之后的实测**（只读 `C:\Users\zhang\.janus-test\data\janus.db`）：
+
+| 项 | 值 |
+| --- | --- |
+| plan 事件条数 | **6** |
+| step 总数 | **25** |
+| 分布在 | 3 个 task run（`60e1bf8f` 10 / `44f274a2` 12 / `cc995071` 3） |
+| 生产者 | `codex` / `codex_app_server` / `event_type=node_activity` |
+| step 形状 | `{step, status}`（唯一形状，6/6） |
+| status 取值 | `completed` 16 / `pending` 7 / `inProgress` 2，**无意外值** |
+
+**判据逐段对齐**（这才是"能进图"的真正条件）：
+
+- `agentPlanEventsFromTaskEvents`：`activityType === 'plan' && plan !== undefined` → **成立**。
+- `normalizeAgentPlan(event.payload.plan)`：`plan` 是数组 → `Array.isArray` 分支 → supported。
+- `normalizeAgentPlanStep`：`source.step` 命中 label → 有值、不为 null。
+- status 归一：`pending → queued`、`inProgress → running`、`completed → completed`。
+
+> **所以 `codex.js → scheduler.js → task_events.payload_json.plan` 这条采集通路，
+> 在真实数据上是已被验证通的。** 这是本轮少有的好消息：采集侧不需要改。
+> 它此前被判为"一次都没跑过"，纯粹是测量错误。
+
+**最小修复（已做）**：
+1. `WHERE` 改用 `json_extract(payload_json,'$.activityType')`。
+2. **`q()` 不再吞异常** —— 查询失败会打印出来并以非零码退出。第 1 条只修了这一次的错法，
+   第 2 条修的是"下一次任何 SQL 笔误都继续以'真实数据里没有'的形式汇报出来"。
+3. 连带更正两处产品源码注释：`uBuddyAgentPlanSteps.js:16`、`planExecDriftService.js:71`
+   （两份都在断言"事件数是 0"）。
+
+### 11.2 断点 2：依赖边「全空」——一半是数据、一半是投影 bug
+
+- **9/15 的记录是真的**：受追踪的 `_graphs/gplan_gexec_summary.json` 当时是
+  `planEdgeTotal: 0` / `execEdgeTotal: 0` —— 那时两张图确实都没有边。
+- **现在数据不是空的**：本库 13 行 `task_nodes` 里 **7 行 `dependencies_json` 非空**。
+- **但 plan 侧仍然是 0 边、exec 侧 7 条** —— 同一批行、同样的依赖。原因是
+  `edgesOf()` 读的是**原始行**的 `dependencies_json`，而 plan 侧被喂的是 `toNode()`
+  **映射之后**的对象（那个对象没有这个字段）。**已修**（P1，喂 `edgesOf(planRows)`）。
+  修后 plan 7 / exec 7，两边节点数与边数**完全一致**。
+
+修前修后的规则基线对照：
+
+| | 6 个真实任务的规则基线动作 |
+| --- | --- |
+| 修前 | `{"record_only":3,"minimal_plan_edit":3}` ← 3 条 `local_replan` **假漂移** |
+| 修后 | `{"record_only":6}` ← 全部 `no_drift` |
+
+> 「两图零边 → 级联推理在真实数据上退化」这个结论，**至少有一半是投影 bug 造成的假象**。
+
+### 11.3 断点 3：`collaboration_graph_*` 缺失——发布缺口，只能靠装新构建
+
+这一处**是真的**，而且三处里只有它无法靠改代码解决。
+
+- **活库**：4 张表全缺；`schema_migrations` 共 95 条，**含** `ubuddy_coordination_contract_v2`，
+  **不含** `ubuddy_collaboration_graph_v1`。
+- **仓库代码**：`ensureUBuddyCollaborationGraphSchema(db)` 在
+  [`sqliteMigrations.js:553`](../../../src/main/modules/persistence/infrastructure/sqliteMigrations.js)
+  **无条件调用**，且紧邻它前后的 `ensureUBuddyContinuousPlanningSchema`(551)、
+  `ensureUBuddyAgentAllocationSchema`(552)、`ensureUBuddyCoordinationContractV2`(554)
+  **都已经在库里记录了** —— 说明这个函数体是被执行到的，只是那一行对应的事情发生过、而这一行没有。
+
+**决定性证据（带对照，避免"搜索路径不对"这种假阳性）**：对已安装的 `app.asar` 做字节搜索。
+
+| asar（安装构建） | `ensureUBuddyCoordinationContractV2`（对照） | `ensureUBuddyCollaborationGraphSchema` | `collaboration_graph_nodes` | `collaborationGraphStoreMethods` |
+| --- | --- | --- | --- | --- |
+| `Janus Test`（2026-09-17, v4.3.5） | **PRESENT** | **ABSENT** | **ABSENT** | **ABSENT** |
+| `Janus`（2026-09-06, v4.3.5） | **PRESENT** | **ABSENT** | **ABSENT** | **ABSENT** |
+
+对照 needle（`ensureUBuddyCoordinationContractV2`）在同一个 asar 里**找得到**，
+所以搜索方法本身是有效的；而三个协作图 needle 全缺 —— 与库状态严丝合缝
+（库记录了 coordination_contract_v2，没记录 collaboration_graph_v1）。
+
+> **结论：已安装构建里根本没有这段代码。** 不是迁移失败、不是数据缺失、不是设计问题。
+> 任何探针侧的、数据侧的、契约侧的工作都**无法**让这 4 张表出现。
+
+**最小修复（只能由人做）**：装一个含该迁移的构建，然后**重启桌面端**
+（`ensureUBuddyCollaborationGraphSchema` 是无条件调用的，重启即建表，不需要额外操作）。
+建表之后再跑真实群任务，`agent_step` 与 `sequence_of` 才会第一次真正落进图里。
+
+### 11.4 断点清单汇总
+
+| # | 旧结论 | 实测真因 | 最小修复 | 已修? | 需要人? |
+| --- | --- | --- | --- | --- | --- |
+| 1 | plan 事件 0 条 | 探针 SQL 用别名 + `q()` 吞异常 | `json_extract` 进 WHERE；查询失败可见并非零退出 | ✅ | 否 |
+| 2 | 依赖边全空 | 一半是 9/15 的真数据，一半是 `edgesOf` 投影 bug | plan 侧改喂原始行 | ✅ | 否 |
+| 3 | `collaboration_graph_*` 缺失 | 安装构建缺该迁移 | **装新构建 + 重启** | ❌ | **是** |
+
+三处都查完之后，输入侧的结论从「断路」变成了**「通到最后一跳，卡在发布」**：
+
+- 采集（codex → scheduler → `task_events.payload_json.plan`）：**已在真实数据上验证通**。
+- 投影（`projectAgentPlanSteps` → `agent_step` + `sequence_of`）：代码与真实形状逐段对齐，
+  但**一次都没跑过**，因为承载它的表不存在。
+- 缺的那一环是**装一个含 `ensureUBuddyCollaborationGraphSchema` 的构建**。
+
+**仍需人做的只有一件**（与 §H 的交接重合）：装新构建、重启、跑 ≥2 个真实群任务。
+在那之前，「影子度量」的分母只可能是 0，apply 的度量门不可能被满足 —— 这不是缺陷，
+是**闸门在正确地挡着**。
+
+## 12. P2 收尾：在库副本上把「投影与闸门」真跑了一遍（2026-09-19）
+
+§11 的三处断点都是**静态**查出来的（读代码、读库、byte 搜索 asar）。这一节把它们放到
+**库副本 + 产品自己的代码**上跑一遍，回答 §11 结尾留下的那句「当 plan 真发出时，投影与闸门是否成立」。
+
+真实库与产品代码**一行未改**：快照是 `_snapshot_db.mjs` 出的单文件副本，所有写入都落在副本上。
+
+### 12.1 先修探针自己的 bug：它从来没跑到过投影那一步
+
+`_probe_layered_graph_e2e.mjs` 的文件头写着「在副本上跑真实迁移」，**代码里没有任何迁移调用**。
+后果是一条链式失败：
+
+1. `collaboration_graph_*` 在新快照上不存在（§11.3 的发布缺口）；
+2. `projectTaskRunToCollaborationGraph` 抛异常，被 catch 进 `projectionError`；
+3. 紧接着那句 `SELECT ... FROM collaboration_graph_nodes` 没有 catch，直接
+   `no such table` 硬失败。
+
+也就是说：**这个探针从来没有真正执行到「投影」和「闸门」**，而它的报告看起来"跑过了"。
+（和 §11.1 的 `q()` 吞异常是同一类问题：失败没有被放在能被看见的位置。）
+
+**修复**：在副本上显式调用产品自己的迁移入口 `migrateDatabase(db)`
+（[`sqliteMigrations.js:517`](../../../src/main/modules/persistence/infrastructure/sqliteMigrations.js)，
+其中第 553 行无条件调用 `ensureUBuddyCollaborationGraphSchema(db)`），并把迁移前后的表清单报出来。
+同时把 `plan_events` 那一段改成**真实事件优先**（此前无条件注入）——注入的载荷再像也终究是我写的，
+而这一段要回答的恰恰是「真实形状的载荷能不能走通」。
+
+### 12.2 决定性证据：迁移一跑，4 张表就出来了
+
+在**全新的干净快照**上：
+
+```json
+{"tablesBefore": [], "tablesAfter": ["collaboration_graphs", "collaboration_graph_nodes",
+ "collaboration_graph_edges", "collaboration_graph_events"], "created": 4}
+```
+
+这把 §11.3 的结论从「byte 搜索推断」升级为**行为学证据**：在副本上调用产品自己的迁移入口，
+缺的 4 张表就出现了；不需要改数据、不需要改代码、不需要任何探针侧的动作。
+剩下的唯一变量就是**已安装构建里没有这段代码**。
+
+### 12.3 投影成立：真实 plan 事件 → 四层图，第一次物化成功
+
+- 选中的 task run：`task_60e1bf8f-0e0a-4419-a41c-794ed175b755`（真实群任务，
+  所属协作组 `collab_group_PHIEeGYW8HiNaBcH`，delegation `agent_delegate_jkunevGGBMyDJHt0`）。
+- plan 来源：**真实事件**（探针报告 `source: "real (…)"`），不是注入。
+- 图形状（`collaboration_graph_nodes` 实查）：
+
+  | kind | depth | n |
+  | --- | --- | --- |
+  | `root` | 0 | 1 |
+  | `ubuddy` | 1 | 1 |
+  | `agent_task` | 2 | 3 |
+  | `agent_step` | 3 | 10 |
+
+- 边（`collaboration_graph_edges` 实查）：
+  `parent_of ×14`、`sequence_of ×8`、`assigned_to ×3`、`dependency_of ×2`、`delegates_to ×1`。
+- 「相近效果」度量：`metric.ready = true`，`missing = []`。
+
+**⇒ `agent_step` 层与 `sequence_of` 边在真实数据上物化成功**（在副本上）。
+§11.2 里「级联推理在真实数据上退化」这个担忧，至少在投影侧被否证了 ——
+退化的原因从来不是投影写不出，而是承载它的表不存在。
+
+### 12.4 闸门**不**成立，但原因只有一个
+
+`passes: false`，缺口 2 条：
+
+| 字段 | kind | side | 节点 status |
+| --- | --- | --- | --- |
+| `output` | `agent_task` | `exec` | `cancelled` |
+| `output` | `agent_task` | `exec` | `cancelled` |
+
+两条都是**被取消的任务**。也就是说：`title`/`summary` 在两侧都齐、`status` 在 step 层也齐，
+唯一过不去的是「一个被取消的任务没有交付文本」。
+
+这不是投影坏了（投影如实反映了 `task_nodes.result_text` 为空），也不是数据没到
+（cancelled 的结果**永远不会到**）。它是**契约的分类里没有这一格**：
+[`summarizePlanExecGaps`](../../../src/shared/contracts/uBuddyPlanExec.js) 的注释把
+「agent_task 层缺 output」解释成「没有执行结果」（= 该等结果），但 cancelled 的结果等不到。
+
+### 12.5 豁免试算：一条规则是否**足够且最小**
+
+探针新增 `gateWaiverDryRun`，**只试算、不落契约**：
+
+- 规则：`exec` 侧 `agent_task` 的 `output`，在 `status ∈ {cancelled, failed}` 时不判缺。
+- 结果：`gapsBefore: 2 → gapsWaived: 2 → gapsAfter: 0`，`wouldPass: true`、`remainingDetail: []`。
+- 也就是说：**这一条规则就是把闸门归零的充分且最小改动**，没有第二种缺口藏在后面。
+
+为什么它不是「放水」：`status` 本身就是 v2 已经判的字段，被取消这件事已经被 `status`
+表达了一次；再要求一个 cancelled 节点吐出 `output`，是要求一个**数据源结构上写不出**的值
+——和 §11 里 v2 把 `summary`/`output` 从规划侧必需集里摘掉是同一条道理（准入规则 (c)）。
+
+**为什么本轮刻意不改契约**：改必需集要 **JS 与 `deploy/rdmd_detective.py#required_fields_for_kind`
+同步改**、要 bump `PLAN_EXEC_CONTRACT_VERSION`；而版本号已经写进已完成任务的
+`cloud_rdmd_inference_jobs.contract_version`（现存全是 `ubuddy_plan_exec_v2`，见
+[`V4_FULL_REPORT.zh-CN.md`](../V4_FULL_REPORT.zh-CN.md) §9 与 §11 的真机切换门）。
+一次未经验证的 bump 会让 v4 刚拿到的真机证据**失效**。所以先把它降级成一条**待决策项**，
+证据留在 `gateWaiverDryRun` 里，随时可复现。
+
+### 12.6 P2 断点清单（最终版）
+
+| # | 旧结论 | 实测真因 | 最小修复 | 已修? | 需要人? |
+| --- | --- | --- | --- | --- | --- |
+| 1 | plan 事件 0 条 | 探针 SQL 用别名 + `q()` 吞异常；真实数据 6 事件 / 25＋步 | `json_extract` 进 WHERE；查询失败可见并非零退出 | ✅ | 否 |
+| 2 | 依赖边全空 | 一半是 7/13 的真数据，一半是 `edgesOf` 投影 bug | plan 侧改喂原始行 | ✅ | 否 |
+| 3 | `collaboration_graph_*` 缺失 | 安装构建缺该迁移 | **装新构建 + 重启** | ❌ | **是** |
+| 4 | （本轮新增）闸门在真实数据上恒 fail | `output` 对 `cancelled` 节点恒缺，契约无此分类 | 终止负向状态豁免 outcome 字段（需 JS+Py 同步 + bump，待决策） | ❌ | **否（是决策）** |
+
+### 12.7 P2 的验收：输入侧只剩一条人做的交接
+
+输入侧的结论从「断路」收敛成**「通到最后一跳，卡在发布」**：
+
+- 采集（codex → scheduler → `task_events.payload_json.plan`）：**真实数据已验证通**。
+- 投影（`projectAgentPlanSteps` → `agent_step` + `sequence_of`）：**在副本上已验证通**（§12.3），
+  图能撑起完整的四层结构，度量也能跑。
+- 闸门（`planExecContractGaps`）：**在副本上已验证**，只差 §12.5 那一条规则。
+- 缺的那一环是**装一个含 `ensureUBuddyCollaborationGraphSchema` 的构建**。
+
+**唯一仍需人做的**（与 §H 的交接重合）：**装新构建 → 重启桌面端 → 跑 ≥2 个真实群任务**。
+在那之前：
+- 影子度量的分母只可能是 0；
+- apply 的度量门不可能被满足。
+
+这不是缺陷 —— 是**闸门在正确地挡着**（fail-closed 按设计工作）。
+
+### 12.8 复现方式
+
+```powershell
+cd experiments/rdmd_detective_dataset/ubuddy_recon
+node _snapshot_db.mjs "$env:USERPROFILE\.janus-test\data\janus.db" "$env:TEMP\janus_fresh.db"
+node _probe_layered_graph_e2e.mjs "$env:TEMP\janus_fresh.db"   # 见 steps / graph / gate / gateWaiverDryRun
+```
+
+读结果的辅助脚本：`_probe_layered_read.mjs`（`A 迁移效果 / B 四层图 / C 闸门 / D 缺口节点状态`）。
+
+交接现场用的只读探针：`_probe_desktop_state.py`（云同步状态逐列 + 四层图/计划事件计数；
+凭据只印前 4 位与长度）—— 用法与两条交接的验收标准见 `HUMAN_HANDOFF.zh-CN.md`。
+
+## 13. P3 动作侧：任务族、影子度量的分母、apply 双门（2026-09-19）
+
+§9 把动作侧关在 shadow，理由是「没有证据就不该改图」。这一节做的是**把证据的容器建起来**，
+并让「开图动作」这件事在结构上只能从两个门里进来。三件事：任务族、度量口径、apply 通道。
+
+一句话结论：**apply 现在是可达的，但在真实环境里仍然不可达** —— 前者是代码事实，
+后者是数据事实（度量门只可能看到 0 条观察）。这两句话不矛盾，也都必须成立。
+
+### 13.1 任务族标识：为什么它不是"顺手的索引"
+
+[`observeShadowFollowUp`](../../../src/main/modules/collaboration/application/planExecDriftService.js)
+只能在**同一张协作图**里做事后观察：它比的是 `nodeId`。而 `nodeId` 是**图内标识**，
+跨图比较没有意义（两张图的 `task_1` 完全可能是两件不同的事）。
+
+这就把原来的度量逼进一个死角：它可以回答「我这轮建议的改动，我自己这轮后面做了吗」，
+**回答不了**「下一个**同类任务**采纳了我上一轮的建议吗」—— 而后者才是「模型有没有用」的证据。
+
+于是补上 [`planExecTaskFamily`](../../../src/main/modules/collaboration/application/planExecDriftService.js)：
+族的定义 = `groupId`（协作组）优先，退到 `delegationId`，再退到 `taskRunId`；同时带一份
+**结构形状指纹** `planExecFamilyShape(plan)`（那层有什么 kind、各几个）。
+
+它随提案一起落进事件（`shadow.proposal.taskFamily`），所以**不需要回填历史**。
+
+**诚实边界（必须写在这里，否则会被误读）**：族标识**没有**解决跨图节点身份问题。
+今天的后续观察仍然只在本图内做，因此族分区现在**测不出跨任务一致率**。
+它现在的价值是：数据从今天起开始带上族，等到跨图节点身份解决时不必回填。
+报告里把这件事直说（见 13.3、13.7），而不是让「族数」看起来像一个已经工作的指标。
+
+**退化提案**：当族退到 `taskRunId`（没有 `groupId`/`delegationId`）时，anchor 只有这一条 run，
+**结构上不可能收敛**。`summarizeShadowAgreement` 把它们数成 `degenerateFamilyProposals`，
+报告单独报出来 —— 否则「提案数在涨」会被读成「样本在积累」。
+
+### 13.2 影子度量的分母口径
+
+`SHADOW_MIN_OBSERVATIONS = 30` 一直没有被满足过，而原因不是"数据不够"：过去没有任何地方
+把分母写清楚。现在口径被固定在 `summarizeShadowAgreement` 里，并随报告一起输出：
+
+| 量 | 含义 | 进分母? |
+| --- | --- | --- |
+| `proposals` | 提案总数 | ✗ |
+| `observed` | 提案之后图**真的又动过**（有更新的 revision） | **✓** |
+| `unobserved` | 提案之后图没再变 | ✗ |
+| `carriedOut` | 观察到的那些里，建议的改动**确实被做了** | 分子 |
+
+`unobserved` **既不算同意也不算反对**：在一个真实产品里，多数任务跑完就结束了，
+图不再变是常态。把它算进分母会把一致率系统性压低，算成同意则会系统性抬高 —— 两条都是
+"报告看起来有数了"的假象。
+
+### 13.3 apply 通道：双门 + 唯一写消费者
+
+**门一（显式开关）**：能力位 `ubuddy_plan_exec_drift_apply`，默认 off。
+
+**门二（度量门）**：[`shadowApplyGate`](../../../src/main/modules/collaboration/application/planExecDriftService.js)
+要求**每一类 op** 各自 `observed ≥ 30` 且 `agreementRate ≥ 0.6`。
+按 op 而不是按总数：总数够了不等于 `remove_node` 这一类也够 —— 而 `remove_node` 恰恰是最贵的那类。
+
+[`resolveDriftPhase`](../../../src/main/modules/collaboration/application/planExecDriftService.js)
+只在**两门同时满足**时才产出 `apply`，否则停在 `shadow`。所以 `RDMD_ACTION_PHASES` 里
+虽然出现了 `'apply'`，"apply 不可达"这条不变量**没有被削弱**，它被改写成了一个更强的命题：
+**双门不满足时不可达**（测试直接钉住这两种输入下的 `phase`）。
+
+**唯一写消费者**：`writePlanPrior`。它写什么、不写什么是这个阶段的核心约束 ——
+
+- 只处理 `minimal_plan_edit`。`similar_swap`（换人）是**方案二**的事，在 apply 阶段也 no-op；
+- 只写**一行** `RDMD_PLAN_PRIOR_EVENT`（`rdmd_plan_exec_drift_plan_prior`）事件，
+  **不碰任何图**：先验是给**下一轮规划**看的建议，不是对既有图的编辑；
+- 记录里带 `graphMutated: false` 与之同行的还有 `gate`（凭什么被写下来），
+  读这条先验的人应该能看见它的判据。
+
+测试里有一条直接查库的断言：整段 apply 流程跑完，`collaboration_graph_nodes` 与
+`collaboration_graph_edges` 仍然是 0 行。**"改图"这件事只有结果能证明，不能只靠函数名。**
+
+### 13.4 一个"看起来该写却写不出"的分支：`target_incomplete` 不可达
+
+`planPriorFromRecord` 里有一条防线：`fields` 点名了某个字段、但 `target` 里没有这个值 → no-op。
+写测试时想造一条真实可达的这种图（plan 的节点有 `kind`、exec 的没有），**造不出来**：
+
+`normalizeDriftGraph` 会把每个被比较的字段归一成**字符串**（缺失 → `''`），而 `shadowProposal`
+的 `target` 抄的正是这个归一化后的 exec 节点 —— 于是 `target.kind === ''`，仍然"有值"，仍然 eligible。
+
+结论被写成了断言而不是删掉：**它是纵深防御，不是活路径**。今天唯一能覆盖它的层是纯函数测试
+（人为构造一条不完整提案）。把它断言成"不可达"，是为了不让后来的人以为线上路径正在覆盖它。
+
+### 13.5 幂等：一族**多条**是有意的
+
+先验事件 id 是 `rdmd_plan_prior:{taskFamilyId}:{taskRunId}`，不是一族一行。
+
+为什么不做成一行：`recordTaskEvent` 把事件 id 绑在一条 run 上（同 id 换 run 会抛
+`Task event identity conflict`，是 store 的既有不变量）。硬做成一族一行只有两条路，都不能走 ——
+改写上一条 run 的行（等于伪造它写下的时间与内容），或者后来的先验直接丢弃。
+
+所以：**一族多条 = 一条时间线**。消费者（下一轮同类任务的规划轮）按族查询取**最新**一条。
+幂等的正确表述是「同一个 (族, run) 反复评估只留一行」，测试钉的就是这句。
+
+### 13.6 验收
+
+| 门 | 命令 | 结果 |
+| --- | --- | --- |
+| 动作侧不变量 | `npm run cloud:test:rdmd-shadow` | 56 passed |
+| 传输层 | `npm run cloud:test:rdmd-transport` | 35 passed |
+| 云侧作业 | `npm run cloud:test:rdmd` | 26 passed |
+| 编码卫生（含探针） | `node --test cloud/test/encoding-hygiene.test.mjs` | 5 passed |
+| worker 判定 | `npm run experiment:rdmd-worker:test` | 12 OK |
+
+只读报告在**真实库**上跑：
+
+```powershell
+node scripts/rdmd_shadow_report.mjs "$env:USERPROFILE\.janus-test\data\janus.db"
+```
+
+输出 `影子提案 0 条，后续观察 0 条` —— 并且**不把这读成 0%**：它明确说
+「能力位还没开过，或者还没有真实群任务跑完，这时候开真动作无从谈起」。
+报告里同时带上分母口径、族数、退化提案数，以及"两道门"的判据原文。
+
+### 13.7 P3 的验收标准：闭环接好且**可证被闸住**
+
+- 写入路径存在：`writePlanPrior` 有调用点、有事件 id 规则、有幂等测试、有"不碰图"的查库断言。✅
+- 默认不可达：能力位默认 off + 度量门（真实环境 0 观察）→ `resolveDriftPhase` 恒产出 `shadow`。✅
+- 有测试钉住：双门不满足时的 `phase`、度量边界（分母口径）、写入幂等、`similar_swap` no-op。✅
+
+**本轮结束时 apply 在真实环境仍不会生效** —— 无真实判定、无度量。这是**预期结果**，
+不是未完成项。与 §12.7 同源：那一条人做的交接（装新构建 → 跑 ≥2 个真实群任务）
+不完成，度量门的分母就永远是 0 —— 而**这正是闸门在正确工作**。
+
+## 14. P4 评测硬化：把 OOD/对抗接成门，第一次跑就红了（2026-09-19）
+
+§12–13 那些数字（"基线 node 1.000 / type 0.527"等等）的唯一落脚点是
+`data/ood_summary.json` 与 `data/adv_summary.json`。它们**只被手工命令写过一次**，
+之后没有任何东西核对过 —— `score_ood.py` 甚至不在任何 npm 脚本里。
+这一节把它接成门，然后报告门第一次跑出来的东西。
+
+### 14.1 门怎么设计的（以及为什么它能不带 GPU）
+
+| 决定 | 理由 |
+| --- | --- |
+| 只比**基线列**（`base_*`），不比 `model_*` | 模型列需要那份权重和一台 GPU。放进本地的门只会让门被跳过，或者更糟 —— 被伪造。 |
+| 整数**逐位相等**，不给容差 | 基线是纯函数（rules A–E）。计数没有浮点误差可言，给容差只是让门更容易放过漂移。 |
+| 参考文件由 `--write-reference` 从一次真实跑导出，并**钉住语料的 sha256** | "参考描述的是哪批字节"不再靠上下文暗示。换一批语料，哈希先对不上，比数字毫无意义。 |
+| 与标签**不一致的行**作为不变量钉进参考 | 比分组计数更本质：分组计数只是它的外在表现。多一行、少一行都要报。 |
+| 语料不提交，但**必须先造出来** | 探针是**种子确定性**的：实测 `node make_ood.mjs` / `make_adversarial.mjs` 重跑与原地那份**逐字节相同**。所以"可复跑"是真的，不是"语料不在就跳过"。 |
+
+### 14.2 第一次跑：23 处（ood）+ 20 处（adv）不一致
+
+两处**不同**的病因，而且都不是"规则改错了" —— 这恰恰说明这个门早就该有。
+
+**（a）OOD：语料被重造过，汇总是旧的。**
+
+| | 今天的语料/标签 | `data/ood_summary.json` |
+| --- | --- | --- |
+| 总行数 | **45** | 43 |
+| `layered_mesh` | **15** | 14 |
+| `nested_diamond` | **10** | 9 |
+| derived-only 行 | **13** | 10 |
+
+`make_ood.mjs` 自己的断言输出今天也写着 `derivedOnlyDriftRows: 13` ——
+也就是说 **V3 报告 §12.2 的"共 43 行 / 其中 10 条刻意造的派生字段行"描述的不是今天的探针**。
+基线与标签**零分歧**（45 行里 0 行不一致），所以规则本身没问题，纯粹是汇总没跟上。
+
+**（b）对抗：汇总来自一个更早的探针（连 `scale` 都还不是真值），且有 2 行真分歧。**
+
+- `adv_summary.json` 的 `byScale` **只有一组 `20`（n=60）**；今天的探针 `scale` 取值是
+  `20 / 27 / 28 / 29`。一个把 scale 写死成常数的版本，不是今天的探针。
+- 今天有 **2 行**标签与基线不一致（已作为不变量钉进参考）：
+
+  | 行 | 标签 | 基线 | 含义 |
+  | --- | --- | --- | --- |
+  | `..._two_derived_cause_23_...` | `UNKNOWN` | `drift` | 它的两个原因在依赖闭包上不再"互不相干"，级联根唯一 |
+  | `..._single_control_31_...` | `drift` | `UNKNOWN` | 它不再有唯一的级联根，"单因控制"这个前提没被满足 |
+
+  这两行正是对抗探针**刻意要造**的那种形状（结构代理 ≠ 构造出来的真值），所以它们是
+  **探针的难度**，不是缺陷 —— 但它们此前从未被写下来过，谁也不知道有 2 行。
+
+### 14.3 落了什么
+
+- `data/ood_baseline.json`、`data/adv_baseline.json`（受版本控制）：基线参考，
+  内含三个语料文件的 sha256 + 逐组计数 + 与标签不一致的行清单。
+- `score_ood.py --gate / --write-reference / --selfcheck`。
+- `scripts/rdmd_ood_gate.mjs` + 两个 npm 门：
+  `experiment:rdmd-ood:gate`、`experiment:rdmd-ood:gate:selfcheck`。
+- 门的负对照**分两步**，缺一不可：先证"当前这一跑真的过"（否则"扰动后失败"毫无信息量 ——
+  一个恒失败的门当然会失败），再扰动一个计数证"它真的会红，且指出被改的那一处"。
+  只做第二步的门可能是永远报错，只做第一步的门可能是永远通过。
+
+实测（本机，无 GPU）：
+
+```
+ood   gate       PASS   45 行 / 4 个 kind 组逐位一致，0 行与标签不一致
+adv   gate       PASS   60 行 / 2 个 kind 组逐位一致，2 行与标签不一致（与参考记下的完全一致）
+ood   selfcheck  PASS   扰动 byScale/16.n 6 -> 7 之后报出 1 处差异并指到该处
+adv   selfcheck  PASS   扰动 byScale/20.n 17 -> 18 之后报出 1 处差异并指到该处
+```
+
+### 14.4 验收门本身的负对照：从"会静默失效"改成"干净 clone 也能跑"
+
+`scripts/test_rdmd_acceptance.py` 本来就有 8 个 case、本来就在测"门必须会说 NO"。
+它的问题不是逻辑，是**依赖**：它读 `sft/test.jsonl`（37MB，被 gitignore，由 `generate.mjs` 派生）。
+干净 clone 上的后果不是"少测一点"，而是 `write_predictions` 直接 `FileNotFoundError`
+—— 一套从不运行的测试等于没有测试。
+
+改法是**自足夹具**：图、SFT 行、原始 case 现场造，只依赖被测试的那份代码。
+夹具不是"跑一遍把输出抄下来"，而是按构造满足每项判据的前提：
+
+| 判据 | 夹具怎么保证它有意义 |
+| --- | --- |
+| `primary_derived_only` | 10 行 drift 里 5 行只改 `artifact`/`output`（比值 0.5，落在 §6 的 0.473±0.05 内，不会触发假警报） |
+| `step_layer_node` | 真凶 `n2` 的 `kind` 是 `agent_step`，10 行都算得进分母 |
+| `status_shortcut` | 让**下游** `n3` 的状态最坏（`cancelled`）而真凶是 `n2` → 捷径**指错**（top1 = 0），差是 1.0 而不是恒为 0 |
+| 覆盖度守卫 | 预测 = gold，覆盖 100% |
+
+新增 case 5b：**语料缺失必须表现为"未测到"**，不能变成"通过"，也不能被读成"模型不行"。
+
+实测：把 `sft/test.jsonl` 与 `data/{train,development,test}.jsonl` 全部挪走后，
+`experiment:rdmd-acceptance:test` 仍然 `ALL ACCEPTANCE TESTS PASSED`。
+
+`scripts/_rdmd_acceptance_selftest.py` 是**另一个**用途（量真语料上那三项到底是多少，
+并回答"test split 里有几行真凶在 step 层" —— 实测 **142/1665**，派生字段子集 **676/1427，比值 0.474**），
+所以它必须要有真语料。它以前在语料缺失时报 `step_layer_node=None (expected 1.0)`
+—— 把"没测到"说成了"接线错了"。现在显式 **exit 3 + 一句人话**。
+
+### 14.5 门钉住了什么、**没有**修什么
+
+**钉住了**：基线在这个语料上怎么算、和哪些标签不一致。这三样任何一项变了，门就红。
+
+**没有修，而且不该由这一轮偷偷"修"**：
+
+`*_summary.json` 里的 `model_*` 列，以及 `*_verdicts.jsonl`，说的都是**旧语料**。
+对抗那侧尤其明显：`adv_verdicts.jsonl` 的 60 个 id 里**有 35 个在今天 60 行的标签里根本不存在**
+（旧命名 `_220.._249` vs 今天 `_2.._60`），而 `ood_verdicts.jsonl` 的 43 个 id 里
+有 2 个已不存在、另有 4 个新行没有判定。也就是说 §12–13 表里的模型列**无法**用今天的语料复现。
+
+要刷新它们只有一条路：**在当前探针上重跑一次模型**（要 GPU 与那份权重）。
+在此之前，那些模型列的正确读法是"某一版旧探针上的数字"，而不是"今天这个探针上的数字"。
+把这件事写在门里而不是悄悄重算，是因为重算需要一个不在本机上的东西 ——
+而"用手边的数字凑一个看起来完整的表"正是这个门存在的理由。
+
+---
+
+## 15. P5：把「顺序链 → 依赖 DAG」定义出来，然后让它说「不能用」（2026-09-19）
+
+### 15.1 这一轮要解决的是一句被写进硬约束的话
+
+`G_PLAN_G_EXEC.zh-CN.md` §4.2 原文：链式投影会**系统性高估**级联（任何顺序都变成因果），
+**在定义清楚之前不得用长程层链条训练/评测 RDMD**。
+
+本轮把「定义」补上了，同时把结论钉死：**定义出来的答案是「今天不能用」**。
+
+### 15.2 交付物（三个，各自的位置很重要）
+
+| 交付物 | 位置 | 为什么放这儿 |
+| --- | --- | --- |
+| 规则 R0–R3 + 可判定性 + 三档必要性 | `stepDependencyMapLib.mjs` | 只做规则、不做 IO，可脱离数据单测；**不放** `src/shared/contracts`，因为它是长程层的诊断契约，放那儿会进产品包并暗示产品地位 |
+| 9 条纪律测试 | `stepDependencyMap.test.mjs` | 第 1 条就是「纯顺序链上门必须说不」；另钉住边 id 唯一（`drop_edge` 一次删两条那个坑）、坏证据必须丢弃报警、`unverifiable ≠ 不需要` |
+| 真实链形状验证 | `_probe_chain_to_dag.mjs` | 只读；结论进 `SEQUENCE_TO_DAG.zh-CN.md` §3 |
+
+全文与逐条规则：`SEQUENCE_TO_DAG.zh-CN.md`。
+
+### 15.3 真实链上的三个决定性数字（只读实测）
+
+| 数字 | 值 | 读法 |
+| --- | --- | --- |
+| 可以因果归因的图（契约口径） | **0 / 22** | 771 条边全是 `sequence`（假设），0 条证据 —— **门 22/22 全关** |
+| 就算把「提到过同一路径」全认成证据 | 候选对 **8,161 条 = 链条边数的 10.6 倍**，仍 **0/22** 可归因、19/22 留着顺序边 | 更宽松的证据不是把链变瘦，是把它变成一张几乎全连接的图 → 「最小漂移」失去唯一候选。**所以这条路不是解法** |
+| `update_plan` 调用 | **2 / 22** 个 rollout，3 次 / 15 个步骤 | 长程层不是完全没有计划信号，但覆盖率太低、语义是 agent 内部待办 → §4.1 的结论要收窄，不能推翻 |
+
+### 15.4 顺手订正了一处**过期的实测基线**
+
+`G_PLAN_G_EXEC` §2.3 记的是 19 图 / 706 节点 / 687 边 / 链长 max 110 / 交互 25；
+今天同一台机器同一目录复测是 **22 图 / 792 节点 / 771 边 / 链长 max 180 / 交互 0**
+（快照 `2026-09-19T06:23:42Z`；节点数在同一天的两次运行之间从 789 涨到 792 —— 数据是活的）。
+
+- 「长程结构真实、尺度够」**不变**（max 110 → 180，≥51 的图仍是 6 个）；
+- 「**交互性**也够」的依据**今天不成立**（22 个文件里 `inter_agent_communication_metadata` 一条都没有）；
+- 另有 **1 个空图**（2 行的 rollout）与 2 个单节点图 —— 空图必须单独数，否则会把「链长最短 0」混进形状表。
+
+### 15.5 已知边界（本轮**不**修，但要记下）
+
+节点 id 是 `<sessionId>#<seq>`，而 22 个 rollout 只落在 **10 个 session 目录**上 →
+**同一图内 id 唯一，把同 session 的多个 rollout 并成一张图会撞 id（12 处）**。
+将来要动长程层必须先解决这个，且要同步 `build_gplan_gexec.mjs`。
+
+### 15.6 本轮**没做**什么
+
+- 不训练、不评测：`STEP_DEPENDENCY_MAP_TRAINING_ALLOWED = false` +
+  `assertNotForTraining()`（会抛，不是注释）。
+- 不把「路径提及」写成规则（§15.3 第二行已经证明它会毁掉唯一性）。
+- 不为长程层补 G_plan，也不改 `buildAgentGraph` 的投影。
+
+### 15.7 复现
+
+```powershell
+npm run experiment:rdmd-chain-to-dag:test   # 9 条纪律测试，不需要真实数据
+npm run experiment:rdmd-chain-to-dag        # 形状验证（只读，需真实 rollout；缺数据 exit 3）
+```
