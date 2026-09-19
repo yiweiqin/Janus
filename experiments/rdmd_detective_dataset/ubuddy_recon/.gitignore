@@ -14,4 +14,10 @@ _verify_empty/
 # route_evolution_e2e.mjs 的产物，不是源码。只留 gplan_gexec_summary.json 这类聚合摘要 ——
 # 计数与形状足够复核结论，真实标题不必入库。
 _graphs/gplan_gexec.json
-_e2e/route_evolution_e2e.json
+
+# 按**目录**挡，不按文件名挡。这两个脚本的输出目录是**可传参的**，所以逐个列名字必然漏：
+# 本轮就多出了 `_e2e_v2/`、`_e2e_v2_fixed/`、`_real_gate_db_cont/`、`_real_gate_db_nocont/`
+# 四个目录，其中 `_e2e_v2*/route_evolution_e2e.json` 里带着真实任务标题。
+# 漏一次就是把真实任务标题提交上去 —— 所以规则要覆盖得住"下次换个目录名"。
+_e2e*/
+_real_gate_db*/

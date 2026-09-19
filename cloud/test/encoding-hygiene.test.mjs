@@ -130,3 +130,22 @@ test('the desktop sources carry no UTF-8 BOM', () => {
   assert.ok(files.length > 100, `扫描到的桌面端文件太少（${files.length}）`);
   assertNoBom(files, 'src/ 与 network/');
 });
+
+test('the reconnaissance harness sources carry no UTF-8 BOM', () => {
+  // 加这一条的原因是一次真实的手滑：改 `gplanGexecLib.mjs` / `route_evolution_e2e.mjs`
+  // 时被写入了 BOM，而上面四条都没覆盖 ubuddy_recon/**，于是**测试全绿**。
+  //
+  // 为什么这个目录值得单独一条：它是**探针与投影的唯一实现**，而它的产物是结论的
+  // 唯一来源（`PLAN_EXEC_TRUTH.zh-CN.md` §10 的数字就是从这儿算出来的）。BOM 在
+  // `.mjs` 上会让 `import` 直接 SyntaxError —— 但更坏的情况是它被 `bash`/`python`
+  // 之类的方式绕过去，于是"投影悄悄换了实现"，而结论看上去照常产出。
+  // 探针本身没有被校验过，就不该相信它给出的数字。
+  //
+  // 只扫 `.mjs`/`.py`：这个目录下还有大量生成的语料（*.jsonl）与真实导出物，
+  // 它们既大又不该进来 —— 按扩展名收窄正好把两者分开。
+  const files = [
+    ...walk(path.join(REPO_ROOT, 'experiments', 'rdmd_detective_dataset', 'ubuddy_recon'), ['.mjs', '.py']),
+  ];
+  assert.ok(files.length > 20, `扫描到的侦察文件太少（${files.length}），说明遍历逻辑坏了而不是没问题`);
+  assertNoBom(files, 'ubuddy_recon/ 探针与投影');
+});

@@ -475,3 +475,100 @@ FROM task_events WHERE event_type = 'rdmd_plan_exec_drift_followup';
 `JSON.stringify(payload)` 原样落库（见 `recordTaskEvent`），没有任何下划线转换 ——
 只有 `task_graph_nodes` 那类**投影列**才是 snake_case。
 
+﻿
+---
+
+## 10. P1 实测：真实 case 到底过不过闸门（2026-09-19）
+
+§8.1 收窄契约的**全部理由**是"让真实 case 能进模型"。这件事此前**从未在真实数据上量过**
+（旧记录只有一句"6/6 violating"，而那个数字是 v1 契约下测的）。本节是实测，两个投影都跑了。
+
+**被测库**：`C:\Users\zhang\.janus-test\data\janus.db`（只读打开，一行未改），6 个 task run / 13 个 task node。
+
+### 10.1 三组数字
+
+| 契约 | 投影 | 违约 case | 问题形状 |
+| --- | --- | --- | --- |
+| v1（旧记录） | 侦察 | 6/6 | 两侧都缺 `artifact`/`stage`/`inputs`/`output`/`summary` |
+| v2 | **侦察**（`route_evolution_e2e.mjs` A 段） | 6/6 | 全部是 `G_prime:<node>:empty_summary` / `empty_output` |
+| v2 | **产品形状**（`_probe_real_gate_from_db.mjs`） | **3/6** | 只有 `G_prime:<node>:empty_output` ×4 |
+
+第二行和第三行的差，不是契约的差，是**投影的差** —— 这正是本节最要紧的一件事。
+
+- **侦察投影**（`gplanGexecLib#buildOrganizationalGraphs`）直读 `task_nodes`，投出来的节点
+  **不带 `kind`、不带 `summary`、不带 `output`**。缺 `kind` 按第 3 条支撑规则回退到最严的
+  `agent_task` 档，于是 exec 侧必然缺 `summary`/`output`。
+  它量的是"**这个投影缺什么**"，不是"**真实数据缺什么**"。
+- **产品形状投影**按 `uBuddyPlanExec.js#execNodeOf` 的字段来源投：
+  `summary ← result_summary ‖ wait_reason ‖ error_text ‖ objective`、
+  `output ← result_text`、`kind = 'agent_task'`。`task_nodes` 里这些列都有值
+  （`objective` 13/13、`result_text` 9/13、`result_summary` 9/13），所以能真判。
+
+**产品形状下 3/6 通过**：`cc995071`、`44f274a2`、`4e1015ef` 全部过闸门，`jsGaps=0`。
+"真实 case 过不了闸门"这句话，对**多节点且全部成功**的真实群任务**已经不成立**。
+
+### 10.2 残余缺口只有一档，形状很干净
+
+剩余 4 个问题**全部**是同一种，且落在同一类节点上：
+
+```text
+task_ea7888e7…  node=7bf656b8  status=failed     result_text=''  objective='基于公开要求与可靠常识，围绕可乐的定义与分类…'
+task_231b6eeb…  node=af239874  status=failed     result_text=''  objective='依据公开要求，整理可乐的定义与分类、起源与发展…'
+task_60e1bf8f…  node=8a4a057d  status=cancelled  result_text=''  objective='基于已核验的章节蓝图，用中文撰写字典学习…'
+task_60e1bf8f…  node=007454c9  status=cancelled  result_text=''  objective='Review all blocking term…'
+```
+
+结论：**`exec` 侧 `agent_task` 的 `output` 被无条件要求，而 `failed` / `cancelled` 节点按定义
+没有 `result_text`。** 任何包含一个未成功节点的真实任务，都会永久卡在闸门外。
+
+这与当初产生支撑规则 2（按侧分档）的逻辑是**同一条**：不要把一个在该处**根本没有来源**的
+字段收进必需集。`summary` 有来源（`objective` 兜底），所以它没出问题；`output` 没有。
+
+- 缺的是**按节点终态再分一档**：`output` 只在"确有产出"的节点上必需；未成功节点的漂移信号
+  是它的 `status`，不是它的 `output`（与 §8.2 说 `agent_step` 用 `status` 承载漂移同源）。
+- **本轮不改契约。** 改闸门会改变哪些 case 进模型，进而牵动 v4 语料与已验收的模型——
+  那是一次需要明确决策的契约版本推进（v2 → v3），不该顺手做。**本节只提供判据与数字。**
+
+### 10.3 顺带修掉的一个测量 bug（否则上面的数字都是假的）
+
+`gplanGexecLib#buildOrganizationalGraphs` 里，`edgesOf()` 读的是**原始行**的
+`dependencies_json`，但规划侧被喂的是 `toNode()` **映射之后**的对象（该对象没有这个字段）：
+
+```js
+plan: { nodes: planNodes, edges: edgesOf(planNodes) },   // planNodes 已被 toNode 映射 -> 恒零边
+exec: { nodes: execNodes, edges: edgesOf(nodes) },       // 喂原始行 -> 有边
+```
+
+后果不是"少几条边"：**同一批行、同样的依赖**，G_plan 恒零边而 G_exec 有边。实测
+`44f274a2` / `cc995071` / `60e1bf8f` 三个任务的 G_star 与 G_prime **节点 id 完全相同**，
+G_prime 有 2/3/2 条边、G_star 却是 `[]`。规则基线把这读成"每个依赖都缺失"，
+于是**在 3 个真实任务上稳定制造出假漂移**。
+
+修法是一行级：规划侧改喂 `edgesOf(planRows)`（未映射的原始行）。修前修后对照：
+
+| | 规则基线动作分布 |
+| --- | --- |
+| 修前 | `{"record_only":3,"minimal_plan_edit":3}` ← 3 条假 `local_replan` |
+| 修后 | `{"record_only":6}` ← **全部 no_drift** |
+
+`node --test ubuddy_recon.test.mjs` 修后仍 6/6 通过。
+
+这与 [§前文] "依赖边全空"的旧结论有关，但**成因不是数据**：本库 `task_nodes` 13 行里
+**7 行 `dependencies_json` 非空**（9/15 对 `_real_prod` / `_real_test` 的两份快照上确实是 `[]`，
+那是另外两个库、另一个时间点）。所以"两图零边"在**这一份库上**至少一半是投影 bug 造出来的。
+
+### 10.4 复现
+
+```powershell
+# 侦察投影（A 段仍是它，数字含"投影缺字段"的成分）
+node experiments/rdmd_detective_dataset/ubuddy_recon/route_evolution_e2e.mjs `
+  "$env:USERPROFILE\.janus-test\data\janus.db" _e2e_v2_fixed
+
+# 产品形状投影（P1 的权威数字；WITH_CONTAINERS=0/1 两版结论一致）
+$env:WITH_CONTAINERS="1"
+node experiments/rdmd_detective_dataset/ubuddy_recon/_probe_real_gate_from_db.mjs `
+  "$env:USERPROFILE\.janus-test\data\janus.db" _real_gate_db_cont
+```
+
+两个探针都**只读**真实库，不改产品代码；产物写在被 gitignore 的目录里
+（含真实任务标题，不入库），本节是它们的受追踪结论。

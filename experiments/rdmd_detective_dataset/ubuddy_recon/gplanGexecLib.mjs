@@ -46,7 +46,8 @@ export function buildOrganizationalGraphs(db, taskRunId) {
     status: n.status || '',
   });
 
-  const planNodes = nodes.filter((n) => !fallbackIds.has(n.id)).map((n) => ({ ...toNode(n), status: 'planned' }));
+  const planRows = nodes.filter((n) => !fallbackIds.has(n.id));
+  const planNodes = planRows.map((n) => ({ ...toNode(n), status: 'planned' }));
   const execNodes = nodes.map(toNode);
 
   const edgesOf = (subset) => {
@@ -62,7 +63,12 @@ export function buildOrganizationalGraphs(db, taskRunId) {
 
   return {
     taskRunId,
-    plan: { nodes: planNodes, edges: edgesOf(planNodes) },
+    // `edgesOf` 读的是**原始行**的 `dependencies_json`，所以两张图都必须喂原始行。
+    // 规划侧曾经喂的是 `planNodes`（`toNode` 之后的映射对象，没有 dependencies_json），
+    // 于是 G_plan 恒为零边、而 G_exec 有边 —— 同一批行、同样的依赖，只因为传错了一个数组。
+    // 后果不是「少了几条边」：规则基线会把这看成每个依赖都缺失，在真实任务上稳定制造
+    // 假漂移（实测 3/6 个任务被误判为 local_replan）。见 _probe_real_gate_from_db.mjs。
+    plan: { nodes: planNodes, edges: edgesOf(planRows) },
     exec: { nodes: execNodes, edges: edgesOf(nodes) },
     supersessions,
     raw: { nodeCount: nodes.length, revisionCount: revs.length, fallbackCount: fallbackIds.size },

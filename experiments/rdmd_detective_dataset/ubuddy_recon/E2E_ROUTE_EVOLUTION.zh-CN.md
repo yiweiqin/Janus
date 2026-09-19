@@ -4,6 +4,17 @@
 > 脚本 `route_evolution_e2e.mjs`，输出 `_e2e/route_evolution_e2e.json`，输入 `C:\Users\zhang\.janus-test\data\janus.db`（只读）。
 > 生成时间 2026-09-16，6 个真实 task_run。
 
+> [!IMPORTANT]
+> **更正（2026-09-19，实测）**——本文写于 v1 契约下，下面的数字与措辞已部分过时。以
+> [`PLAN_EXEC_TRUTH.zh-CN.md`](PLAN_EXEC_TRUTH.zh-CN.md) **§10** 为准：
+> - A 段的 **6/6 拒答不再成立**。它现在量的是"**侦察投影缺字段**"（该投影不带 `kind`/`summary`/`output`，
+>   节点落进最严兜底档），不是"真实数据缺字段"。按**产品形状投影**实测是 **3/6**，
+>   且通过的正是多节点、全部成功的真实群任务。
+> - §2 说的"缺 5 个富文本字段"是 v1 的事。v2 按 `kind` 收窄后，残余缺口**只剩一档**：
+>   `exec` 侧 `failed`/`cancelled` 节点的 `empty_output`。
+> - 表格里 B 段的 "1 `minimal_plan_edit`" 是**投影 bug 造出来的假漂移**（规划侧恒零边）。
+>   修掉后 B 段是 **6/6 `no_drift`**。**§3.2 关于"构造产物"的结论方向对，但数字已变。**
+
 ---
 
 ## 0. 一句话结论

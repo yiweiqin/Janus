@@ -4,7 +4,9 @@
 //
 // 三段对照，缺一不可，因为能跑的东西和想跑的东西不是一回事：
 //   A. 真实数据过**模型输入闸门** —— 用官方 deploy/predict.py --dry-run（权威守卫，不重写一遍）。
-//      预期结果：拒答（缺 5 个富文本字段）。这是**设计行为**，不是 bug。
+//      用的是**侦察投影**（不带 kind / summary / output），所以节点落进最严的兜底档，
+//      exec 侧必然缺 outcome 文本。这量的是「这个投影缺什么」，**不是**「真实数据缺什么」；
+//      产品形状投影下的违约数另见 _probe_real_gate_from_db.mjs。
 //   B. 真实数据过**规则基线** detectMinimalDrift —— 规则能吃窄字段，所以能出判定，
 //      再喂 routeEvolution 得到动作。
 //   C. **已录的真实模型判定**回放 routeEvolution —— 用验收时留下的 ood/adv verdicts，
@@ -72,9 +74,24 @@ const realInputGate = {
     contractProblems: c.contractProblems || null,
     passed: !c.contractProblems,
   })),
+  // 结论由**实测问题形状**推出，不写死。写死过一次，v2 收窄契约之后那句话就变成了假话
+  // （它一直说「缺 5 个富文本字段」，而 v2 的真实残余全部是 exec 侧 failed/cancelled 节点的
+  // empty_output）。数字错了可见，措辞错了不可见 —— 所以这里必须从数据算。
+  problemShapes: violating.reduce((acc, c) => {
+    for (const p of c.contractProblems) {
+      const k = String(p).replace(/node_[0-9a-f-]{8,}/gi, '<node>');
+      acc[k] = (acc[k] || 0) + 1;
+    }
+    return acc;
+  }, {}),
+  projectionCaveat:
+    '注意：本段用的是侦察投影 gplanGexecLib#buildOrganizationalGraphs（不带 kind、不带 summary/output），' +
+    '所以每个节点都落进兜底档 agent_task（最严），exec 侧必然缺 outcome 文本。' +
+    '产品形状的投影（kind + summary<-result_summary|wait_reason|error_text|objective + output<-result_text）' +
+    '另有更低的违约数，见 ubuddy_recon/_probe_real_gate_from_db.mjs 与 PLAN_EXEC_TRUTH.zh-CN.md §P1。',
   conclusion: violating.length
-    ? '真实组织层图缺少 5 个富文本字段（artifact/stage/inputs/output/summary），模型按设计拒答。'
-    : '真实图通过了输入闸门（与预期不符，需复查）。',
+    ? `真实 case 仍有 ${violating.length}/${gatePerCase.length} 条未过闸门，问题形状见 problemShapes（按投影不同而不同，见 projectionCaveat）。`
+    : '真实图通过了输入闸门。',
 };
 
 // 拒答后模型侧等价于「空判定 = UNKNOWN」，走 routeEvolution 看它变成什么动作。

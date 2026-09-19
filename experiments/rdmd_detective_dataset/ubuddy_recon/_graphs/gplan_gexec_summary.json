@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-09-15T17:49:44.783Z",
+  "generatedAt": "2026-09-19T05:22:53.250Z",
   "source": {
     "db": "janus.db",
     "codexRoot": "C:\\Users\\zhang\\.janus-test\\data\\codex_backend_sessions"
@@ -10,116 +10,114 @@
       1,
       1,
       1,
-      1,
-      1,
-      1
+      3,
+      4,
+      3
     ],
     "execNodeCounts": [
-      2,
       1,
       1,
       1,
-      1,
-      1
+      3,
+      4,
+      3
     ],
-    "planEdgeTotal": 0,
-    "execEdgeTotal": 0,
-    "supersessionTotal": 11
+    "planEdgeTotal": 7,
+    "execEdgeTotal": 7,
+    "supersessionTotal": 0
   },
   "agentLongHorizon": {
-    "graphCount": 19,
+    "graphCount": 17,
     "chainLengths": [
-      16,
+      5,
+      5,
+      5,
+      5,
+      26,
+      63,
+      52,
+      35,
+      144,
       13,
-      16,
-      9,
-      9,
+      180,
+      57,
+      125,
       11,
-      24,
-      6,
-      14,
+      18,
       10,
-      28,
-      82,
-      107,
-      110,
-      81,
-      11,
-      83,
-      25,
-      51
+      9
     ],
-    "edgeTotal": 687,
-    "nodeTotal": 706,
-    "interactionTotal": 25,
-    "bytesTotal": 18222262
+    "edgeTotal": 746,
+    "nodeTotal": 763,
+    "interactionTotal": 0,
+    "bytesTotal": 3914778
   },
   "sessionJoin": [
     {
-      "sessionId": "session_882a2d3a-fd47-4c0b-b9e8-b11e209a4311",
+      "sessionId": "session_5561b442-0c5c-4466-9029-6930876152b8",
       "inSessionsTable": true,
       "codexThreadId": "",
-      "rolloutCount": 5
-    },
-    {
-      "sessionId": "session_989d72f7-95d1-454b-a05d-048aab547aac",
-      "inSessionsTable": true,
-      "codexThreadId": "019ff5bb-090f-7f60-bfcc-c285490b5e30",
-      "rolloutCount": 2
-    },
-    {
-      "sessionId": "session_b2b8adab-dfd1-4d8e-8425-78a848e323a3",
-      "inSessionsTable": true,
-      "codexThreadId": "",
-      "rolloutCount": 2
+      "rolloutCount": 3
     },
     {
       "sessionId": "session_f9bf8697-f4b0-4c2f-a3e3-e38a9189520a",
       "inSessionsTable": true,
-      "codexThreadId": "01a010f2-3e8c-7f73-9f19-f0b6180ec26c",
+      "codexThreadId": "",
       "rolloutCount": 1
     },
     {
-      "sessionId": "session_task_node_1b186bab715c78157334197ee76c9d2a",
+      "sessionId": "session_task_node_282dc55b1be8eb65baa7613783a9fbcb",
       "inSessionsTable": true,
-      "codexThreadId": "01a0012c-8936-7751-9fb1-990fe5d183fb",
-      "rolloutCount": 5
+      "codexThreadId": "01a0b225-1371-7e91-8322-1df404898187",
+      "rolloutCount": 3
     },
     {
-      "sessionId": "session_task_node_dd130d363426741e85eb5ee4d8760a71",
+      "sessionId": "session_task_node_5982ca97569c4ab808ff09142c13c197",
       "inSessionsTable": true,
       "codexThreadId": "",
+      "rolloutCount": 2
+    },
+    {
+      "sessionId": "session_task_node_686670f700cd5014c920fd24777414fe",
+      "inSessionsTable": true,
+      "codexThreadId": "01a0b380-7212-7772-a74b-50718e667b92",
       "rolloutCount": 4
+    },
+    {
+      "sessionId": "session_task_node_e71e762a55805dc57c0ec2d7e1fedb01",
+      "inSessionsTable": true,
+      "codexThreadId": "01a0b047-4c41-70b3-9513-79dc3021c9ac",
+      "rolloutCount": 2
+    },
+    {
+      "sessionId": "session_task_node_fb1208228fd3afddb6aa2ecbab841acd",
+      "inSessionsTable": true,
+      "codexThreadId": "01a0b221-6ad5-7200-96c9-fd57591cc7f5",
+      "rolloutCount": 2
     }
   ],
   "driftDiagnostics": [
     {
       "taskRunId": "task_4e1015ef-cf5a-465a-98ab-caabfa343ee8",
       "verdict": {
-        "status": "drift",
-        "nodeId": "node_d03c03d1-957f-49d9-8755-e6418ff73fe8",
+        "status": "no_drift",
+        "nodeId": "",
         "edgeId": "",
-        "type": "local_replan",
-        "evidenceNodeIds": [
-          "node_d03c03d1-957f-49d9-8755-e6418ff73fe8"
-        ],
+        "type": "",
+        "evidenceNodeIds": [],
         "contrast": {
-          "involvedNodeIds": [
-            "node_d03c03d1-957f-49d9-8755-e6418ff73fe8"
-          ],
-          "extraNodeIds": [
-            "node_d03c03d1-957f-49d9-8755-e6418ff73fe8"
-          ],
+          "involvedNodeIds": [],
+          "extraNodeIds": [],
           "missingNodeIds": [],
           "missingEdgeKeys": [],
           "extraEdgeKeys": [],
-          "nodeCountDiff": 1,
+          "nodeCountDiff": 0,
           "edgeCountDiff": 0
         }
       }
     },
     {
-      "taskRunId": "task_1a8c7a0b-2142-40e6-b469-61e2e36912f0",
+      "taskRunId": "task_ea7888e7-33f3-4622-ae69-c6e7dc668aea",
       "verdict": {
         "status": "no_drift",
         "nodeId": "",
@@ -138,7 +136,7 @@
       }
     },
     {
-      "taskRunId": "task_a16f57dd-7a51-48f7-961f-331ec26546db",
+      "taskRunId": "task_231b6eeb-b9c0-43cf-927d-19bab5aaba93",
       "verdict": {
         "status": "no_drift",
         "nodeId": "",
@@ -157,7 +155,7 @@
       }
     },
     {
-      "taskRunId": "task_6ce70b9f-bd38-462e-bca7-22402c43e83a",
+      "taskRunId": "task_44f274a2-2117-4700-b1f2-504ae6eff033",
       "verdict": {
         "status": "no_drift",
         "nodeId": "",
@@ -176,7 +174,7 @@
       }
     },
     {
-      "taskRunId": "task_7270b516-037b-4612-b690-82d19651c11f",
+      "taskRunId": "task_cc995071-6182-4bed-a2f8-5aee12b834b7",
       "verdict": {
         "status": "no_drift",
         "nodeId": "",
@@ -195,7 +193,7 @@
       }
     },
     {
-      "taskRunId": "task_30a1a3fc-7fab-4546-a4d3-2cb071c6c4ef",
+      "taskRunId": "task_60e1bf8f-0e0a-4419-a41c-794ed175b755",
       "verdict": {
         "status": "no_drift",
         "nodeId": "",
