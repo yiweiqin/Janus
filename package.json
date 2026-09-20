@@ -62,6 +62,7 @@
     "experiment:cpdb-apply-labels": "node experiments/cpdb_org_world/apply_labels.mjs",
     "experiment:cpdb-consensus:test": "python experiments/cpdb_org_world/test_annotate_consensus.py",
     "experiment:cpdb-export": "node experiments/cpdb_org_world/export_bundle.mjs",
+    "experiment:cpdb-export:verify": "node experiments/cpdb_org_world/verify_bundle.mjs",
     "experiment:cpdb-export:test": "node --test experiments/cpdb_org_world/export_bundle.test.mjs experiments/cpdb_org_world/import_ai_labels.test.mjs",
     "experiment:cpdb-import": "node experiments/cpdb_org_world/import_ai_labels.mjs",
     "experiment:cpdb-judge": "python experiments/cpdb_org_world/judge_with_local_llm.py",
