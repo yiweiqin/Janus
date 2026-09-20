@@ -220,6 +220,46 @@ sha256 钉住 —— 那串哈希正是"你复现的就是我交付的"这句话
    `ai_judge_qwen3_8b_majority_v1`；`diagnose.test.mjs` 在守这条断言，加了人工标注它会红）。
    这是唯一能把上面两个选项分开的办法。
 
+### 已经打包好的那份问人材料
+
+选项 3 不是一句待办，而是一个**已经生成的可交付物**：
+
+```bash
+npm run experiment:cpdb-human-review          # 生成 exports/cpdb-human-review-v1/
+npm run experiment:cpdb-human-review:score -- --dir exports/cpdb-human-review-v1
+```
+
+41 张卡，预计 31 分钟。分成 6 组，其中三组是两套口径真正对立的地方，
+另外三组（含一组完全一致的对照组）用来防止"总分被稀释"的误读：
+
+| 分组 | 候选池 | 取 | 要问出什么 |
+|---|---:|---:|---|
+| `same_family_dependency_opposed` | 2640 | 12 | 同职能的两个 Agent，左方产出能否当右方输入 |
+| `same_family_similarity_ai_low` | 76 | 8 | 同职能但细节不同时，替换代价是否真的一样 |
+| `same_family_agree_similarity` | 46 | 4 | 两套口径在相似度上一致时，依赖分是否仍为 0 |
+| `cross_family_dependency_opposed` | 339 | 5 | 跨职能时依赖分是否该随能力缺口大幅变化 |
+| `cross_family_similarity_ai_high` | 2810 | 6 | 跨职能是否可能互为好替换 |
+| `agreement_control` | 431 | 6 | 两套一致时人是否也一致（刻度读没读懂的对照） |
+
+关于这份材料，有三件事是刻意做死的，动它们等于整包作废：
+
+- **卡面没有任何机器标签**。teacher / AI / contract / init 的分数全在 `answer_key.jsonl` 里，
+  标完再对。印在卡上，人只会挑一个，我们测到的就是"他会不会挑"，不是"他怎么看"。
+- **卡面只保留 AI 判分器当时看到的字段**（名称/主职能/细节能力/标签/产出/输入/技能摘要）。
+  owner、orgId 全部剔除 —— `judge_with_local_llm.py` 的 `render_side()` 没渲染它们。
+  真实 pair id 也换成了 `hrv1-0001` 这样的编号，因为原 id 形如 `ag_p_01_01_3>ag_p_01_01_4`，
+  前缀会漏出"这两个归同一个人管"。留着它，两边就不是口径之差而是**信息量之差**，对比作废。
+- **`policy.json` 里的三个判断题比 41 张卡更重要**，且与卡上打分冲突时以它为准。
+
+算账脚本**不替人下结论**，只把「人 vs teacher」「人 vs AI」的 QWK 并排摆出来，
+并按分组分开报。它的自检是两条恒等式：
+`--simulate teacher` 必须判 `teacher`、`--simulate ai` 必须判 `ai`
+（`human_review.test.mjs` 用一个人造小夹具守这两条，不依赖导出目录是否存在）。
+
+三种结果各自的去向写在 `COORDINATOR.zh-CN.md` 里：靠近 teacher → 不需要模型；
+靠近 AI → 需要的是**同职能内部的细分标签**，不是再训一版；
+两套都不像 → 该改的是 `TASK.json` 的两轴锚点。
+
 ---
 
 ## 七、两个必须一起看的警告

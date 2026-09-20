@@ -68,7 +68,7 @@
     "experiment:cpdb-judge": "python experiments/cpdb_org_world/judge_with_local_llm.py",
     "experiment:cpdb-matrix": "node experiments/cpdb_org_world/export_training_matrix.mjs",
     "experiment:cpdb-train": "python experiments/cpdb_org_world/train_scorer.py",
-    "experiment:cpdb-scorer:test": "node --test experiments/cpdb_org_world/features.test.mjs experiments/cpdb_org_world/scorer.test.mjs experiments/cpdb_org_world/splits.test.mjs experiments/cpdb_org_world/diagnose.test.mjs experiments/cpdb_org_world/ship.test.mjs src/shared/contracts/uBuddyCapabilityDependencyScorer.test.js",
+    "experiment:cpdb-scorer:test": "node --test experiments/cpdb_org_world/features.test.mjs experiments/cpdb_org_world/scorer.test.mjs experiments/cpdb_org_world/splits.test.mjs experiments/cpdb_org_world/diagnose.test.mjs experiments/cpdb_org_world/ship.test.mjs experiments/cpdb_org_world/human_review.test.mjs src/shared/contracts/uBuddyCapabilityDependencyScorer.test.js",
     "cloud:test:organization-evolution": "node --test cloud/test/organization-evolution.test.mjs",
     "experiment:ubuddy:doctor": "node scripts/ubuddy_experiment.mjs doctor",
     "experiment:ubuddy:pilot": "node scripts/ubuddy_experiment.mjs pilot",
@@ -135,7 +135,10 @@
     "experiment:cpdb-contract:diagnose": "node experiments/cpdb_org_world/diagnose_contract.mjs",
     "experiment:cpdb-table": "python experiments/cpdb_org_world/train_scorer.py --fit-table",
     "experiment:cpdb-ship": "node experiments/cpdb_org_world/ship_bundle.mjs",
-    "experiment:cpdb-integration:test": "node --test src/shared/contracts/uBuddyCapabilityDependencyScorer.test.js src/shared/contracts/uBuddyCapabilityDependencyBundle.test.js"
+    "experiment:cpdb-integration:test": "node --test src/shared/contracts/uBuddyCapabilityDependencyScorer.test.js src/shared/contracts/uBuddyCapabilityDependencyBundle.test.js",
+    "experiment:cpdb-human-review": "node experiments/cpdb_org_world/export_human_review.mjs",
+    "experiment:cpdb-human-review:score": "node experiments/cpdb_org_world/score_human_review.mjs",
+    "experiment:cpdb-human-review:test": "node --test experiments/cpdb_org_world/human_review.test.mjs"
   },
   "keywords": [
     "janus",
