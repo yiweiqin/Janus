@@ -1,0 +1,729 @@
+{
+  "schema": "cpdb_scorer_table/v1",
+  "generatedAt": "2026-09-20T06:01:13Z",
+  "keyKind": "family_pair",
+  "keyFormat": "familyL>familyR（有向）",
+  "featureSpec": "cpdb_pair_features_v1",
+  "scale": [
+    0.0,
+    0.25,
+    0.5,
+    0.75,
+    1.0
+  ],
+  "cells": {
+    "research>writing": {
+      "dependency": [
+        0.0,
+        0.0,
+        0.083665,
+        0.868526,
+        0.047809
+      ],
+      "similarity": [
+        0.003984,
+        0.067729,
+        0.896414,
+        0.031873,
+        0.0
+      ]
+    },
+    "research>ppt": {
+      "dependency": [
+        0.0,
+        0.0,
+        0.35461,
+        0.64539,
+        0.0
+      ],
+      "similarity": [
+        0.0,
+        0.234043,
+        0.765957,
+        0.0,
+        0.0
+      ]
+    },
+    "research>review": {
+      "dependency": [
+        0.024,
+        0.0,
+        0.776,
+        0.2,
+        0.0
+      ],
+      "similarity": [
+        0.024,
+        0.768,
+        0.208,
+        0.0,
+        0.0
+      ]
+    },
+    "writing>research": {
+      "dependency": [
+        0.003891,
+        0.0,
+        0.731518,
+        0.264591,
+        0.0
+      ],
+      "similarity": [
+        0.003891,
+        0.346304,
+        0.649805,
+        0.0,
+        0.0
+      ]
+    },
+    "writing>ppt": {
+      "dependency": [
+        0.0,
+        0.0,
+        0.0,
+        0.954023,
+        0.045977
+      ],
+      "similarity": [
+        0.0,
+        0.0,
+        0.942529,
+        0.057471,
+        0.0
+      ]
+    },
+    "writing>review": {
+      "dependency": [
+        0.0,
+        0.0,
+        0.038168,
+        0.641221,
+        0.320611
+      ],
+      "similarity": [
+        0.030534,
+        0.068702,
+        0.793893,
+        0.10687,
+        0.0
+      ]
+    },
+    "writing>writing": {
+      "dependency": [
+        0.0,
+        0.0,
+        0.035168,
+        0.960245,
+        0.004587
+      ],
+      "similarity": [
+        0.0,
+        0.003058,
+        0.932722,
+        0.06422,
+        0.0
+      ]
+    },
+    "ppt>research": {
+      "dependency": [
+        0.035971,
+        0.0,
+        0.956835,
+        0.007194,
+        0.0
+      ],
+      "similarity": [
+        0.035971,
+        0.784173,
+        0.179856,
+        0.0,
+        0.0
+      ]
+    },
+    "ppt>writing": {
+      "dependency": [
+        0.0,
+        0.0,
+        0.778481,
+        0.221519,
+        0.0
+      ],
+      "similarity": [
+        0.0,
+        0.120253,
+        0.879747,
+        0.0,
+        0.0
+      ]
+    },
+    "ppt>review": {
+      "dependency": [
+        0.124069,
+        0.0,
+        0.801489,
+        0.074442,
+        0.0
+      ],
+      "similarity": [
+        0.124069,
+        0.779156,
+        0.096774,
+        0.0,
+        0.0
+      ]
+    },
+    "review>research": {
+      "dependency": [
+        0.473214,
+        0.0,
+        0.526786,
+        0.0,
+        0.0
+      ],
+      "similarity": [
+        0.473214,
+        0.392857,
+        0.133929,
+        0.0,
+        0.0
+      ]
+    },
+    "review>writing": {
+      "dependency": [
+        0.0,
+        0.0,
+        0.035806,
+        0.953964,
+        0.01023
+      ],
+      "similarity": [
+        0.0,
+        0.033248,
+        0.953964,
+        0.012788,
+        0.0
+      ]
+    },
+    "review>ppt": {
+      "dependency": [
+        0.318182,
+        0.0,
+        0.666667,
+        0.015152,
+        0.0
+      ],
+      "similarity": [
+        0.287879,
+        0.636364,
+        0.075758,
+        0.0,
+        0.0
+      ]
+    },
+    "research>data": {
+      "dependency": [
+        0.0,
+        0.0,
+        0.002894,
+        0.875543,
+        0.121563
+      ],
+      "similarity": [
+        0.0,
+        0.001447,
+        0.881331,
+        0.117221,
+        0.0
+      ]
+    },
+    "research>code": {
+      "dependency": [
+        0.912281,
+        0.0,
+        0.087719,
+        0.0,
+        0.0
+      ],
+      "similarity": [
+        0.921053,
+        0.078947,
+        0.0,
+        0.0,
+        0.0
+      ]
+    },
+    "research>research": {
+      "dependency": [
+        0.0,
+        0.0,
+        0.892361,
+        0.107639,
+        0.0
+      ],
+      "similarity": [
+        0.0,
+        0.111111,
+        0.888889,
+        0.0,
+        0.0
+      ]
+    },
+    "data>research": {
+      "dependency": [
+        0.012821,
+        0.0,
+        0.942308,
+        0.044872,
+        0.0
+      ],
+      "similarity": [
+        0.012821,
+        0.544872,
+        0.442308,
+        0.0,
+        0.0
+      ]
+    },
+    "data>writing": {
+      "dependency": [
+        0.033333,
+        0.0,
+        0.811111,
+        0.155556,
+        0.0
+      ],
+      "similarity": [
+        0.038889,
+        0.711111,
+        0.25,
+        0.0,
+        0.0
+      ]
+    },
+    "data>code": {
+      "dependency": [
+        0.87234,
+        0.0,
+        0.12766,
+        0.0,
+        0.0
+      ],
+      "similarity": [
+        0.87234,
+        0.12766,
+        0.0,
+        0.0,
+        0.0
+      ]
+    },
+    "writing>data": {
+      "dependency": [
+        0.0,
+        0.0,
+        0.555556,
+        0.438272,
+        0.006173
+      ],
+      "similarity": [
+        0.018519,
+        0.512346,
+        0.469136,
+        0.0,
+        0.0
+      ]
+    },
+    "writing>code": {
+      "dependency": [
+        0.141227,
+        0.0,
+        0.24679,
+        0.564907,
+        0.047076
+      ],
+      "similarity": [
+        0.435093,
+        0.216833,
+        0.313837,
+        0.034237,
+        0.0
+      ]
+    },
+    "code>research": {
+      "dependency": [
+        0.980583,
+        0.0,
+        0.019417,
+        0.0,
+        0.0
+      ],
+      "similarity": [
+        0.990291,
+        0.009709,
+        0.0,
+        0.0,
+        0.0
+      ]
+    },
+    "code>data": {
+      "dependency": [
+        0.649123,
+        0.0,
+        0.350877,
+        0.0,
+        0.0
+      ],
+      "similarity": [
+        0.649123,
+        0.333333,
+        0.017544,
+        0.0,
+        0.0
+      ]
+    },
+    "code>writing": {
+      "dependency": [
+        0.171171,
+        0.0,
+        0.738739,
+        0.09009,
+        0.0
+      ],
+      "similarity": [
+        0.171171,
+        0.612613,
+        0.216216,
+        0.0,
+        0.0
+      ]
+    },
+    "code>review": {
+      "dependency": [
+        0.0,
+        0.0,
+        0.633803,
+        0.366197,
+        0.0
+      ],
+      "similarity": [
+        0.0,
+        0.419014,
+        0.580986,
+        0.0,
+        0.0
+      ]
+    },
+    "code>code": {
+      "dependency": [
+        0.0,
+        0.0,
+        0.303571,
+        0.685714,
+        0.010714
+      ],
+      "similarity": [
+        0.0,
+        0.0,
+        0.989286,
+        0.003571,
+        0.007143
+      ]
+    },
+    "review>code": {
+      "dependency": [
+        0.0,
+        0.0,
+        0.981132,
+        0.018868,
+        0.0
+      ],
+      "similarity": [
+        0.0,
+        0.924528,
+        0.075472,
+        0.0,
+        0.0
+      ]
+    },
+    "ppt>data": {
+      "dependency": [
+        0.043956,
+        0.0,
+        0.934066,
+        0.021978,
+        0.0
+      ],
+      "similarity": [
+        0.043956,
+        0.923077,
+        0.032967,
+        0.0,
+        0.0
+      ]
+    },
+    "ppt>ppt": {
+      "dependency": [
+        0.0,
+        0.0,
+        0.254762,
+        0.745238,
+        0.0
+      ],
+      "similarity": [
+        0.0,
+        0.0,
+        0.997619,
+        0.002381,
+        0.0
+      ]
+    },
+    "data>ppt": {
+      "dependency": [
+        0.150685,
+        0.0,
+        0.703196,
+        0.146119,
+        0.0
+      ],
+      "similarity": [
+        0.150685,
+        0.694064,
+        0.155251,
+        0.0,
+        0.0
+      ]
+    },
+    "data>data": {
+      "dependency": [
+        0.0,
+        0.0,
+        0.479487,
+        0.520513,
+        0.0
+      ],
+      "similarity": [
+        0.0,
+        0.007692,
+        0.992308,
+        0.0,
+        0.0
+      ]
+    },
+    "data>review": {
+      "dependency": [
+        0.054545,
+        0.0,
+        0.927273,
+        0.018182,
+        0.0
+      ],
+      "similarity": [
+        0.054545,
+        0.927273,
+        0.018182,
+        0.0,
+        0.0
+      ]
+    },
+    "review>data": {
+      "dependency": [
+        0.12,
+        0.0,
+        0.88,
+        0.0,
+        0.0
+      ],
+      "similarity": [
+        0.12,
+        0.88,
+        0.0,
+        0.0,
+        0.0
+      ]
+    },
+    "review>review": {
+      "dependency": [
+        0.0,
+        0.0,
+        0.228125,
+        0.771875,
+        0.0
+      ],
+      "similarity": [
+        0.0,
+        0.021875,
+        0.978125,
+        0.0,
+        0.0
+      ]
+    },
+    "ppt>code": {
+      "dependency": [
+        0.826087,
+        0.0,
+        0.173913,
+        0.0,
+        0.0
+      ],
+      "similarity": [
+        0.869565,
+        0.130435,
+        0.0,
+        0.0,
+        0.0
+      ]
+    },
+    "code>ppt": {
+      "dependency": [
+        1.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "similarity": [
+        1.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ]
+    }
+  },
+  "prior": {
+    "dependency": [
+      0.076069,
+      0.0,
+      0.415359,
+      0.485631,
+      0.022941
+    ],
+    "similarity": [
+      0.10227,
+      0.24668,
+      0.628351,
+      0.022458,
+      0.000241
+    ]
+  },
+  "unseenFallback": "prior",
+  "foldMetrics": {
+    "org": {
+      "dependency": {
+        "mean": 0.7789,
+        "stdAcrossFolds": 0.0215,
+        "perFold": [
+          0.7409,
+          0.7815,
+          0.779,
+          0.8073,
+          0.7858
+        ]
+      },
+      "similarity": {
+        "mean": 0.7881,
+        "stdAcrossFolds": 0.0271,
+        "perFold": [
+          0.7409,
+          0.7875,
+          0.8083,
+          0.8199,
+          0.7837
+        ]
+      }
+    },
+    "facet_pair": {
+      "dependency": {
+        "mean": 0.7726,
+        "stdAcrossFolds": 0.042,
+        "perFold": [
+          0.79,
+          0.7894,
+          0.6908,
+          0.8104,
+          0.7826
+        ]
+      },
+      "similarity": {
+        "mean": 0.7921,
+        "stdAcrossFolds": 0.0264,
+        "perFold": [
+          0.8358,
+          0.7701,
+          0.7905,
+          0.7609,
+          0.8031
+        ]
+      }
+    },
+    "facet": {
+      "dependency": {
+        "mean": 0.7657,
+        "stdAcrossFolds": 0.0601,
+        "perFold": [
+          0.7264,
+          0.7985,
+          0.8191,
+          0.8182,
+          0.6665
+        ]
+      },
+      "similarity": {
+        "mean": 0.7816,
+        "stdAcrossFolds": 0.0444,
+        "perFold": [
+          0.7502,
+          0.8659,
+          0.7833,
+          0.743,
+          0.7657
+        ]
+      }
+    },
+    "family": {
+      "dependency": {
+        "mean": 0.3833,
+        "stdAcrossFolds": 0.0517,
+        "perFold": [
+          0.3165,
+          0.3909,
+          0.4425
+        ]
+      },
+      "similarity": {
+        "mean": 0.5899,
+        "stdAcrossFolds": 0.0242,
+        "perFold": [
+          0.6098,
+          0.6041,
+          0.5558
+        ]
+      }
+    }
+  },
+  "labelSource": {
+    "file": "data/full/ai_labels_qwen3_8b_v1.jsonl",
+    "annotators": [
+      "ai_judge_qwen3_8b_majority_v1/ai_judge"
+    ]
+  },
+  "provenance": {
+    "matrixDir": "train_out_ai",
+    "inputs": {
+      "data/full/agents.jsonl": "e20eb0fa3b57a3c57b3c672007b240a39071d3aad45217d8a869617aa53028e9",
+      "data/full/agent_profiles.jsonl": "2b83f78cdff1a4d7b0ccecf0b0ccf533308684ed03ef3bcf42aadb491ea43600",
+      "data/full/pairs.jsonl": "639bde6abb9f6c943d0ad208af41bb88224d7bbd4b7aea4fffca8b63827604ef",
+      "data/full/ai_labels_qwen3_8b_v1.jsonl": "7834ce42a7986f7b982af30b9170fa4d2d6739262a6a63bd3888ddbd31749cba"
+    },
+    "outputs": {
+      "train_out_ai/X.f32": "5758fbbd284532d7a9705d1c9b18054d9e922cd21e8e30059907f3a3aef44dae",
+      "train_out_ai/y_dependency.i8": "22203579ca8925b5fdc2bc4f0095f200395de99705f2e6e0d35478fd3e0ac1d9",
+      "train_out_ai/y_similarity.i8": "9a1fd6efaa287de0512475bc90eff728052a4bcf4f332f26acdff9050529b305",
+      "train_out_ai/rows.jsonl": "a8a4bff9654c2bd9daf19a34f4752f1cb6a7426623b10d5e0608f2ed133baf87",
+      "train_out_ai/folds.jsonl": "eca4a3ddea3b7150f816294f8de9ca0fa1eb7e34e214c27c21715140df12a15b",
+      "train_out_ai/labels.jsonl": "7eea62c3c194ccfca4cf4cd6dbe525595388e6b43061a4d1d0c61613f997ea50",
+      "train_out_ai/baselines.jsonl": "2f9da765ca6bc73353ef74bdd79726f5e4a01dac0e0c674d69b44fdb8b4d6607"
+    },
+    "rows": 8282
+  },
+  "note": "格里的值是从标签学来的类别分布，不是手写规则。未知 family 对回落到 prior（全局分布），因为回落到一个众数档会让「未知」与「确定」看起来一样自信。"
+}

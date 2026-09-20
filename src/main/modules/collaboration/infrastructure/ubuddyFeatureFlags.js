@@ -49,6 +49,19 @@ export const UBUDDY_FEATURE_FLAGS = Object.freeze({
   // 而不是"打开就开始改图"。这条区分很重要：读代码的人如果以为打开它就会改图，
   // 会去审查一个不存在的风险；而真正该审查的是影子度量有没有被绕过。
   planExecDriftApply: 'ubuddy_plan_exec_drift_apply',
+  // CPDB 打分器：用**学到的**分替换 `uBuddyCapabilityDependencyBundle` 的手写规则。
+  //
+  // 默认**关**，理由与 planExecDriftApply 同类：打开它会改变"规划时挑谁协作、失败后换谁"
+  // 的名次，也就是会改变协作图的形状。所以它守的是行为，不是投影。
+  //
+  // 打开之后发生的事是可枚举的：`scoredSelectCollaborators` / `scoredSelectReplacement`
+  // 走交付产物（`artifacts/cpdb-scorer-v3-ship`，默认是 36 格 family 表），
+  // 而 `describeScorerFallback` 会告诉你此刻到底走的是表、模型还是规则。
+  // 产物不在位时**不会**变成"所有分数为 0"——它回落到手写规则，可发现、可观测。
+  //
+  // 为什么不默认开：手写规则与学到的分**不是同一个函数**。它们在"同族一律压到 0"
+  // 这类地方差别很大（这正是学习想要修掉的那一点，也正是风险所在）。要换，得先看影子对比。
+  capabilityDependencyScorer: 'ubuddy_capability_dependency_scorer_v1',
 });
 
 const ENV_KEYS = Object.freeze({
@@ -75,6 +88,7 @@ const ENV_KEYS = Object.freeze({
   [UBUDDY_FEATURE_FLAGS.organizationEvolutionDecompositionV1]: 'JANUS_UBUDDY_ORGANIZATION_EVOLUTION_DECOMPOSITION_V1',
   [UBUDDY_FEATURE_FLAGS.planExecDrift]: 'JANUS_UBUDDY_PLAN_EXEC_DRIFT',
   [UBUDDY_FEATURE_FLAGS.planExecDriftApply]: 'JANUS_UBUDDY_PLAN_EXEC_DRIFT_APPLY',
+  [UBUDDY_FEATURE_FLAGS.capabilityDependencyScorer]: 'JANUS_UBUDDY_CAPABILITY_DEPENDENCY_SCORER_V1',
 });
 
 const LEGACY_ENV_KEYS = Object.freeze({
@@ -106,6 +120,9 @@ const SAFE_DEFAULT_OFF = new Set([
   // 不会改任何东西。默认关的严格程度与它守的东西无关，而与"这个开关的语义将来会不会变强"
   // 有关 —— 将来接上真动作时，这个默认值就是唯一的安全边界，所以现在就设成关。
   UBUDDY_FEATURE_FLAGS.planExecDriftApply,
+  // 打分器会改"挑谁协作 / 换谁"的名次，也就是会改变协作图的形状 —— 这个默认值
+  // 将来接上真动作时就是唯一的安全边界，所以现在就设成关。
+  UBUDDY_FEATURE_FLAGS.capabilityDependencyScorer,
 ]);
 const OPTIONAL_DEFAULT_OFF_FLAGS = new Set([
   UBUDDY_FEATURE_FLAGS.organizationEvolutionCollectV1,
@@ -178,6 +195,7 @@ export function createUBuddyFeatureFlagService({ store, env = process.env, isDev
     const organizationEvolutionDecompositionV1 = resolve(UBUDDY_FEATURE_FLAGS.organizationEvolutionDecompositionV1, context);
     const planExecDrift = resolve(UBUDDY_FEATURE_FLAGS.planExecDrift, context);
     const planExecDriftApply = resolve(UBUDDY_FEATURE_FLAGS.planExecDriftApply, context);
+    const capabilityDependencyScorer = resolve(UBUDDY_FEATURE_FLAGS.capabilityDependencyScorer, context);
     const organizationEvolutionConfigured = [
       organizationEvolutionCollectV1,
       organizationEvolutionApplyV1,
@@ -208,6 +226,7 @@ export function createUBuddyFeatureFlagService({ store, env = process.env, isDev
       recentWorkReportingV1: recentWorkReportingV1.enabled,
       planExecDrift: planExecDrift.enabled,
       planExecDriftApply: planExecDriftApply.enabled,
+      capabilityDependencyScorer: capabilityDependencyScorer.enabled,
       ...(organizationEvolutionConfigured ? {
         organizationEvolutionCollectV1: organizationEvolutionCollectV1.enabled,
         organizationEvolutionApplyV1: organizationEvolutionApplyV1.enabled,
@@ -237,8 +256,9 @@ export function createUBuddyFeatureFlagService({ store, env = process.env, isDev
         messageModeV1,
         continuousPlanningV1,
         recentWorkReportingV1,
-        planExecDrift,
-        planExecDriftApply,
+      planExecDrift,
+      planExecDriftApply,
+      capabilityDependencyScorer,
         ...(organizationEvolutionConfigured ? {
           organizationEvolutionCollectV1,
           organizationEvolutionApplyV1,

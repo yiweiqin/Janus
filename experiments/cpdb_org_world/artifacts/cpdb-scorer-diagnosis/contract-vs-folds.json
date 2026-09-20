@@ -1,0 +1,1037 @@
+[
+  {
+    "schema": "cpdb_contract_vs_folds/v1",
+    "labelName": "prelabel_v1",
+    "labelSource": {
+      "file": "data/full/human_labels.jsonl",
+      "annotators": [
+        "prelabel_v1/prelabel"
+      ]
+    },
+    "matrixDir": "train_out",
+    "notice": "?????????????????????????? 5 ????????????????????MAE ??????????????????",
+    "folds": {
+      "org": {
+        "k": 5,
+        "folds": [
+          {
+            "fold": 0,
+            "evalN": 1995,
+            "trainN": 6287,
+            "axes": {
+              "dependency": {
+                "n": 1995,
+                "quantizedExact": 0.7599,
+                "quantizedWithinOne": 0.9619,
+                "maeContinuous": 0.0796,
+                "majorityExact": 0.2932
+              },
+              "similarity": {
+                "n": 1995,
+                "quantizedExact": 0.6501,
+                "quantizedWithinOne": 1,
+                "maeContinuous": 0.0772,
+                "majorityExact": 0.8035
+              }
+            }
+          },
+          {
+            "fold": 1,
+            "evalN": 2320,
+            "trainN": 5962,
+            "axes": {
+              "dependency": {
+                "n": 2320,
+                "quantizedExact": 0.5642,
+                "quantizedWithinOne": 0.9039,
+                "maeContinuous": 0.1618,
+                "majorityExact": 0.5263
+              },
+              "similarity": {
+                "n": 2320,
+                "quantizedExact": 0.731,
+                "quantizedWithinOne": 1,
+                "maeContinuous": 0.0938,
+                "majorityExact": 0.7103
+              }
+            }
+          },
+          {
+            "fold": 2,
+            "evalN": 1570,
+            "trainN": 6712,
+            "axes": {
+              "dependency": {
+                "n": 1570,
+                "quantizedExact": 0.5911,
+                "quantizedWithinOne": 0.9217,
+                "maeContinuous": 0.1446,
+                "majorityExact": 0.5248
+              },
+              "similarity": {
+                "n": 1570,
+                "quantizedExact": 0.735,
+                "quantizedWithinOne": 1,
+                "maeContinuous": 0.0912,
+                "majorityExact": 0.7172
+              }
+            }
+          },
+          {
+            "fold": 3,
+            "evalN": 2315,
+            "trainN": 5967,
+            "axes": {
+              "dependency": {
+                "n": 2315,
+                "quantizedExact": 0.5922,
+                "quantizedWithinOne": 0.911,
+                "maeContinuous": 0.1505,
+                "majorityExact": 0.5244
+              },
+              "similarity": {
+                "n": 2315,
+                "quantizedExact": 0.7322,
+                "quantizedWithinOne": 1,
+                "maeContinuous": 0.0946,
+                "majorityExact": 0.714
+              }
+            }
+          },
+          {
+            "fold": 4,
+            "evalN": 2316,
+            "trainN": 5966,
+            "axes": {
+              "dependency": {
+                "n": 2316,
+                "quantizedExact": 0.5782,
+                "quantizedWithinOne": 0.9136,
+                "maeContinuous": 0.152,
+                "majorityExact": 0.5229
+              },
+              "similarity": {
+                "n": 2316,
+                "quantizedExact": 0.7392,
+                "quantizedWithinOne": 1,
+                "maeContinuous": 0.0914,
+                "majorityExact": 0.7064
+              }
+            }
+          }
+        ]
+      },
+      "facet_pair": {
+        "k": 5,
+        "folds": [
+          {
+            "fold": 0,
+            "evalN": 1657,
+            "trainN": 6625,
+            "axes": {
+              "dependency": {
+                "n": 1657,
+                "quantizedExact": 0.5951,
+                "quantizedWithinOne": 0.857,
+                "maeContinuous": 0.1579,
+                "majorityExact": 0.5667
+              },
+              "similarity": {
+                "n": 1657,
+                "quantizedExact": 0.7423,
+                "quantizedWithinOne": 1,
+                "maeContinuous": 0.0914,
+                "majorityExact": 0.6482
+              }
+            }
+          },
+          {
+            "fold": 1,
+            "evalN": 1657,
+            "trainN": 6625,
+            "axes": {
+              "dependency": {
+                "n": 1657,
+                "quantizedExact": 0.551,
+                "quantizedWithinOne": 0.9535,
+                "maeContinuous": 0.1371,
+                "majorityExact": 0.4967
+              },
+              "similarity": {
+                "n": 1657,
+                "quantizedExact": 0.7707,
+                "quantizedWithinOne": 1,
+                "maeContinuous": 0.0951,
+                "majorityExact": 0.688
+              }
+            }
+          },
+          {
+            "fold": 2,
+            "evalN": 1656,
+            "trainN": 6626,
+            "axes": {
+              "dependency": {
+                "n": 1656,
+                "quantizedExact": 0.6081,
+                "quantizedWithinOne": 0.9746,
+                "maeContinuous": 0.1086,
+                "majorityExact": 0.5036
+              },
+              "similarity": {
+                "n": 1656,
+                "quantizedExact": 0.7192,
+                "quantizedWithinOne": 1,
+                "maeContinuous": 0.1081,
+                "majorityExact": 0.6691
+              }
+            }
+          },
+          {
+            "fold": 3,
+            "evalN": 1656,
+            "trainN": 6626,
+            "axes": {
+              "dependency": {
+                "n": 1656,
+                "quantizedExact": 0.5851,
+                "quantizedWithinOne": 0.8835,
+                "maeContinuous": 0.1763,
+                "majorityExact": 0.4511
+              },
+              "similarity": {
+                "n": 1656,
+                "quantizedExact": 0.689,
+                "quantizedWithinOne": 1,
+                "maeContinuous": 0.0955,
+                "majorityExact": 0.7705
+              }
+            }
+          },
+          {
+            "fold": 4,
+            "evalN": 1656,
+            "trainN": 6626,
+            "axes": {
+              "dependency": {
+                "n": 1656,
+                "quantizedExact": 0.503,
+                "quantizedWithinOne": 0.8659,
+                "maeContinuous": 0.1958,
+                "majorityExact": 0.6117
+              },
+              "similarity": {
+                "n": 1656,
+                "quantizedExact": 0.8194,
+                "quantizedWithinOne": 1,
+                "maeContinuous": 0.0875,
+                "majorityExact": 0.6135
+              }
+            }
+          }
+        ]
+      },
+      "facet": {
+        "k": 5,
+        "folds": [
+          {
+            "fold": 0,
+            "evalN": 3103,
+            "trainN": 5179,
+            "axes": {
+              "dependency": {
+                "n": 3103,
+                "quantizedExact": 0.6075,
+                "quantizedWithinOne": 0.9778,
+                "maeContinuous": 0.1054,
+                "majorityExact": 0.553
+              },
+              "similarity": {
+                "n": 3103,
+                "quantizedExact": 0.8605,
+                "quantizedWithinOne": 1,
+                "maeContinuous": 0.0847,
+                "majorityExact": 0.6374
+              }
+            }
+          },
+          {
+            "fold": 1,
+            "evalN": 2997,
+            "trainN": 5285,
+            "axes": {
+              "dependency": {
+                "n": 2997,
+                "quantizedExact": 0.4398,
+                "quantizedWithinOne": 0.8589,
+                "maeContinuous": 0.1993,
+                "majorityExact": 0.5699
+              },
+              "similarity": {
+                "n": 2997,
+                "quantizedExact": 0.7891,
+                "quantizedWithinOne": 1,
+                "maeContinuous": 0.075,
+                "majorityExact": 0.67
+              }
+            }
+          },
+          {
+            "fold": 2,
+            "evalN": 3106,
+            "trainN": 5176,
+            "axes": {
+              "dependency": {
+                "n": 3106,
+                "quantizedExact": 0.6117,
+                "quantizedWithinOne": 0.8941,
+                "maeContinuous": 0.1554,
+                "majorityExact": 0.5299
+              },
+              "similarity": {
+                "n": 3106,
+                "quantizedExact": 0.7228,
+                "quantizedWithinOne": 1,
+                "maeContinuous": 0.1083,
+                "majorityExact": 0.6787
+              }
+            }
+          },
+          {
+            "fold": 3,
+            "evalN": 2899,
+            "trainN": 5383,
+            "axes": {
+              "dependency": {
+                "n": 2899,
+                "quantizedExact": 0.5478,
+                "quantizedWithinOne": 0.8137,
+                "maeContinuous": 0.2196,
+                "majorityExact": 0.5357
+              },
+              "similarity": {
+                "n": 2899,
+                "quantizedExact": 0.6309,
+                "quantizedWithinOne": 1,
+                "maeContinuous": 0.1176,
+                "majorityExact": 0.6654
+              }
+            }
+          },
+          {
+            "fold": 4,
+            "evalN": 3193,
+            "trainN": 5089,
+            "axes": {
+              "dependency": {
+                "n": 3193,
+                "quantizedExact": 0.6361,
+                "quantizedWithinOne": 0.9731,
+                "maeContinuous": 0.1122,
+                "majorityExact": 0.4309
+              },
+              "similarity": {
+                "n": 3193,
+                "quantizedExact": 0.7269,
+                "quantizedWithinOne": 1,
+                "maeContinuous": 0.0899,
+                "majorityExact": 0.751
+              }
+            }
+          }
+        ]
+      },
+      "family": {
+        "k": 3,
+        "folds": [
+          {
+            "fold": 0,
+            "evalN": 4328,
+            "trainN": 3954,
+            "axes": {
+              "dependency": {
+                "n": 4328,
+                "quantizedExact": 0.6691,
+                "quantizedWithinOne": 0.9614,
+                "maeContinuous": 0.1022,
+                "majorityExact": 0.4704
+              },
+              "similarity": {
+                "n": 4328,
+                "quantizedExact": 0.762,
+                "quantizedWithinOne": 1,
+                "maeContinuous": 0.0999,
+                "majorityExact": 0.7842
+              }
+            }
+          },
+          {
+            "fold": 1,
+            "evalN": 4236,
+            "trainN": 4046,
+            "axes": {
+              "dependency": {
+                "n": 4236,
+                "quantizedExact": 0.4655,
+                "quantizedWithinOne": 0.8305,
+                "maeContinuous": 0.2188,
+                "majorityExact": 0.5269
+              },
+              "similarity": {
+                "n": 4236,
+                "quantizedExact": 0.6308,
+                "quantizedWithinOne": 1,
+                "maeContinuous": 0.0985,
+                "majorityExact": 0.7583
+              }
+            }
+          },
+          {
+            "fold": 2,
+            "evalN": 4163,
+            "trainN": 4119,
+            "axes": {
+              "dependency": {
+                "n": 4163,
+                "quantizedExact": 0.5976,
+                "quantizedWithinOne": 0.9805,
+                "maeContinuous": 0.1252,
+                "majorityExact": 0.3613
+              },
+              "similarity": {
+                "n": 4163,
+                "quantizedExact": 0.6209,
+                "quantizedWithinOne": 1,
+                "maeContinuous": 0.1162,
+                "majorityExact": 0.8227
+              }
+            }
+          }
+        ]
+      }
+    },
+    "byFamilyMatch": {
+      "org": {
+        "sameFamily": {
+          "n": 2822,
+          "quantizedExact": 0.3753,
+          "quantizedWithinOne": 0.7955,
+          "maeContinuous": 0.2379
+        },
+        "crossFamily": {
+          "n": 7694,
+          "quantizedExact": 0.7024,
+          "quantizedWithinOne": 0.9674,
+          "maeContinuous": 0.1027
+        },
+        "sameFamilyShare": 0.2684
+      },
+      "facet_pair": {
+        "sameFamily": {
+          "n": 2640,
+          "quantizedExact": 0.3955,
+          "quantizedWithinOne": 0.7818,
+          "maeContinuous": 0.2398
+        },
+        "crossFamily": {
+          "n": 5642,
+          "quantizedExact": 0.6494,
+          "quantizedWithinOne": 0.9654,
+          "maeContinuous": 0.1155
+        },
+        "sameFamilyShare": 0.3188
+      },
+      "facet": {
+        "sameFamily": {
+          "n": 4821,
+          "quantizedExact": 0.3993,
+          "quantizedWithinOne": 0.7781,
+          "maeContinuous": 0.2447
+        },
+        "crossFamily": {
+          "n": 10477,
+          "quantizedExact": 0.6488,
+          "quantizedWithinOne": 0.964,
+          "maeContinuous": 0.1167
+        },
+        "sameFamilyShare": 0.3151
+      },
+      "family": {
+        "sameFamily": {
+          "n": 2640,
+          "quantizedExact": 0.3955,
+          "quantizedWithinOne": 0.7818,
+          "maeContinuous": 0.2398
+        },
+        "crossFamily": {
+          "n": 10087,
+          "quantizedExact": 0.6258,
+          "quantizedWithinOne": 0.9613,
+          "maeContinuous": 0.1246
+        },
+        "sameFamilyShare": 0.2074
+      }
+    },
+    "inputs": {
+      "folds.jsonl": "eca4a3ddea3b7150f816294f8de9ca0fa1eb7e34e214c27c21715140df12a15b",
+      "labels.jsonl": "5792cf1e005200688e2dd3cc2348bacda1ec71df3033ab9d7acadbd4b0ab2401",
+      "baselines.jsonl": "2f9da765ca6bc73353ef74bdd79726f5e4a01dac0e0c674d69b44fdb8b4d6607"
+    },
+    "agreement": {
+      "dependency": {
+        "pearson": 0.7607,
+        "spearman": 0.6962,
+        "contractMean": 0.3931,
+        "labelMean": 0.2968,
+        "contractHistogram": {
+          "0": 2087,
+          "1": 1983,
+          "0.75": 413,
+          "0.5": 256,
+          "0.25": 3543
+        },
+        "labelHistogram": {
+          "0": 4356,
+          "1": 1392,
+          "0.75": 392,
+          "0.25": 1194,
+          "0.5": 948
+        }
+      },
+      "similarity": {
+        "pearson": 0.9656,
+        "spearman": 0.8204,
+        "contractMean": 0.3336,
+        "labelMean": 0.2399,
+        "contractHistogram": {
+          "0": 3528,
+          "0.25": 2114,
+          "0.75": 2640
+        },
+        "labelHistogram": {
+          "0": 5614,
+          "0.75": 2640,
+          "0.25": 28
+        }
+      }
+    }
+  },
+  {
+    "schema": "cpdb_contract_vs_folds/v1",
+    "labelName": "ai_judge_qwen3_8b_majority_v1",
+    "labelSource": {
+      "file": "data/full/ai_labels_qwen3_8b_v1.jsonl",
+      "annotators": [
+        "ai_judge_qwen3_8b_majority_v1/ai_judge"
+      ]
+    },
+    "matrixDir": "train_out_ai",
+    "notice": "?????????????????????????? 5 ????????????????????MAE ??????????????????",
+    "folds": {
+      "org": {
+        "k": 5,
+        "folds": [
+          {
+            "fold": 0,
+            "evalN": 1995,
+            "trainN": 6287,
+            "axes": {
+              "dependency": {
+                "n": 1995,
+                "quantizedExact": 0.0712,
+                "quantizedWithinOne": 0.6301,
+                "maeContinuous": 0.3656,
+                "majorityExact": 0.2586
+              },
+              "similarity": {
+                "n": 1995,
+                "quantizedExact": 0.1965,
+                "quantizedWithinOne": 0.8216,
+                "maeContinuous": 0.2814,
+                "majorityExact": 0.614
+              }
+            }
+          },
+          {
+            "fold": 1,
+            "evalN": 2320,
+            "trainN": 5962,
+            "axes": {
+              "dependency": {
+                "n": 2320,
+                "quantizedExact": 0.0892,
+                "quantizedWithinOne": 0.4901,
+                "maeContinuous": 0.3955,
+                "majorityExact": 0.4716
+              },
+              "similarity": {
+                "n": 2320,
+                "quantizedExact": 0.1638,
+                "quantizedWithinOne": 0.8353,
+                "maeContinuous": 0.2758,
+                "majorityExact": 0.6125
+              }
+            }
+          },
+          {
+            "fold": 2,
+            "evalN": 1570,
+            "trainN": 6712,
+            "axes": {
+              "dependency": {
+                "n": 1570,
+                "quantizedExact": 0.0841,
+                "quantizedWithinOne": 0.4828,
+                "maeContinuous": 0.4051,
+                "majorityExact": 0.4752
+              },
+              "similarity": {
+                "n": 1570,
+                "quantizedExact": 0.1561,
+                "quantizedWithinOne": 0.8503,
+                "maeContinuous": 0.2714,
+                "majorityExact": 0.6051
+              }
+            }
+          },
+          {
+            "fold": 3,
+            "evalN": 2315,
+            "trainN": 5967,
+            "axes": {
+              "dependency": {
+                "n": 2315,
+                "quantizedExact": 0.0847,
+                "quantizedWithinOne": 0.5158,
+                "maeContinuous": 0.3873,
+                "majorityExact": 0.4536
+              },
+              "similarity": {
+                "n": 2315,
+                "quantizedExact": 0.1568,
+                "quantizedWithinOne": 0.8531,
+                "maeContinuous": 0.2728,
+                "majorityExact": 0.5952
+              }
+            }
+          },
+          {
+            "fold": 4,
+            "evalN": 2316,
+            "trainN": 5966,
+            "axes": {
+              "dependency": {
+                "n": 2316,
+                "quantizedExact": 0.0825,
+                "quantizedWithinOne": 0.4763,
+                "maeContinuous": 0.4037,
+                "majorityExact": 0.4775
+              },
+              "similarity": {
+                "n": 2316,
+                "quantizedExact": 0.1408,
+                "quantizedWithinOne": 0.8204,
+                "maeContinuous": 0.2852,
+                "majorityExact": 0.617
+              }
+            }
+          }
+        ]
+      },
+      "facet_pair": {
+        "k": 5,
+        "folds": [
+          {
+            "fold": 0,
+            "evalN": 1657,
+            "trainN": 6625,
+            "axes": {
+              "dependency": {
+                "n": 1657,
+                "quantizedExact": 0.105,
+                "quantizedWithinOne": 0.5576,
+                "maeContinuous": 0.3844,
+                "majorityExact": 0.44
+              },
+              "similarity": {
+                "n": 1657,
+                "quantizedExact": 0.1509,
+                "quantizedWithinOne": 0.86,
+                "maeContinuous": 0.2813,
+                "majorityExact": 0.6403
+              }
+            }
+          },
+          {
+            "fold": 1,
+            "evalN": 1657,
+            "trainN": 6625,
+            "axes": {
+              "dependency": {
+                "n": 1657,
+                "quantizedExact": 0.1074,
+                "quantizedWithinOne": 0.4852,
+                "maeContinuous": 0.3881,
+                "majorityExact": 0.49
+              },
+              "similarity": {
+                "n": 1657,
+                "quantizedExact": 0.166,
+                "quantizedWithinOne": 0.8829,
+                "maeContinuous": 0.2548,
+                "majorityExact": 0.5588
+              }
+            }
+          },
+          {
+            "fold": 2,
+            "evalN": 1656,
+            "trainN": 6626,
+            "axes": {
+              "dependency": {
+                "n": 1656,
+                "quantizedExact": 0.0767,
+                "quantizedWithinOne": 0.4149,
+                "maeContinuous": 0.4427,
+                "majorityExact": 0.5344
+              },
+              "similarity": {
+                "n": 1656,
+                "quantizedExact": 0.1612,
+                "quantizedWithinOne": 0.8388,
+                "maeContinuous": 0.2831,
+                "majorityExact": 0.6661
+              }
+            }
+          },
+          {
+            "fold": 3,
+            "evalN": 1656,
+            "trainN": 6626,
+            "axes": {
+              "dependency": {
+                "n": 1656,
+                "quantizedExact": 0.0628,
+                "quantizedWithinOne": 0.5187,
+                "maeContinuous": 0.3762,
+                "majorityExact": 0.5109
+              },
+              "similarity": {
+                "n": 1656,
+                "quantizedExact": 0.1075,
+                "quantizedWithinOne": 0.7711,
+                "maeContinuous": 0.3043,
+                "majorityExact": 0.6636
+              }
+            }
+          },
+          {
+            "fold": 4,
+            "evalN": 1656,
+            "trainN": 6626,
+            "axes": {
+              "dependency": {
+                "n": 1656,
+                "quantizedExact": 0.0441,
+                "quantizedWithinOne": 0.4499,
+                "maeContinuous": 0.4297,
+                "majorityExact": 0.4529
+              },
+              "similarity": {
+                "n": 1656,
+                "quantizedExact": 0.1274,
+                "quantizedWithinOne": 0.8527,
+                "maeContinuous": 0.2779,
+                "majorityExact": 0.6129
+              }
+            }
+          }
+        ]
+      },
+      "facet": {
+        "k": 5,
+        "folds": [
+          {
+            "fold": 0,
+            "evalN": 3103,
+            "trainN": 5179,
+            "axes": {
+              "dependency": {
+                "n": 3103,
+                "quantizedExact": 0.0519,
+                "quantizedWithinOne": 0.3893,
+                "maeContinuous": 0.4519,
+                "majorityExact": 0.5198
+              },
+              "similarity": {
+                "n": 3103,
+                "quantizedExact": 0.1627,
+                "quantizedWithinOne": 0.8379,
+                "maeContinuous": 0.2791,
+                "majorityExact": 0.6113
+              }
+            }
+          },
+          {
+            "fold": 1,
+            "evalN": 2997,
+            "trainN": 5285,
+            "axes": {
+              "dependency": {
+                "n": 2997,
+                "quantizedExact": 0.0591,
+                "quantizedWithinOne": 0.5666,
+                "maeContinuous": 0.3769,
+                "majorityExact": 0.4071
+              },
+              "similarity": {
+                "n": 2997,
+                "quantizedExact": 0.1141,
+                "quantizedWithinOne": 0.8552,
+                "maeContinuous": 0.285,
+                "majorityExact": 0.6303
+              }
+            }
+          },
+          {
+            "fold": 2,
+            "evalN": 3106,
+            "trainN": 5176,
+            "axes": {
+              "dependency": {
+                "n": 3106,
+                "quantizedExact": 0.0769,
+                "quantizedWithinOne": 0.4066,
+                "maeContinuous": 0.4395,
+                "majorityExact": 0.3593
+              },
+              "similarity": {
+                "n": 3106,
+                "quantizedExact": 0.1417,
+                "quantizedWithinOne": 0.8258,
+                "maeContinuous": 0.2809,
+                "majorityExact": 0.6693
+              }
+            }
+          },
+          {
+            "fold": 3,
+            "evalN": 2899,
+            "trainN": 5383,
+            "axes": {
+              "dependency": {
+                "n": 2899,
+                "quantizedExact": 0.1338,
+                "quantizedWithinOne": 0.535,
+                "maeContinuous": 0.361,
+                "majorityExact": 0.4915
+              },
+              "similarity": {
+                "n": 2899,
+                "quantizedExact": 0.1156,
+                "quantizedWithinOne": 0.7975,
+                "maeContinuous": 0.2974,
+                "majorityExact": 0.6871
+              }
+            }
+          },
+          {
+            "fold": 4,
+            "evalN": 3193,
+            "trainN": 5089,
+            "axes": {
+              "dependency": {
+                "n": 3193,
+                "quantizedExact": 0.0761,
+                "quantizedWithinOne": 0.5402,
+                "maeContinuous": 0.387,
+                "majorityExact": 0.4479
+              },
+              "similarity": {
+                "n": 3193,
+                "quantizedExact": 0.1657,
+                "quantizedWithinOne": 0.8631,
+                "maeContinuous": 0.267,
+                "majorityExact": 0.5622
+              }
+            }
+          }
+        ]
+      },
+      "family": {
+        "k": 3,
+        "folds": [
+          {
+            "fold": 0,
+            "evalN": 4328,
+            "trainN": 3954,
+            "axes": {
+              "dependency": {
+                "n": 4328,
+                "quantizedExact": 0.0823,
+                "quantizedWithinOne": 0.3588,
+                "maeContinuous": 0.4622,
+                "majorityExact": 0.3165
+              },
+              "similarity": {
+                "n": 4328,
+                "quantizedExact": 0.1927,
+                "quantizedWithinOne": 0.7814,
+                "maeContinuous": 0.2686,
+                "majorityExact": 0.6098
+              }
+            }
+          },
+          {
+            "fold": 1,
+            "evalN": 4236,
+            "trainN": 4046,
+            "axes": {
+              "dependency": {
+                "n": 4236,
+                "quantizedExact": 0.1228,
+                "quantizedWithinOne": 0.6542,
+                "maeContinuous": 0.3304,
+                "majorityExact": 0.3909
+              },
+              "similarity": {
+                "n": 4236,
+                "quantizedExact": 0.1624,
+                "quantizedWithinOne": 0.8395,
+                "maeContinuous": 0.2782,
+                "majorityExact": 0.6041
+              }
+            }
+          },
+          {
+            "fold": 2,
+            "evalN": 4163,
+            "trainN": 4119,
+            "axes": {
+              "dependency": {
+                "n": 4163,
+                "quantizedExact": 0.0651,
+                "quantizedWithinOne": 0.5804,
+                "maeContinuous": 0.348,
+                "majorityExact": 0.4425
+              },
+              "similarity": {
+                "n": 4163,
+                "quantizedExact": 0.11,
+                "quantizedWithinOne": 0.8732,
+                "maeContinuous": 0.266,
+                "majorityExact": 0.5558
+              }
+            }
+          }
+        ]
+      }
+    },
+    "byFamilyMatch": {
+      "org": {
+        "sameFamily": {
+          "n": 2822,
+          "quantizedExact": 0.0365,
+          "quantizedWithinOne": 0.2459,
+          "maeContinuous": 0.5151
+        },
+        "crossFamily": {
+          "n": 7694,
+          "quantizedExact": 0.0994,
+          "quantizedWithinOne": 0.618,
+          "maeContinuous": 0.3458
+        },
+        "sameFamilyShare": 0.2684
+      },
+      "facet_pair": {
+        "sameFamily": {
+          "n": 2640,
+          "quantizedExact": 0.039,
+          "quantizedWithinOne": 0.2481,
+          "maeContinuous": 0.5171
+        },
+        "crossFamily": {
+          "n": 5642,
+          "quantizedExact": 0.098,
+          "quantizedWithinOne": 0.5962,
+          "maeContinuous": 0.3514
+        },
+        "sameFamilyShare": 0.3188
+      },
+      "facet": {
+        "sameFamily": {
+          "n": 4821,
+          "quantizedExact": 0.0427,
+          "quantizedWithinOne": 0.2477,
+          "maeContinuous": 0.5157
+        },
+        "crossFamily": {
+          "n": 10477,
+          "quantizedExact": 0.0956,
+          "quantizedWithinOne": 0.5966,
+          "maeContinuous": 0.3525
+        },
+        "sameFamilyShare": 0.3151
+      },
+      "family": {
+        "sameFamily": {
+          "n": 2640,
+          "quantizedExact": 0.039,
+          "quantizedWithinOne": 0.2481,
+          "maeContinuous": 0.5171
+        },
+        "crossFamily": {
+          "n": 10087,
+          "quantizedExact": 0.1035,
+          "quantizedWithinOne": 0.6033,
+          "maeContinuous": 0.3454
+        },
+        "sameFamilyShare": 0.2074
+      }
+    },
+    "inputs": {
+      "folds.jsonl": "eca4a3ddea3b7150f816294f8de9ca0fa1eb7e34e214c27c21715140df12a15b",
+      "labels.jsonl": "7eea62c3c194ccfca4cf4cd6dbe525595388e6b43061a4d1d0c61613f997ea50",
+      "baselines.jsonl": "2f9da765ca6bc73353ef74bdd79726f5e4a01dac0e0c674d69b44fdb8b4d6607"
+    },
+    "agreement": {
+      "dependency": {
+        "pearson": 0.0908,
+        "spearman": 0.099,
+        "contractMean": 0.3931,
+        "labelMean": 0.5948,
+        "contractHistogram": {
+          "0": 2087,
+          "1": 1983,
+          "0.75": 413,
+          "0.5": 256,
+          "0.25": 3543
+        },
+        "labelHistogram": {
+          "0": 630,
+          "1": 190,
+          "0.5": 3440,
+          "0.75": 4022
+        }
+      },
+      "similarity": {
+        "pearson": 0.4918,
+        "spearman": 0.5723,
+        "contractMean": 0.3336,
+        "labelMean": 0.3929,
+        "contractHistogram": {
+          "0": 3528,
+          "0.25": 2114,
+          "0.75": 2640
+        },
+        "labelHistogram": {
+          "0": 847,
+          "1": 2,
+          "0.25": 2043,
+          "0.5": 5204,
+          "0.75": 186
+        }
+      }
+    }
+  }
+]

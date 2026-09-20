@@ -6,11 +6,14 @@ import { fileURLToPath } from 'node:url';
 import { stepIndex } from './export_training_matrix.mjs';
 import {
   CPDB_FEATURE_SPEC_VERSION,
+  CPDB_FEATURE_VARIANT_NAMES,
   buildVocab,
   featureDimension,
   featureNames,
+  featureVariantColumns,
   normalizeAgentView,
   pairFeatures,
+  selectFeatureColumns,
 } from './lib/features.mjs';
 
 const ROOT = dirname(fileURLToPath(import.meta.url));
@@ -154,4 +157,67 @@ test('标签只在标尺上才收，落不到档位的一律拒绝而不是四�
   for (const value of [0.6, 0.1, 1.5, -0.25, Number.NaN, null, '0.5', undefined]) {
     assert.equal(stepIndex(value), -1, `${value} 应该被拒绝`);
   }
+});
+
+/**
+ * 特征变体这一层是诊断轮的关键承重件，所以它自己也要有闸。
+ *
+ * 它坏掉的方式很安静：`columns` 少一列、多一列、顺序变了，训练照样跑完，
+ * 指标照样出来 —— 只是那个指标已经不是你打算测的东西了。留出 facet 的折尤其危险：
+ * 只要 `no_identity` 漏回一列 `facet_l=`，那一格就又被"角色名"喂饱，
+ * 于是结论会从「内容里有信号」翻成「模型在记角色」而没人察觉。
+ */
+test('每个特征变体的列都落在特征维度内，且不含角色恒等列以外的越界', () => {
+  const names = featureNames(vocab);
+  for (const variant of CPDB_FEATURE_VARIANT_NAMES) {
+    const columns = featureVariantColumns(vocab, variant);
+    assert.ok(columns.length > 0, `${variant} 是空列集`);
+    assert.equal(new Set(columns).size, columns.length, `${variant} 的列下标有重复`);
+    assert.deepEqual(columns, [...columns].sort((a, b) => a - b), `${variant} 的列下标没有升序`);
+    for (const at of columns) {
+      assert.ok(at >= 0 && at < names.length, `${variant} 的列下标 ${at} 越界`);
+    }
+  }
+  assert.deepEqual(featureVariantColumns(vocab, 'full'), names.map((_, at) => at));
+});
+
+test('no_identity / content_only 里一列角色恒等列都不许剩', () => {
+  const names = featureNames(vocab);
+  for (const variant of ['no_identity', 'content_only']) {
+    const kept = featureVariantColumns(vocab, variant).map((at) => names[at]);
+    const identity = kept.filter((name) => /^(family|facet)_[lr]=/.test(name));
+    assert.deepEqual(identity, [], `${variant} 里残留了角色恒等列：${identity.slice(0, 5).join(',')}`);
+  }
+  // `content_only` 比 `no_identity` 再少掉 6 个 `same_*` 标志，这一个差值就是
+  // 「same_facet / same_family 有没有独自承担全部信号」这个问题的全部预算。
+  const noIdentity = featureVariantColumns(vocab, 'no_identity');
+  const contentOnly = featureVariantColumns(vocab, 'content_only');
+  const difference = noIdentity.filter((at) => !contentOnly.includes(at));
+  assert.equal(difference.length, 6, `两个变体应当只差 6 个 same_* 标志，实际差 ${difference.length} 列`);
+  assert.ok(
+    difference.every((at) => names[at].startsWith('same_')),
+    '两个变体之间差的列不全是 same_* 标志',
+  );
+});
+
+test('按变体裁列得到的向量与逐列取值的口径一致', () => {
+  // 训练侧用 `columns` 去切矩阵，推理侧用 `selectFeatureColumns` 去切向量。
+  // 两处只要口径不一致，线上分数就会与离线指标对不上，而且不会报错。
+  const pair = pairs[0];
+  const feature = pairFeatures(viewsById.get(pair.leftAgentId), viewsById.get(pair.rightAgentId), vocab);
+  for (const variant of CPDB_FEATURE_VARIANT_NAMES) {
+    const columns = featureVariantColumns(vocab, variant);
+    assert.deepEqual(
+      selectFeatureColumns(feature, columns),
+      columns.map((at) => feature[at]),
+      `${variant} 的裁列口径与逐列取值不一致`,
+    );
+  }
+});
+
+test('未知变体名直接抛错，不静默回落到 full', () => {
+  // 静默回落会让 `--feature-variant no_identiy`（打错一个字母）跑出一份 full 的结果，
+  // 而报告上写的却是 no_identity —— 这正好是最难发现的那类错误。
+  assert.throws(() => featureVariantColumns(vocab, 'no_identiy'), /cpdb_feature_variant_unknown/);
+  assert.throws(() => featureVariantColumns(vocab, ''), /cpdb_feature_variant_unknown/);
 });

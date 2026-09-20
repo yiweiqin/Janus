@@ -1,4 +1,4 @@
-.DS_Store
+﻿.DS_Store
 assets/.DS_Store
 experiments/runs/
 assets/.DS_Store
@@ -104,6 +104,14 @@ experiments/cpdb_org_world/train_out_ai/*
 #    三者合计约 5MB，且都是"当时那一次"的结果，不是中间量。
 #    例外：`artifacts/_*` 是冒烟跑出来的草稿（`_smoke`），不是交付物，不进库。
 experiments/cpdb_org_world/artifacts/_*/
+# 7. `exports/cpdb-training-set-v1/` **不进库**，与第 2 条的 `export/ai-judge-v1/` 同类：
+#    它是**发出去**的交付包（X.f32 3MB + folds 1.9MB + rows 0.9MB + labels 0.6MB），
+#    里面每一份都是 `export_training_matrix.mjs` 从「世界 + 标签 + features」重跑即得的派生量。
+#    要钉住的是 `artifacts/cpdb-scorer-v3-ship/manifest.json` 里那串逐文件 sha256 ——
+#    那正是它存在的意义：证明"你复现的就是我交付的"。包本身可以随时重建：
+#      `npm run experiment:cpdb-matrix` → `npm run experiment:cpdb-ship`
+#    注意 `ship.test.mjs` 会在缺包时**跳过并说明怎么重建**，不会把"包不在"变成假失败。
+experiments/cpdb_org_world/exports/
 #
 # 注：`.gitignore` 不允许「父目录被忽略、子文件再放行」，所以上面用的是逐个放行的写法。
 

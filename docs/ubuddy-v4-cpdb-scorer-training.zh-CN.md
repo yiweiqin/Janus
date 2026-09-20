@@ -1,16 +1,30 @@
-# V4 方案二：CPDB 打分器训练报告（v1-teacher / v2-aijudge）
+﻿# V4 方案二：CPDB 打分器训练报告（v1-teacher / v2-aijudge）
+
+> **⚠️ 这份报告是"训练过程"的记录，不是"效果"的结论。它的两个 0.87/0.86 都是同分布内的插值，
+> 不是泛化 —— 那份 799 条的 test 里有 99.0% 落在训练见过的 `(facetL, facetR)` 上。
+> 泛化口径、四条判据与最终裁决见 [`ubuddy-v4-cpdb-scorer-diagnosis.zh-CN.md`](./ubuddy-v4-cpdb-scorer-diagnosis.zh-CN.md)。
+> 结论是：MLP 不被证实，**交付的是 36 格 family 表**；而这一轮真正的发现是
+> **标签选择的分量远大于模型选择**。本文件里凡出现"测试集 0.87"的地方，请按上面那条读。**
 
 > 配套代码：`experiments/cpdb_org_world/{lib/features.mjs, export_training_matrix.mjs, train_scorer.py, judge_with_local_llm.py, scorer.mjs}`
-> 配套产物：`experiments/cpdb_org_world/artifacts/cpdb-scorer-{v1-teacher,v2-aijudge}/`
+> 配套产物：`experiments/cpdb_org_world/artifacts/cpdb-scorer-{v1-teacher,v2-aijudge}/`；
+> **交付产物**在 `artifacts/cpdb-scorer-v3-ship/`（表 + 模型 + manifest）
 > 协议见 `docs/ubuddy-v4-cpdb-protocol.zh-CN.md`（依赖分与相似度必须分开，禁止合成总分）。
+
+> 代码位置变更：特征与打分器前向**已搬到** `src/shared/contracts/uBuddyCapabilityPairFeatures.js`
+> 与 `src/shared/contracts/uBuddyCapabilityDependencyScorer.js`（调用方是应用，而 `experiments/`
+> 不进安装包）。本目录下的 `lib/features.mjs` / `scorer.mjs` 只剩一行 `export *` 转发，实现只有一份。
 
 ## 一句话结论
 
 两个版本都训出来了、都能在 JS 侧逐条复现。**它们的意义完全不同**：
 
 - `v1-teacher` 拿到测试集 **100% 同档**。这不是「学会了」，是**复述了一条确定性规则** —— 它的价值在于证明特征集足够还原规则，不能当成绩。
-- `v2-aijudge` 拿到测试集 **依赖 87.0% / 相似 85.7% 同档**，同时手写契约在同批标签上只有 **9.4% / 13.5%**。
-  也就是说：**AI 判出来的那套打法和仓库里现在 shipped 的规则不是一回事，而且它可以被画像学出来。**
+- `v2-aijudge` 拿到测试集 **依赖 87.0% / 相似 85.7% 同档**。**这个数后来被证实是插值，不是泛化**
+  （99.0% 的 test pair 落在训练见过的 facet 对上；换成留出整个角色的 `facet` 折后，
+  同样特征的 MLP 掉到 0.7332/0.7477，而一张 36 格的 family 表是 0.7657/0.7816）。
+  仍然成立的结论只有一半：AI 判出来的打法与仓库里 shipped 的规则**确实不是一回事**；
+  但**它并没有被画像"学出来"到此为止** —— 能被学出来的那部分，粗到一个 36 格的表就能吃掉。
 
 顺带一个必须在报告里写明的边界：**这套标签是「一次判决」，不是「标准答案」**。同一模型换一种问法，
 两轴一致性只有 qwk 0.242/0.382；只有把问法钉死，它才稳（qwk 0.924/0.910）。详见「标签的底子」。
@@ -48,6 +62,11 @@ capabilityTags 等）。按名字分 6 块（有 3 列重叠，故合计 95 > 92
 
 ## 三、测试集（799 条）
 
+> **这一节的数字是同分布内的插值，不是泛化。** 那份 `test` 按 `orgId` 切，挡住了组织但没挡住角色：
+> 其中 **99.0%** 的 pair 落在训练见过的 `(facetL, facetR)` 上，**79%** 的 Agent 在训练集里出现过。
+> 表里的"模型 同档"因此应当读作"模型在见过的角色组合上插值插得多准"。
+> 泛化口径（留出整个角色 / 整个职能）见诊断页第四节；结论是 MLP 不被证实，交付 36 格表。
+
 模型 vs 两个基线。基线是「在同一批标签上，不用模型能拿到多少」：
 
 | 版本 | 轴 | 模型 同档 | 模型 ±1 档 | 多数类 同档 | 手写契约 同档 | 契约 ±1 档 |
@@ -67,6 +86,19 @@ capabilityTags 等）。按名字分 6 块（有 3 列重叠，故合计 95 > 92
    主要来源在 `same_family` 这一类：teacher 规则把同族 pair 的依赖分**一律压成 0**
    （视作替代品，不是协作者），而 AI 判分面对同样的画像会给出 0.75 —— 它读的是画像描述，
    不是族标签。这是本报告最重要的一个结构差异。
+
+   **这个结构差异后来在四种折上被重新量了一遍**（`diagnose_contract.mjs` → `contract-vs-folds.json`），
+   因为是同分布内的数，所以两件事同时被看清了：
+
+   | 标签 | 折 | 契约 依赖 同档 | 众数 | 契约 相似 同档 | 众数 |
+   |---|---|---:|---:|---:|---:|
+   | `prelabel_v1` | `facet` | 0.5686 | 0.5239 | 0.7460 | 0.6805 |
+   | **`ai_judge_qwen3_8b_majority_v1`** | `facet` | **0.0796** | 0.4451 | **0.1400** | 0.6320 |
+
+   契约在**它自己的标签**上略胜众数，在 **AI 标签上远低于众数** ——
+   所以"0.094/0.135"不是"契约不准"，是"契约和 AI 判分判的不是同一件事"。
+   这也是为什么诊断页的结论把重点放在**用哪套标签**，而不是用哪个模型。
+   同一批 AI 标签、同一个折上，一张 36 格 family 表是 **0.7657 / 0.7816**。
 
 ### 逐类拆解（v2-aijudge）
 
@@ -177,10 +209,20 @@ vocab、标准化参数全部写进产物，而不是让 JS 侧靠 `trunk.0 / tr
 **还没做的（不要当成已完成）**：
 
 1. **没接进规划路径。** `selectCollaborators` / `selectReplacement` 目前仍走契约里的手写函数。
-   把 `argmax S` 换成模型分、并补替换实验的对照，是下一步的事。
-2. **没做人评。** 目前只有 AI 标签与规则标签两套政策，谁更对**没有证据**。
-   两套政策在 `same_family` 上系统性分歧，这正是一个可以拿几个人去问的具体问题。
+   适配层已经写好且测过（`src/shared/contracts/uBuddyCapabilityDependencyScorer.js`：
+   `scoredDependencyScore` / `scoredSimilarityScore` / `scoredSelectCollaborators` /
+   `scoredSelectReplacement`，形状与契约一致、可逐个替换），
+   开关也加了（`ubuddy_capability_dependency_scorer_v1`，**默认关**）。
+   但**没有把调用点改过去** —— 仓库里目前没有任何一处业务代码在调这组契约，
+   所以"接进去"这一步现在等于"选一个调用点"，那是个产品决定，不是代码决定。
+2. **没做人评。** 而且要说清楚到目前**一条人工标注都没有**：
+   `data/full/human_labels.jsonl` 的 annotator 只有 `prelabel_v1/prelabel` 与
+   `ai_judge_qwen3_8b_majority_v1`（`diagnose.test.mjs` 有断言在守这条，加了人工标注它会红）。
+   文件名 `human_labels.jsonl` 指的是"人工标注的落点"，不是"里面是人工标注" —— 这里曾被误读过一次。
+   规则与 AI 两套政策谁更对**没有证据**；而诊断页第六节表明，"该信哪套标签"是比"用哪个模型"更大的决定。
 3. **没做在线回归。** 换掉打分函数会改规划选人结果，需要一次影子对照（同任务、新旧两份规划）才能动线上。
+   开关默认关，正是为了这件事还没做。
 
 **下一步最省事的一步**：拿 `same_family` 那批分歧 pair（AI 给 0.75、teacher 给 0）去问人。
-这一小批就能决定 v2 是该直接采用、还是要把 teacher 的「同族清零」规则并进去再训第三版。
+这一小批就能把"该信哪套标签"这个卡点解开 —— 而它是目前唯一挡在路上的卡点
+（模型侧已经查清：再大的模型也不会更好，因为标签的分辨率就停在 `(familyL, familyR)`）。

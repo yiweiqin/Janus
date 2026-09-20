@@ -1,0 +1,273 @@
+{
+  "schema": "cpdb_ship_manifest/v1",
+  "artifactId": "cpdb-scorer-v3-ship",
+  "generatedAt": "2026-09-20T06:05:41.612Z",
+  "defaultScorer": "table",
+  "reason": "诊断轮：同一批折、同一批标签上，36 格 family 表在 facet 折（换没见过的角色）相似度 0.7816，MLP 0.7669/0.7477；family 折上 MLP 相似度 0.5544 低于众数 0.5899。",
+  "labelSource": {
+    "file": "data/full/ai_labels_qwen3_8b_v1.jsonl",
+    "annotators": [
+      "ai_judge_qwen3_8b_majority_v1/ai_judge"
+    ]
+  },
+  "trainingSet": {
+    "dir": "exports/cpdb-training-set-v1",
+    "rows": 8282,
+    "dimension": 92,
+    "featureSpec": "cpdb_pair_features_v1",
+    "variants": {
+      "full": {
+        "width": 92
+      },
+      "no_identity": {
+        "width": 32
+      }
+    },
+    "folds": {
+      "org": 5,
+      "facet_pair": 5,
+      "facet": 5,
+      "family": 3
+    },
+    "files": {
+      "matrix.json": {
+        "bytes": 14077,
+        "sha256": "0a246478208e5975e740485be427c8ecf708d4cf1c4d1bd5ef32cfe1ec38b7b7"
+      },
+      "X.f32": {
+        "bytes": 3047776,
+        "sha256": "5758fbbd284532d7a9705d1c9b18054d9e922cd21e8e30059907f3a3aef44dae"
+      },
+      "y_dependency.i8": {
+        "bytes": 8282,
+        "sha256": "22203579ca8925b5fdc2bc4f0095f200395de99705f2e6e0d35478fd3e0ac1d9"
+      },
+      "y_similarity.i8": {
+        "bytes": 8282,
+        "sha256": "9a1fd6efaa287de0512475bc90eff728052a4bcf4f332f26acdff9050529b305"
+      },
+      "rows.jsonl": {
+        "bytes": 899048,
+        "sha256": "a8a4bff9654c2bd9daf19a34f4752f1cb6a7426623b10d5e0608f2ed133baf87"
+      },
+      "folds.jsonl": {
+        "bytes": 1873617,
+        "sha256": "eca4a3ddea3b7150f816294f8de9ca0fa1eb7e34e214c27c21715140df12a15b"
+      },
+      "labels.jsonl": {
+        "bytes": 574371,
+        "sha256": "7eea62c3c194ccfca4cf4cd6dbe525595388e6b43061a4d1d0c61613f997ea50"
+      }
+    },
+    "inputs": {
+      "data/full/agents.jsonl": "e20eb0fa3b57a3c57b3c672007b240a39071d3aad45217d8a869617aa53028e9",
+      "data/full/agent_profiles.jsonl": "2b83f78cdff1a4d7b0ccecf0b0ccf533308684ed03ef3bcf42aadb491ea43600",
+      "data/full/pairs.jsonl": "639bde6abb9f6c943d0ad208af41bb88224d7bbd4b7aea4fffca8b63827604ef",
+      "data/full/ai_labels_qwen3_8b_v1.jsonl": "7834ce42a7986f7b982af30b9170fa4d2d6739262a6a63bd3888ddbd31749cba"
+    },
+    "retrain": [
+      "python train_scorer.py --fit-table --matrix-dir train_out_ai --out artifacts/cpdb-scorer-v3-ship",
+      "python train_scorer.py --fit-all --variant no_identity --matrix-dir train_out_ai --out artifacts/cpdb-scorer-v3-ship/model",
+      "node experiments/cpdb_org_world/ship_bundle.mjs"
+    ]
+  },
+  "artifacts": {
+    "table": {
+      "bytes": 13301,
+      "sha256": "81011f2d1f924ffb674eb95861f64d556ed947453129d6b024111f605ae45f2b"
+    },
+    "tableMetrics": {
+      "bytes": 3671,
+      "sha256": "24ea189b6875a347f977366d960c819ffe4ba5eaa1007d48e7c353c845cf5da5"
+    },
+    "model": {
+      "bytes": 834694,
+      "sha256": "3916fdff4cc8ec2641829c2a080472543ca89feae7ff4dcc8cbcd2e5aa1bdf39"
+    },
+    "modelMetrics": {
+      "bytes": 3476,
+      "sha256": "ac1a3bd48b9fd309d6662043d37756df16d45fc308a704f6af527f45f8d70024"
+    }
+  },
+  "tableFoldMetrics": {
+    "org": {
+      "dependency": {
+        "mean": 0.7789,
+        "stdAcrossFolds": 0.0215,
+        "perFold": [
+          0.7409,
+          0.7815,
+          0.779,
+          0.8073,
+          0.7858
+        ]
+      },
+      "similarity": {
+        "mean": 0.7881,
+        "stdAcrossFolds": 0.0271,
+        "perFold": [
+          0.7409,
+          0.7875,
+          0.8083,
+          0.8199,
+          0.7837
+        ]
+      }
+    },
+    "facet_pair": {
+      "dependency": {
+        "mean": 0.7726,
+        "stdAcrossFolds": 0.042,
+        "perFold": [
+          0.79,
+          0.7894,
+          0.6908,
+          0.8104,
+          0.7826
+        ]
+      },
+      "similarity": {
+        "mean": 0.7921,
+        "stdAcrossFolds": 0.0264,
+        "perFold": [
+          0.8358,
+          0.7701,
+          0.7905,
+          0.7609,
+          0.8031
+        ]
+      }
+    },
+    "facet": {
+      "dependency": {
+        "mean": 0.7657,
+        "stdAcrossFolds": 0.0601,
+        "perFold": [
+          0.7264,
+          0.7985,
+          0.8191,
+          0.8182,
+          0.6665
+        ]
+      },
+      "similarity": {
+        "mean": 0.7816,
+        "stdAcrossFolds": 0.0444,
+        "perFold": [
+          0.7502,
+          0.8659,
+          0.7833,
+          0.743,
+          0.7657
+        ]
+      }
+    },
+    "family": {
+      "dependency": {
+        "mean": 0.3833,
+        "stdAcrossFolds": 0.0517,
+        "perFold": [
+          0.3165,
+          0.3909,
+          0.4425
+        ]
+      },
+      "similarity": {
+        "mean": 0.5899,
+        "stdAcrossFolds": 0.0242,
+        "perFold": [
+          0.6098,
+          0.6041,
+          0.5558
+        ]
+      }
+    }
+  },
+  "jsFoldCrossCheck": {
+    "org": {
+      "dependency": [
+        0.7409,
+        0.7815,
+        0.779,
+        0.8073,
+        0.7858
+      ],
+      "similarity": [
+        0.7409,
+        0.7875,
+        0.8083,
+        0.8199,
+        0.7837
+      ]
+    },
+    "facet_pair": {
+      "dependency": [
+        0.79,
+        0.7894,
+        0.6908,
+        0.8104,
+        0.7826
+      ],
+      "similarity": [
+        0.8358,
+        0.7701,
+        0.7905,
+        0.7609,
+        0.8031
+      ]
+    },
+    "facet": {
+      "dependency": [
+        0.7264,
+        0.7985,
+        0.8191,
+        0.8182,
+        0.6665
+      ],
+      "similarity": [
+        0.7502,
+        0.8659,
+        0.7833,
+        0.743,
+        0.7657
+      ]
+    },
+    "family": {
+      "dependency": [
+        0.3165,
+        0.3909,
+        0.4425
+      ],
+      "similarity": [
+        0.6098,
+        0.6041,
+        0.5558
+      ]
+    }
+  },
+  "integration": {
+    "module": "src/shared/contracts/uBuddyCapabilityDependencyScorer.js",
+    "load": "loadCapabilityScorer(<artifactDir>)",
+    "entries": {
+      "dependencyScore": "scoredDependencyScore",
+      "similarityScore": "scoredSimilarityScore",
+      "selectCollaborators": "scoredSelectCollaborators",
+      "selectReplacement": "scoredSelectReplacement"
+    },
+    "fallback": "scorer 为空或不可用时回落到 uBuddyCapabilityDependencyBundle 的手写打分；用 describeScorerFallback 读当前走的是哪条。"
+  },
+  "caveats": [
+    "AI 标签由本机 Qwen3-8B 多数投票生成，不是人工标注。标签库 human_labels.jsonl 里没有任何人工标注。",
+    "AI 判分对提问措辞敏感（不同 framing 之间的 qwk 只有 0.2-0.3），所以标签本身的稳定性有上限。",
+    "表只在 (familyL, familyR) 上分辨；未知家族对回落到 prior，此时 pair 之间会并列（family 折 0.5899 = 众数）。",
+    "标签分辨率大约就到 (familyL, familyR) 为止，所以更大的模型不会自动变得更好 —— 这是这轮最主要的结论。"
+  ],
+  "parity": {
+    "checked": true,
+    "note": "两轴 argmax 必须逐条相同；连续分允许 1e-3（float32 两套实现的舍入差）。",
+    "rows": 8282,
+    "argmaxAgreementBothAxes": 1,
+    "worstExpectedGap": 0.000001,
+    "tolerance": 0.001
+  }
+}

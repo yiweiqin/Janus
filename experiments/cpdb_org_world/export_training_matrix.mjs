@@ -19,11 +19,18 @@
 //   y_dependency.i8     n 个 0..4 的档位下标（不是 0..1 的分数）
 //   y_similarity.i8     同上
 //   rows.jsonl          {index,id,split,kind} —— 评估切片用，**不含标签**
+//   folds.jsonl         {id, <scheme>:[折号...], lookupKeys:{...}} —— 四种评估折 +
+//                       查表基线用的格子键，见 lib/splits.mjs
 //   labels.jsonl        {id,dependency,similarity} —— 便于事后核对标签来源
-//   matrix.json         规格、词表、特征名、行数、以及全部输入输出的 sha256
+//   matrix.json         规格、词表、特征名、特征变体列、四种折的摘要、
+//                       行数、以及全部输入输出的 sha256
 //
 // 注意 `rows.jsonl` 里**故意不放分数**：它是给评估脚本切分用的索引，
 // 分数在 y_*.i8 与 labels.jsonl 里，混在一起很容易让某个下游脚本不小心把答案拼进特征。
+//
+// `folds.jsonl` 是这一轮新加的，动机见 `lib/splits.mjs` 的文件头：第一轮按 org 切的
+// "test" 里有 99.0% 落在训练见过的 facet 对上，却没有任何一处断言过不相交。
+// 折与标签分开放，是为了让「换一种留出方式」不需要重导矩阵 —— 折是评估口径，不是数据。
 
 import { createHash } from 'node:crypto';
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
@@ -31,12 +38,15 @@ import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import {
   CPDB_FEATURE_SPEC_VERSION,
+  CPDB_FEATURE_VARIANT_NAMES,
   buildVocab,
   featureDimension,
   featureNames,
+  featureVariantColumns,
   normalizeAgentView,
   pairFeatures,
 } from './lib/features.mjs';
+import { FOLD_SCHEME_NAMES, buildFolds, foldSummary } from './lib/splits.mjs';
 
 const ROOT = dirname(fileURLToPath(import.meta.url));
 const SCALE = [0, 0.25, 0.5, 0.75, 1];
@@ -139,11 +149,49 @@ export function exportTrainingMatrix({
   }
 
   mkdirSync(outDir, { recursive: true });
+
+  // 四种评估折。与标签无关，所以每次导出都重算一遍 —— 它是 `lib/splits.mjs` 的纯函数，
+  // 重算比读一份缓存更不容易出错。
+  const foldsById = {};
+  const foldSummaries = {};
+  for (const scheme of FOLD_SCHEME_NAMES) {
+    const folded = buildFolds(pairs, scheme);
+    foldSummaries[scheme] = foldSummary(folded);
+    for (const [id, list] of folded.evalFoldsById) foldsById[id] = { ...(foldsById[id] || {}), [scheme]: list };
+  }
+
+  // 查表基线要用的格子键，**在这里算好**，不让 Python 再去拼一遍。
+  // 理由和特征只写一份一样：键的拼法是判据的一部分（比如 `facet` 那条按 `左>右` 是有向的，
+  // 而折方案里按**集合**留出是无向的），两份实现迟早会在某次修改里分叉，
+  // 而分叉的症状是「查表基线的分数莫名其妙」。
+  const lookupKeys = (pair) => ({
+    facet: `${pair.leftFacet}>${pair.rightFacet}`,
+    family: `${pair.leftFamily}>${pair.rightFamily}`,
+    agent: `${pair.leftAgentId}>${pair.rightAgentId}`,
+    // org 是集合语义（跨组织时是 `a|b`），排序后拼接，保证与 `groupKeysOf` 同一个口径。
+    org: String(pair.orgId || '').split('|').filter(Boolean).sort().join('|'),
+  });
+  const foldRows = pairs.map((pair) => ({ id: pair.id, ...foldsById[pair.id], lookupKeys: lookupKeys(pair) }));
+
+  // 特征变体的**列下标**直接落盘，不让 Python 那边再实现一遍"哪些列属于 no_identity"。
+  // 只落一个名字的话，判据就被复制成了两份，而两份判据一定会漂移。
+  const variants = Object.fromEntries(
+    CPDB_FEATURE_VARIANT_NAMES.map((variant) => {
+      const columns = featureVariantColumns(vocab, variant);
+      return [variant, {
+        columns,
+        width: columns.length,
+        columnNames: columns.map((at) => names[at]),
+      }];
+    }),
+  );
+
   const files = {
     x: join(outDir, 'X.f32'),
     yDependency: join(outDir, 'y_dependency.i8'),
     ySimilarity: join(outDir, 'y_similarity.i8'),
     rows: join(outDir, 'rows.jsonl'),
+    folds: join(outDir, 'folds.jsonl'),
     labels: join(outDir, 'labels.jsonl'),
     baselines: join(outDir, 'baselines.jsonl'),
     matrix: join(outDir, 'matrix.json'),
@@ -152,6 +200,7 @@ export function exportTrainingMatrix({
   writeFileSync(files.yDependency, Buffer.from(yDependency.buffer, yDependency.byteOffset, yDependency.byteLength));
   writeFileSync(files.ySimilarity, Buffer.from(ySimilarity.buffer, ySimilarity.byteOffset, ySimilarity.byteLength));
   writeFileSync(files.rows, `${rows.map((row) => JSON.stringify(row)).join('\n')}\n`);
+  writeFileSync(files.folds, `${foldRows.map((row) => JSON.stringify(row)).join('\n')}\n`);
   writeFileSync(files.labels, `${labelRows.map((row) => JSON.stringify(row)).join('\n')}\n`);
   writeFileSync(files.baselines, `${baselineRows.map((row) => JSON.stringify(row)).join('\n')}\n`);
 
@@ -164,12 +213,17 @@ export function exportTrainingMatrix({
     featureNames: names,
     vocab,
     scale: SCALE,
+    variants,
+    folds: foldSummaries,
     labelSource: { file: rel(labelsFile), annotators },
     splits: tally(rows.map((row) => row.split)),
     kinds: tally(rows.map((row) => row.kind)),
     labelHistogram: { dependency: tally(yDependency), similarity: tally(ySimilarity) },
     inputs: sha256Of([agentsPath, profilesPath, pairsPath, labelsFile]),
-    outputs: sha256Of([files.x, files.yDependency, files.ySimilarity, files.rows, files.labels, files.baselines]),
+    outputs: sha256Of([
+      files.x, files.yDependency, files.ySimilarity,
+      files.rows, files.folds, files.labels, files.baselines,
+    ]),
   };
   writeFileSync(files.matrix, `${JSON.stringify(matrix, null, 2)}\n`);
   return { outDir, matrix };

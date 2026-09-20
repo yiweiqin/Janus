@@ -68,7 +68,7 @@
     "experiment:cpdb-judge": "python experiments/cpdb_org_world/judge_with_local_llm.py",
     "experiment:cpdb-matrix": "node experiments/cpdb_org_world/export_training_matrix.mjs",
     "experiment:cpdb-train": "python experiments/cpdb_org_world/train_scorer.py",
-    "experiment:cpdb-scorer:test": "node --test experiments/cpdb_org_world/features.test.mjs experiments/cpdb_org_world/scorer.test.mjs",
+    "experiment:cpdb-scorer:test": "node --test experiments/cpdb_org_world/features.test.mjs experiments/cpdb_org_world/scorer.test.mjs experiments/cpdb_org_world/splits.test.mjs experiments/cpdb_org_world/diagnose.test.mjs experiments/cpdb_org_world/ship.test.mjs src/shared/contracts/uBuddyCapabilityDependencyScorer.test.js",
     "cloud:test:organization-evolution": "node --test cloud/test/organization-evolution.test.mjs",
     "experiment:ubuddy:doctor": "node scripts/ubuddy_experiment.mjs doctor",
     "experiment:ubuddy:pilot": "node scripts/ubuddy_experiment.mjs pilot",
@@ -128,7 +128,14 @@
     "config:check:storage": "node deploy/scripts/check-config.mjs storage",
     "config:check:release": "node deploy/scripts/check-config.mjs release",
     "deploy:preflight": "node deploy/scripts/preflight.mjs",
-    "security:scan:tree": "node deploy/scripts/scan-public-tree.mjs"
+    "security:scan:tree": "node deploy/scripts/scan-public-tree.mjs",
+    "experiment:cpdb-diagnose": "python experiments/cpdb_org_world/train_scorer.py --diagnose",
+    "experiment:cpdb-diagnose:smoke": "python experiments/cpdb_org_world/train_scorer.py --diagnose --diagnose-schemes facet --diagnose-variants no_identity --seeds 20260920 --diagnose-epochs 60 --diagnose-patience 10 --diagnose-out experiments/cpdb_org_world/artifacts/_smoke/diagnosis.json",
+    "experiment:cpdb-diagnose:merge": "node experiments/cpdb_org_world/merge_diagnosis.mjs",
+    "experiment:cpdb-contract:diagnose": "node experiments/cpdb_org_world/diagnose_contract.mjs",
+    "experiment:cpdb-table": "python experiments/cpdb_org_world/train_scorer.py --fit-table",
+    "experiment:cpdb-ship": "node experiments/cpdb_org_world/ship_bundle.mjs",
+    "experiment:cpdb-integration:test": "node --test src/shared/contracts/uBuddyCapabilityDependencyScorer.test.js src/shared/contracts/uBuddyCapabilityDependencyBundle.test.js"
   },
   "keywords": [
     "janus",
